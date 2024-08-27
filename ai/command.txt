@@ -1,0 +1,3 @@
+
+
+Describe the "IsolationSegments" category, the respective objects and all related endpoints(including possible errors and query parameters,bodies,headers) under the respective tag extending the current openapi.yaml for the CloudFoundry V3 API.

@@ -1,0 +1,270 @@
+paths:
+  /v3/app_usage_events/{guid}:
+    get:
+      summary: "Retrieve an app usage event"
+      parameters:
+        - name: "guid"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Unique identifier for the event"
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUsageEvent"
+      security:
+        - bearerAuth: []
+      tags:
+        - "App Usage Events"
+      x-permissions:
+        - "Admin"
+        - "Admin Read-Only"
+        - "Global Auditor"
+
+  /v3/app_usage_events:
+    get:
+      summary: "List app usage events"
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            minimum: 1
+          description: "Page to display"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+            minimum: 1
+            maximum: 5000
+          description: "Number of results per page"
+        - name: "order_by"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["created_at", "-created_at"]
+          description: "Value to sort by"
+        - name: "after_guid"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Filters out events before and including the event with the given guid"
+        - name: "guids"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+          description: "Comma-delimited list of usage event guids to filter by"
+        - name: "created_ats"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              format: "date-time"
+          description: "Timestamp to filter by"
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUsageEventList"
+      security:
+        - bearerAuth: []
+      tags:
+        - "App Usage Events"
+      x-permissions:
+        - "All Roles"
+
+  /v3/app_usage_events/actions/destructively_purge_all_and_reseed:
+    post:
+      summary: "Purge and seed app usage events"
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      security:
+        - bearerAuth: []
+      tags:
+        - "App Usage Events"
+      x-permissions:
+        - "Admin"
+
+components:
+  schemas:
+    AppUsageEvent:
+      type: "object"
+      properties:
+        guid:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier for the event"
+        created_at:
+          type: "string"
+          format: "date-time"
+          description: "The time with zone when the event occurred"
+        updated_at:
+          type: "string"
+          format: "date-time"
+          description: "Identical to created_at (events are created, never updated)"
+        state:
+          type: "object"
+          properties:
+            current:
+              type: "string"
+              nullable: true
+              description: "Current state of the app that this event pertains to, if applicable"
+            previous:
+              type: "string"
+              nullable: true
+              description: "Previous state of the app that this event pertains to, if applicable"
+        app:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the app that this event pertains to, if applicable"
+            name:
+              type: "string"
+              nullable: true
+              description: "Name of the app that this event pertains to, if applicable"
+        process:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the process that this event pertains to, if applicable"
+            type:
+              type: "string"
+              nullable: true
+              description: "Type of the process that this event pertains to, if applicable"
+        space:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the space that this event pertains to, if applicable"
+            name:
+              type: "string"
+              nullable: true
+              description: "Name of the space that this event pertains to, if applicable"
+        organization:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the org that this event pertains to, if applicable"
+        buildpack:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the buildpack that this event pertains to, if applicable"
+            name:
+              type: "string"
+              nullable: true
+              description: "Name of the buildpack that this event pertains to, if applicable"
+        task:
+          type: "object"
+          properties:
+            guid:
+              type: "string"
+              nullable: true
+              description: "Unique identifier of the task that this event pertains to, if applicable"
+            name:
+              type: "string"
+              nullable: true
+              description: "Name of the task that this event pertains to, if applicable"
+        memory_in_mb_per_instance:
+          type: "object"
+          properties:
+            current:
+              type: "integer"
+              nullable: true
+              description: "Current memory in MB of the app that this event pertains to, if applicable"
+            previous:
+              type: "integer"
+              nullable: true
+              description: "Previous memory in MB of the app that this event pertains to, if applicable"
+        instance_count:
+          type: "object"
+          properties:
+            current:
+              type: "integer"
+              nullable: true
+              description: "Current instance count of the app that this event pertains to, if applicable"
+            previous:
+              type: "integer"
+              nullable: true
+              description: "Previous instance count of the app that this event pertains to, if applicable"
+        links:
+          type: "object"
+          properties:
+            self:
+              type: "object"
+              properties:
+                href:
+                  type: "string"
+                  format: "url"
+                  description: "Link to the app usage event resource"
+
+    AppUsageEventList:
+      type: "object"
+      properties:
+        pagination:
+          type: "object"
+          properties:
+            total_results:
+              type: "integer"
+              description: "Total number of results"
+            total_pages:
+              type: "integer"
+              description: "Total number of pages"
+            first:
+              type: "object"
+              properties:
+                href:
+                  type: "string"
+                  format: "url"
+                  description: "Link to the first page"
+            last:
+              type: "object"
+              properties:
+                href:
+                  type: "string"
+                  format: "url"
+                  description: "Link to the last page"
+            next:
+              type: "object"
+              properties:
+                href:
+                  type: "string"
+                  format: "url"
+                  description: "Link to the next page"
+            previous:
+              type: "object"
+              nullable: true
+              description: "Link to the previous page, if applicable"
+        resources:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/AppUsageEvent"
+
+  securitySchemes:
+    bearerAuth:
+      type: "http"
+      scheme: "bearer"

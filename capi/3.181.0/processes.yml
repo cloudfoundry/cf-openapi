@@ -1,0 +1,423 @@
+paths:
+  /v3/processes/{guid}:
+    get:
+      summary: Get a process
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+  /v3/processes/{guid}/stats:
+    get:
+      summary: Get stats for a process
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessStats'
+  /v3/processes:
+    get:
+      summary: List processes
+      parameters:
+        - name: guids
+          in: query
+          schema:
+            type: string
+        - name: types
+          in: query
+          schema:
+            type: string
+        - name: app_guids
+          in: query
+          schema:
+            type: string
+        - name: space_guids
+          in: query
+          schema:
+            type: string
+        - name: organization_guids
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessList'
+  /v3/apps/{guid}/processes:
+    get:
+      summary: List processes for app
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: guids
+          in: query
+          schema:
+            type: string
+        - name: types
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessList'
+  /v3/processes/{guid}:
+    patch:
+      summary: Update a process
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+  /v3/processes/{guid}/actions/scale:
+    post:
+      summary: Scale a process
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessScale'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+  /v3/processes/{guid}/instances/{index}:
+    delete:
+      summary: Terminate a process instance
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+components:
+  schemas:
+    Process:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        type:
+          type: string
+        command:
+          type: string
+          nullable: true
+        instances:
+          type: integer
+        memory_in_mb:
+          type: integer
+        disk_in_mb:
+          type: integer
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+        health_check:
+          $ref: '#/components/schemas/HealthCheck'
+        readiness_health_check:
+          $ref: '#/components/schemas/ReadinessHealthCheck'
+        relationships:
+          type: object
+          properties:
+            app:
+              $ref: '#/components/schemas/ToOneRelationship'
+            revision:
+              $ref: '#/components/schemas/ToOneRelationship'
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: string
+          format: uuid
+        links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/Link'
+            scale:
+              $ref: '#/components/schemas/Link'
+            app:
+              $ref: '#/components/schemas/Link'
+            space:
+              $ref: '#/components/schemas/Link'
+            stats:
+              $ref: '#/components/schemas/Link'
+    ProcessStats:
+      type: object
+      properties:
+        type:
+          type: string
+        index:
+          type: integer
+        state:
+          type: string
+        usage:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+            cpu:
+              type: number
+            mem:
+              type: integer
+            disk:
+              type: integer
+            log_rate:
+              type: integer
+        host:
+          type: string
+        instance_internal_ip:
+          type: string
+        instance_ports:
+          type: array
+          items:
+            type: object
+            properties:
+              external:
+                type: integer
+              internal:
+                type: integer
+              external_tls_proxy_port:
+                type: integer
+              internal_tls_proxy_port:
+                type: integer
+        uptime:
+          type: integer
+        mem_quota:
+          type: integer
+          nullable: true
+        disk_quota:
+          type: integer
+          nullable: true
+        log_rate_limit:
+          type: integer
+          nullable: true
+        fds_quota:
+          type: integer
+        isolation_segment:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+    ProcessList:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Process'
+    ProcessUpdate:
+      type: object
+      properties:
+        command:
+          type: string
+          nullable: true
+        health_check:
+          $ref: '#/components/schemas/HealthCheck'
+        readiness_health_check:
+          $ref: '#/components/schemas/ReadinessHealthCheck'
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+    ProcessScale:
+      type: object
+      properties:
+        instances:
+          type: integer
+        memory_in_mb:
+          type: integer
+        disk_in_mb:
+          type: integer
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+    HealthCheck:
+      type: object
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+          properties:
+            timeout:
+              type: integer
+              nullable: true
+            invocation_timeout:
+              type: integer
+              nullable: true
+            interval:
+              type: integer
+              nullable: true
+            endpoint:
+              type: string
+              nullable: true
+    ReadinessHealthCheck:
+      type: object
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+          properties:
+            invocation_timeout:
+              type: integer
+              nullable: true
+            interval:
+              type: integer
+              nullable: true
+            endpoint:
+              type: string
+              nullable: true
+    ToOneRelationship:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            guid:
+              type: string
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          $ref: '#/components/schemas/Link'
+        last:
+          $ref: '#/components/schemas/Link'
+        next:
+          $ref: '#/components/schemas/Link'
+        previous:
+          type: string
+          nullable: true
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        method:
+          type: string
+          nullable: true

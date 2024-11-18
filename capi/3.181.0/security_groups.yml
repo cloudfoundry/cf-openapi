@@ -1,0 +1,297 @@
+paths:
+  /v3/security_groups:
+    post:
+      summary: Create a security group
+      description: Creates a new security group.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityGroupCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGroup'
+    get:
+      summary: List security groups
+      description: Retrieves a list of security groups.
+      parameters:
+        - name: guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of security group guids to filter by
+        - name: names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of security group names to filter by
+        - name: globally_enabled_running
+          in: query
+          schema:
+            type: boolean
+          description: If true, only include the security groups that are enabled for running
+        - name: globally_enabled_staging
+          in: query
+          schema:
+            type: boolean
+          description: If true, only include the security groups that are enabled for staging
+        - name: running_space_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space guids to filter by
+        - name: staging_space_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space guids to filter by
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page to display; valid values are integers >= 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: Number of results per page; valid values are 1 through 5000
+        - name: order_by
+          in: query
+          schema:
+            type: string
+          description: Value to sort by. Defaults to ascending; prepend with - to sort descending. Valid values are created_at, updated_at
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGroupList'
+  /v3/security_groups/{guid}:
+    get:
+      summary: Get a security group
+      description: Retrieves a security group by its GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The security group GUID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGroup'
+    patch:
+      summary: Update a security group
+      description: Updates the specified attributes of the security group.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The security group GUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityGroupUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGroup'
+    delete:
+      summary: Delete a security group
+      description: Deletes a security group by its GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The security group GUID
+      responses:
+        '202':
+          description: Accepted
+components:
+  schemas:
+    SecurityGroup:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+        globally_enabled:
+          type: object
+          properties:
+            running:
+              type: boolean
+            staging:
+              type: boolean
+        relationships:
+          type: object
+          properties:
+            running_spaces:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+            staging_spaces:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+    Rule:
+      type: object
+      properties:
+        protocol:
+          type: string
+        destination:
+          type: string
+        ports:
+          type: string
+          nullable: true
+        type:
+          type: integer
+          nullable: true
+        code:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        log:
+          type: boolean
+          nullable: true
+    SecurityGroupCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+        globally_enabled:
+          type: object
+          properties:
+            running:
+              type: boolean
+            staging:
+              type: boolean
+    SecurityGroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        globally_enabled:
+          type: object
+          properties:
+            running:
+              type: boolean
+              nullable: true
+            staging:
+              type: boolean
+              nullable: true
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+          nullable: true
+    SecurityGroupList:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            total_results:
+              type: integer
+            total_pages:
+              type: integer
+            first:
+              type: object
+              properties:
+                href:
+                  type: string
+            last:
+              type: object
+              properties:
+                href:
+                  type: string
+            next:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+            previous:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityGroup'

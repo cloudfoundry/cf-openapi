@@ -1,0 +1,691 @@
+paths:
+  /v3/droplets:
+    post:
+      summary: Create a droplet
+      description: Create a droplet without a package.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                relationships:
+                  type: object
+                  properties:
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+              required:
+                - relationships
+      responses:
+        '201':
+          description: Droplet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+
+    get:
+      summary: List droplets
+      description: Retrieve all droplets the user has access to.
+      parameters:
+        - in: query
+          name: guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet guids to filter by
+        - in: query
+          name: states
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet states to filter by
+        - in: query
+          name: app_guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of app guids to filter by
+        - in: query
+          name: space_guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space guids to filter by
+        - in: query
+          name: organization_guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of organization guids to filter by
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to display
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Number of results per page
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Value to sort by
+        - in: query
+          name: label_selector
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+        - in: query
+          name: created_ats
+          schema:
+            type: string
+            format: date-time
+          description: Timestamp to filter by
+        - in: query
+          name: updated_ats
+          schema:
+            type: string
+            format: date-time
+          description: Timestamp to filter by
+      responses:
+        '200':
+          description: List of droplets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Droplet'
+
+  /v3/droplets/{guid}:
+    get:
+      summary: Get a droplet
+      description: Retrieve a specific droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      responses:
+        '200':
+          description: Droplet retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+
+  /v3/packages/{guid}/droplets:
+    get:
+      summary: List droplets for a package
+      description: Retrieve a list of droplets belonging to a package.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the package
+        - in: query
+          name: guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet guids to filter by
+        - in: query
+          name: states
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet states to filter by
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to display
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Number of results per page
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Value to sort by
+        - in: query
+          name: label_selector
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+      responses:
+        '200':
+          description: List of droplets for a package retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Droplet'
+
+  /v3/apps/{guid}/droplets:
+    get:
+      summary: List droplets for an app
+      description: Retrieve a list of droplets belonging to an app.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the app
+        - in: query
+          name: guids
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet guids to filter by
+        - in: query
+          name: states
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of droplet states to filter by
+        - in: query
+          name: current
+          schema:
+            type: boolean
+          description: If true, only include the droplet currently assigned to the app
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to display
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Number of results per page
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Value to sort by
+        - in: query
+          name: label_selector
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+      responses:
+        '200':
+          description: List of droplets for an app retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Droplet'
+
+components:
+  schemas:
+    Droplet:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum: [AWAITING_UPLOAD, PROCESSING_UPLOAD, STAGED, COPYING, FAILED, EXPIRED]
+        error:
+          type: string
+        lifecycle:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [buildpack, docker]
+            data:
+              type: object
+        execution_metadata:
+          type: string
+        process_types:
+          type: object
+          additionalProperties:
+            type: string
+        checksum:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [sha256, sha1]
+            value:
+              type: string
+        buildpacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Buildpack'
+        stack:
+          type: string
+        image:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        relationships:
+          type: object
+          properties:
+            app:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            package:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            app:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            assign_current_droplet:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+            download:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+
+    Buildpack:
+      type: object
+      properties:
+        name:
+          type: string
+        detect_output:
+          type: string
+        version:
+          type: string
+        buildpack_name:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        next:
+          type: string
+          format: uri
+        previous:
+          type: string
+          format: uri
+
+  /v3/droplets/{guid}:
+    get:
+      summary: Get a droplet
+      description: Retrieve a specific droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      responses:
+        '200':
+          description: Droplet retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+
+    patch:
+      summary: Update a droplet
+      description: Update the metadata of a droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                    annotations:
+                      type: object
+      responses:
+        '200':
+          description: Droplet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+
+    delete:
+      summary: Delete a droplet
+      description: Delete a specific droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      responses:
+        '202':
+          description: Droplet deletion accepted
+          headers:
+            Location:
+              description: URL to check the status of the deletion job
+              schema:
+                type: string
+                format: uri
+
+  /v3/droplets:
+    post:
+      summary: Copy a droplet
+      description: Copy a droplet to a different app.
+      parameters:
+        - in: query
+          name: source_guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Source guid of the droplet to be copied
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                relationships:
+                  type: object
+                  properties:
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+      responses:
+        '201':
+          description: Droplet copied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+
+  /v3/droplets/{guid}/download:
+    get:
+      summary: Download droplet bits
+      description: Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      responses:
+        '302':
+          description: Droplet bits download redirect
+          headers:
+            Location:
+              description: URL to download the droplet bits
+              schema:
+                type: string
+                format: uri
+
+  /v3/droplets/{guid}/upload:
+    post:
+      summary: Upload droplet bits
+      description: Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                bits:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Droplet bits upload accepted
+          headers:
+            Location:
+              description: URL to check the status of the upload job
+              schema:
+                type: string
+                format: uri
+
+components:
+  schemas:
+    Droplet:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum: [AWAITING_UPLOAD, PROCESSING_UPLOAD, STAGED, COPYING, FAILED, EXPIRED]
+        error:
+          type: string
+        lifecycle:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [buildpack, docker]
+            data:
+              type: object
+        execution_metadata:
+          type: string
+        process_types:
+          type: object
+          additionalProperties:
+            type: string
+        checksum:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [sha256, sha1]
+            value:
+              type: string
+        buildpacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Buildpack'
+        stack:
+          type: string
+        image:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        relationships:
+          type: object
+          properties:
+            app:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            package:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            app:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            assign_current_droplet:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+            download:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+
+    Buildpack:
+      type: object
+      properties:
+        name:
+          type: string
+        detect_output:
+          type: string
+        version:
+          type: string
+        buildpack_name:
+          type: string

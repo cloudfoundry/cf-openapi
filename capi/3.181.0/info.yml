@@ -1,0 +1,85 @@
+paths:
+  /v3/info:
+    get:
+      summary: Get platform info
+      description: Retrieve Cloud Controller configuration information.
+      responses:
+        '200':
+          description: Platform information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformInfo'
+
+  /v3/info/usage_summary:
+    get:
+      summary: Get platform usage summary
+      description: Retrieve a high-level summary of usage across the entire Cloud Foundry installation.
+      responses:
+        '200':
+          description: Platform usage summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+components:
+  schemas:
+    PlatformInfo:
+      type: object
+      properties:
+        build:
+          type: string
+        cli_version:
+          type: object
+          properties:
+            minimum:
+              type: string
+            recommended:
+              type: string
+        custom:
+          type: object
+          additionalProperties:
+            type: string
+        description:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            support:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+    UsageSummary:
+      type: object
+      properties:
+        usage_summary:
+          type: object
+          properties:
+            started_instances:
+              type: integer
+              description: Total number of process instances in the STARTED state
+            memory_in_mb:
+              type: integer
+              description: Sum of memory usage of all tasks in the RUNNING state and all process instances in the STARTED state
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+

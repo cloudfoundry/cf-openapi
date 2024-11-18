@@ -1,0 +1,5 @@
+capi/*.json
+capi/*.yml
+.DS_Store
+openapitools.json
+clients/

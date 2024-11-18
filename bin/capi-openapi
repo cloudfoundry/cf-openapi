@@ -1,0 +1,209 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use FindBin;
+use File::Spec;
+use File::Basename;
+use Cwd qw(abs_path);
+use File::Path qw(make_path);
+
+$ENV{CAPI_VERSION} ||= '3.181.0';
+$ENV{OPENAPI_VERSION} ||= '3.1.1';
+
+# Get project root directory (one level up from bin/)
+my $script_dir = dirname(abs_path($0));
+my $project_root = dirname($script_dir);
+
+my $specs = {
+  'capi' => {
+    version => $ENV{CAPI_VERSION},
+    url => "https://v3-apidocs.cloudfoundry.org/version/${ENV{CAPI_VERSION}}/index.html",
+  },
+  'openapi' =>  {
+    version => $ENV{OPENAPI_VERSION},
+    url => "https://spec.openapis.org/oas/${ENV{OPENAPI_VERSION}}.html",
+  },
+};
+
+my @endpoints = (qw(
+  capi
+  admin
+  app_usage_events
+  apps
+  audit_events
+  buildpacks
+  builds
+  deployments
+  domains
+  droplets
+  environment_variable_groups
+  feature_flags
+  info
+  isolation_segments
+  organization_quotas
+  organizations
+  packages
+  processes
+  resource_matches
+  revisions
+  roles
+  root
+  routes
+  security_groups
+  service_brokers
+  service_credential_bindings
+  service_instances
+  service_offerings
+  service_plan_visibility
+  service_plans
+  service_route_bindings
+  service_usage_events
+  sidecars
+  space_features
+  space_quotas
+  spaces
+  stacks
+  tasks
+  users
+  ));
+
+sub check_deps {
+  my @deps = qw(spruce jq openapi-generator);
+  for my $dep (@deps) {
+    my $cmd = "which $dep";
+    my $result = `$cmd`;
+    if ($result eq '') {
+      print "Dependency '$dep' not found. Please install it.\n";
+      if ($dep eq 'openapi-generator') {
+        print "For openapi-generator, you can install it via:\n";
+        print 'bun install \@openapitools/openapi-generator -g', "\n";
+      }
+      exit 1;
+    }
+  }
+}
+
+sub fetch_spec {
+  my ($spec_name, $spec_version, $spec_url) = @_;
+  my $specs_path = "${project_root}/specs";
+  my $spec_file = "${specs_path}/${spec_name}/${spec_version}.html";
+
+  if (-e $spec_file) {
+    print "Spec file '${spec_file}' already downloaded.\n";
+    return
+  } else {
+    print "Fetching spec from '${spec_url}' to '${spec_file}'\n";
+    my $cmd = "curl -sL '${spec_url}' -o '${spec_file}'";
+    printf("Running command: '%s'\n", $cmd);
+    system($cmd);
+    if ($? == -1) {
+      print "Failed to execute: $!\n";
+    }
+  }
+}
+
+sub create_capi_files {
+  my ($capi_version) = @_;
+  for my $endpoint (@endpoints) {
+    my $endpoint_file = "${project_root}/capi/${capi_version}/${endpoint}.yml";
+    `touch ${endpoint_file}`;
+  }
+}
+
+sub prepare {
+  for my $spec (keys %$specs) {
+    fetch_spec($spec, $specs->{$spec}->{version}, $specs->{$spec}->{url});
+  }
+  create_capi_files($specs->{'capi'}->{version});
+}
+
+sub gen_capi_openapi_spec {
+  my ($capi_version) = @_;
+
+  my @yamls = ();
+  unshift @endpoints, 'capi' unless $endpoints[0] eq 'capi';
+  for my $endpoint (@endpoints) {
+    my $endpoint_file = "${project_root}/capi/${capi_version}/${endpoint}.yml";
+    push @yamls, $endpoint_file;
+  }
+
+  my $capi_openapi_prefix = "${project_root}/capi/${capi_version}.openapi";
+  my $cmd = "spruce merge -m '".join("' '", @yamls)."' > ${capi_openapi_prefix}.yml";
+  printf("Running command: '%s'\n", $cmd);
+  system($cmd);
+  if ($? == -1) {
+    print "Failed to execute: $!\n";
+  }
+  $cmd = "spruce json ${capi_openapi_prefix}.yml | jq > ${capi_openapi_prefix}.json";
+  printf("Running command: '%s'\n", $cmd);
+  system($cmd);
+  if ($? == -1) {
+    print "Failed to execute: $!\n";
+  }
+}
+
+sub generate_go_client {
+  my ($capi_version) = @_;
+
+  my $spec_file = "${project_root}/capi/${capi_version}.openapi.json";
+  my $output_dir = "${project_root}/clients/go";
+  make_path($output_dir) unless -d $output_dir;
+
+  my $cmd = "openapi-generator generate " .
+            "-i $spec_file " .
+            "-g go " .
+            "-o $output_dir " .
+            "--additional-properties=packageName=capiclient,isGoSubmodule=true,generateInterfaces=true";
+  # TODO: investigate what additional properties we want here.
+
+  printf("Generating Go client...\n");
+  printf("Running command: '%s'\n", $cmd);
+  system($cmd);
+  if ($? == -1) {
+    print "Failed to execute: $!\n";
+    exit 1;
+  }
+  print "Go client generated successfully in $output_dir\n";
+}
+
+sub convert {
+  print "Convert functionality not implemented yet\n";
+  exit 1;
+}
+
+sub main {
+  my $command = shift @ARGV || '';
+  my $subcommand = shift @ARGV || '';
+  my $type = shift @ARGV || '';
+
+  if ($command eq 'prepare') {
+    prepare();
+  }
+  elsif ($command eq 'convert') {
+    convert();
+  }
+  elsif ($command eq 'gen' && $subcommand eq 'openapi' && $type eq 'spec') {
+    check_deps();
+    gen_capi_openapi_spec($specs->{'capi'}->{version});
+  }
+  elsif ($command eq 'gen' && $subcommand eq 'go' && $type eq 'client') {
+    check_deps();
+    generate_go_client($specs->{'capi'}->{version});
+  }
+  else {
+    print "Usage: $0 <command> [subcommand] [type]\n";
+    print "Available commands:\n";
+    print "  prepare          - Fetch specs and create CAPI files\n";
+    print "  convert          - Convert spec sections from published api to openapi. (Not implemented yet - still manual)\n";
+    print "  gen openapi spec - Generate CAPI OpenAPI specs by merging prepared and converted stubs.\n";
+    print "  gen go client    - Generate Go client from OpenAPI spec\n";
+    exit 1;
+  }
+}
+
+main();
+
+__END__
+

@@ -1,0 +1,425 @@
+paths:
+  /v3/organization_quotas:
+    post:
+      summary: Create an organization quota
+      operationId: createOrganizationQuota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the quota
+                apps:
+                  type: object
+                  properties:
+                    per_process_memory_in_mb:
+                      type: integer
+                      nullable: true
+                      description: Maximum memory for a single process or task
+                    total_memory_in_mb:
+                      type: integer
+                      nullable: true
+                      description: Total memory allowed for all the started processes and running tasks in an organization
+                    total_instances:
+                      type: integer
+                      nullable: true
+                      description: Total instances of all the started processes allowed in an organization
+                    log_rate_limit_in_bytes_per_second:
+                      type: integer
+                      nullable: true
+                      description: Total log rate limit allowed for all the started processes and running tasks in an organization
+                    per_app_tasks:
+                      type: integer
+                      nullable: true
+                      description: Maximum number of running tasks in an organization
+                services:
+                  type: object
+                  properties:
+                    paid_services_allowed:
+                      type: boolean
+                      description: Specifies whether instances of paid service plans can be created
+                    total_service_instances:
+                      type: integer
+                      nullable: true
+                      description: Total number of service instances allowed in an organization
+                    total_service_keys:
+                      type: integer
+                      nullable: true
+                      description: Total number of service keys allowed in an organization
+                routes:
+                  type: object
+                  properties:
+                    total_routes:
+                      type: integer
+                      nullable: true
+                      description: Total number of routes allowed in an organization
+                    total_reserved_ports:
+                      type: integer
+                      nullable: true
+                      description: Total number of ports that are reservable by routes in an organization
+                domains:
+                  type: object
+                  properties:
+                    total_domains:
+                      type: integer
+                      nullable: true
+                      description: Total number of domains that can be scoped to an organization
+                relationships:
+                  type: object
+                  properties:
+                    organizations:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          guid:
+                            type: string
+                            format: uuid
+                            description: GUID of the organization
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+    get:
+      summary: List organization quotas
+      operationId: listOrganizationQuotas
+      parameters:
+        - name: guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+            description: Comma-delimited list of organization quota guids to filter by
+        - name: names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            description: Comma-delimited list of organization quota names to filter by
+        - name: organization_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+            description: Comma-delimited list of organization guids to filter by
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            description: Page to display
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            description: Number of results per page
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at]
+            description: Value to sort by; defaults to ascending. Prepend with - to sort descending.
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: Timestamp to filter by created_at
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: Timestamp to filter by updated_at
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      next:
+                        type: object
+                        nullable: true
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      previous:
+                        type: object
+                        nullable: true
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizationQuota'
+  /v3/organization_quotas/{guid}:
+    get:
+      summary: Get an organization quota
+      operationId: getOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: GUID of the organization quota
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+    patch:
+      summary: Update an organization quota
+      operationId: updateOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: GUID of the organization quota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the quota
+                apps:
+                  $ref: '#/components/schemas/AppsQuota'
+                services:
+                  $ref: '#/components/schemas/ServicesQuota'
+                routes:
+                  $ref: '#/components/schemas/RoutesQuota'
+                domains:
+                  $ref: '#/components/schemas/DomainsQuota'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+    delete:
+      summary: Delete an organization quota
+      operationId: deleteOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: GUID of the organization quota
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: string
+                    format: uri
+                    description: URL to track the deletion job
+  /v3/organization_quotas/{quota_guid}/relationships/organizations:
+    post:
+      summary: Apply an organization quota to organizations
+      operationId: applyOrganizationQuotaToOrganizations
+      parameters:
+        - name: quota_guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: GUID of the organization quota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                        description: GUID of the organization
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: string
+                        format: uri
+                        description: URL of the applied quota relationship
+components:
+  schemas:
+    OrganizationQuota:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the organization quota
+        created_at:
+          type: string
+          format: date-time
+          description: The time with zone when the organization quota was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time with zone when the organization quota was last updated
+        name:
+          type: string
+          description: Name of the quota
+        apps:
+          $ref: '#/components/schemas/AppsQuota'
+        services:
+          $ref: '#/components/schemas/ServicesQuota'
+        routes:
+          $ref: '#/components/schemas/RoutesQuota'
+        domains:
+          $ref: '#/components/schemas/DomainsQuota'
+        relationships:
+          type: object
+          properties:
+            organizations:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              format: uri
+              description: URL of the organization quota
+    AppsQuota:
+      type: object
+      properties:
+        per_process_memory_in_mb:
+          type: integer
+          nullable: true
+          description: Maximum memory for a single process or task
+        total_memory_in_mb:
+          type: integer
+          nullable: true
+          description: Total memory allowed for all the started processes and running tasks in an organization
+        total_instances:
+          type: integer
+          nullable: true
+          description: Total instances of all the started processes allowed in an organization
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+          nullable: true
+          description: Total log rate limit allowed for all the started processes and running tasks in an organization
+        per_app_tasks:
+          type: integer
+          nullable: true
+          description: Maximum number of running tasks in an organization
+    ServicesQuota:
+      type: object
+      properties:
+        paid_services_allowed:
+          type: boolean
+          description: Specifies whether instances of paid service plans can be created
+        total_service_instances:
+          type: integer
+          nullable: true
+          description: Total number of service instances allowed in an organization
+        total_service_keys:
+          type: integer
+          nullable: true
+          description: Total number of service keys allowed in an organization
+    RoutesQuota:
+      type: object
+      properties:
+        total_routes:
+          type: integer
+          nullable: true
+          description: Total number of routes allowed in an organization
+        total_reserved_ports:
+          type: integer
+          nullable: true
+          description: Total number of ports that are reservable by routes in an organization
+    DomainsQuota:
+      type: object
+      properties:
+        total_domains:
+          type: integer
+          nullable: true
+          description: Total number of domains that can be scoped to an organization

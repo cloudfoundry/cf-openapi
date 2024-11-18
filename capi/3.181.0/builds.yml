@@ -1,0 +1,103 @@
+paths:
+  /v3/builds:
+    get:
+      summary: List builds
+      description: Retrieve a list of all builds.
+      responses:
+        '200':
+          description: A JSON array of builds.
+        'default':
+          description: An unexpected error.
+
+    post:
+      summary: Create a build
+      description: Create a new build.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: The created build.
+        'default':
+          description: An unexpected error.
+
+  /v3/builds/{guid}:
+    get:
+      summary: Get a build
+      description: Retrieve a build.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the build.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The build.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - AdminReadOnly: []
+        - GlobalAuditor: []
+        - OrgManager: []
+        - SpaceAuditor: []
+        - SpaceDeveloper: []
+        - SpaceManager: []
+        - SpaceSupporter: []
+
+  /v3/apps/{guid}/builds:
+    get:
+      summary: List builds for an app
+      description: Retrieve all builds for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the app.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A JSON array of builds.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - AdminReadOnly: []
+        - GlobalAuditor: []
+        - OrgManager: []
+        - SpaceAuditor: []
+        - SpaceDeveloper: []
+        - SpaceManager: []
+        - SpaceSupporter: []
+
+  /v3/builds/{guid}:
+    patch:
+      summary: Update a build
+      description: Update an existing build.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the build.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: The updated build.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - SpaceDeveloper: []
+        - BuildStateUpdater: []
+

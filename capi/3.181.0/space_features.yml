@@ -1,0 +1,89 @@
+paths:
+  /v3/spaces/{guid}/features:
+    get:
+      summary: List space features
+      description: Retrieve the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SpaceFeature'
+    patch:
+      summary: Update space features
+      description: Update a space feature.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceFeature'
+
+  /v3/spaces/{guid}/features/{name}:
+    get:
+      summary: Get a space feature
+      description: Retrieve a space feature by name.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceFeature'
+
+components:
+  schemas:
+    SpaceFeature:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+

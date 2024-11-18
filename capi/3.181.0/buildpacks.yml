@@ -1,0 +1,105 @@
+paths:
+  /v3/buildpacks:
+    get:
+      summary: List buildpacks
+      description: Retrieve a list of all buildpacks.
+      responses:
+        '200':
+          description: A JSON array of buildpacks.
+        'default':
+          description: An unexpected error.
+
+    post:
+      summary: Create a buildpack
+      description: Create a new buildpack.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: The created buildpack.
+        'default':
+          description: An unexpected error.
+
+  /v3/buildpacks/{guid}:
+    get:
+      summary: Get a buildpack
+      description: Retrieve a buildpack.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the buildpack.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The buildpack.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - AdminReadOnly: []
+        - GlobalAuditor: []
+        - OrgManager: []
+        - SpaceAuditor: []
+        - SpaceDeveloper: []
+        - SpaceManager: []
+        - SpaceSupporter: []
+
+  /v3/buildpacks/{guid}:
+    patch:
+      summary: Update a buildpack
+      description: Update an existing buildpack.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the buildpack.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: The updated buildpack.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - SpaceDeveloper: []
+
+  /v3/buildpacks/{guid}/upload:
+    post:
+      summary: "Upload buildpack bits"
+      description: "Upload a zip file containing a Cloud Foundry compatible buildpack."
+      parameters:
+        - name: guid
+          in: path
+          description: "The GUID of the buildpack."
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: "object"
+              properties:
+                bits:
+                  type: "string"
+                  format: "binary"
+      responses:
+        '202':
+          description: "The accepted upload job."
+        'default':
+          description: "An unexpected error."
+      security:
+        - Admin: []
+

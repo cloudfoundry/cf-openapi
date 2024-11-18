@@ -1,0 +1,286 @@
+paths:
+  /v3/roles:
+    post:
+      summary: Create a role
+      description: Create a new role for a user in an organization or space.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Role to create, see valid role types
+                relationships:
+                  type: object
+                  properties:
+                    user:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            username:
+                              type: string
+                            origin:
+                              type: string
+                    organization:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                    space:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+    get:
+      summary: List roles
+      description: List roles that the user has access to.
+      parameters:
+        - name: guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of role guids to filter by
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of role types to filter by
+        - name: space_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space guids to filter by
+        - name: organization_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of organization guids to filter by
+        - name: user_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of user guids to filter by
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Page to display, valid values are integers >= 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+          description: Number of results per page, valid values are 1 through 5000
+        - name: order_by
+          in: query
+          schema:
+            type: string
+          description: Value to sort by, defaults to ascending, prepend with - to sort descending
+        - name: include
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Optionally include a list of unique related resources in the response
+        - name: created_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Timestamp to filter by, supports filtering with relational operators
+        - name: updated_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Timestamp to filter by, supports filtering with relational operators
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolesList'
+
+  /v3/roles/{guid}:
+    get:
+      summary: Get a role
+      description: Get an individual role resource.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the role
+        - name: include
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Optionally include a list of unique related resources in the response
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+
+    delete:
+      summary: Delete a role
+      description: Delete an individual role.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the role
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to check the status of the deletion job
+
+components:
+  schemas:
+    Role:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        type:
+          type: string
+        relationships:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                    username:
+                      type: string
+                    origin:
+                      type: string
+            organization:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+            space:
+              type: object
+              properties:
+                data:
+                  type: object
+                  nullable: true
+                  properties:
+                    guid:
+                      type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+            user:
+              type: object
+              properties:
+                href:
+                  type: string
+            organization:
+              type: object
+              properties:
+                href:
+                  type: string
+
+    RolesList:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            total_results:
+              type: integer
+            total_pages:
+              type: integer
+            first:
+              type: object
+              properties:
+                href:
+                  type: string
+            last:
+              type: object
+              properties:
+                href:
+                  type: string
+            next:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+            previous:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+

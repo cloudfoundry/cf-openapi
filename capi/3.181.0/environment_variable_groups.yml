@@ -1,0 +1,78 @@
+openapi: 3.0.0
+info:
+  title: Cloud Controller API
+  version: v3
+  description: API specification for managing environment variable groups in Cloud Controller.
+
+paths:
+  /v3/environment_variable_groups/{name}:
+    get:
+      summary: Get an environment variable group
+      description: Retrieve a specific environment variable group.
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the environment variable group (running or staging)
+      responses:
+        '200':
+          description: Environment variable group retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentVariableGroup'
+
+    patch:
+      summary: Update environment variable group
+      description: Update the environment variable group. The variables given in the request will be merged with the existing environment variable group. Any requested variables with a value of null will be removed from the group. Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the environment variable group (running or staging)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                var:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        '200':
+          description: Environment variable group updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentVariableGroup'
+
+components:
+  schemas:
+    EnvironmentVariableGroup:
+      type: object
+      properties:
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        var:
+          type: object
+          additionalProperties:
+            type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri

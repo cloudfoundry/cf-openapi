@@ -1,0 +1,92 @@
+paths:
+  /v3/deployments:
+    get:
+      summary: List deployments
+      description: Retrieve a list of all deployments.
+      responses:
+        '200':
+          description: A JSON array of deployments.
+        'default':
+          description: An unexpected error.
+
+    post:
+      summary: Create a deployment
+      description: Create a new deployment.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: The created deployment.
+        'default':
+          description: An unexpected error.
+
+  /v3/deployments/{guid}:
+    get:
+      summary: Get a deployment
+      description: Retrieve a deployment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the deployment.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The deployment.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - AdminReadOnly: []
+        - GlobalAuditor: []
+        - OrgManager: []
+        - SpaceAuditor: []
+        - SpaceDeveloper: []
+        - SpaceManager: []
+        - SpaceSupporter: []
+
+  /v3/deployments/{guid}/actions/cancel:
+    post:
+      summary: Cancel a deployment
+      description: Cancel an ongoing deployment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the deployment.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The canceled deployment.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - SpaceDeveloper: []
+        - SpaceSupporter: []
+
+  /v3/deployments/{guid}/actions/continue:
+    post:
+      summary: Continue a deployment
+      description: Continue a paused deployment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the deployment.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The continued deployment.
+        'default':
+          description: An unexpected error.
+      security:
+        - Admin: []
+        - SpaceDeveloper: []
+        - SpaceSupporter: []

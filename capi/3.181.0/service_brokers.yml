@@ -1,158 +1,387 @@
 paths:
   /v3/service_brokers:
-    post:
-      summary: Create a service broker
-      description: Creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker’s catalog.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ServiceBrokerCreate'
-      responses:
-        '202':
-          description: Accepted
-          headers:
-            Location:
-              description: URL to the created job
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceBroker'
     get:
       summary: List service brokers
       description: Retrieves the service brokers the user has access to.
       parameters:
-        - name: names
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-          description: Comma-delimited list of service broker names to filter by
-        - name: page
-          in: query
-          schema:
-            type: integer
-          description: Page to display; valid values are integers >= 1
-        - name: per_page
-          in: query
-          schema:
-            type: integer
-          description: Number of results per page; valid values are 1 through 5000
-        - name: space_guids
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-          description: Comma-delimited list of space GUIDs to filter by
-        - name: order_by
-          in: query
-          schema:
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
             type: string
-          description: Value to sort by. Defaults to ascending; prepend with - to sort descending. Valid values are created_at, updated_at, name
-        - name: label_selector
-          in: query
-          schema:
+        description: Comma-delimited list of service broker names to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
             type: string
-          description: A query string containing a list of label selector requirements
-        - name: created_ats
-          in: query
-          schema:
-            type: string
-          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
-        - name: updated_ats
-          in: query
-          schema:
-            type: string
-          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+        description: Comma-delimited list of space GUIDs to filter by
+      - name: order_by
+        in: query
+        schema:
+          type: string
+          enum: [created_at, updated_at, name, -created_at, -updated_at, -name]
+        description: Value to sort by
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5000
+      - name: label_selector
+        in: query
+        schema:
+          type: string
+      - name: created_ats
+        in: query
+        schema:
+          type: string
+      - name: updated_ats
+        in: query
+        schema:
+          type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServiceBrokerList'
-  /v3/service_brokers/{guid}:
-    get:
-      summary: Get a service broker
-      description: Retrieves the service broker by GUID.
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The service broker GUID
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceBroker'
-    patch:
-      summary: Update a service broker
-      description: Updates a service broker.
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The service broker GUID
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceBroker'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - GlobalAuditor:
+        - cloud_controller.global_auditor
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
+
+    post:
+      summary: Create a service broker
+      description: Creates a new service broker and syncs with catalog
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceBrokerUpdate'
+              type: object
+              required:
+                - name
+                - url
+                - authentication
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+                authentication:
+                  $ref: '#/components/schemas/Authentication'
+                relationships:
+                  type: object
+                  properties:
+                    space:
+                      $ref: '#/components/schemas/ToOneRelationship'
+                metadata:
+                  $ref: '#/components/schemas/Metadata'
       responses:
-        '200':
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceBroker'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.write
+
+  /v3/service_brokers/{guid}:
+    parameters:
+    - name: guid
+      in: path
+      required: true
+      schema:
+        type: string
+
+    get:
+      summary: Get a service broker
+      responses:
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceBroker'
-        '202':
-          description: Accepted
-          headers:
-            Location:
-              description: URL to the created job
-              schema:
-                type: string
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - GlobalAuditor:
+        - cloud_controller.global_auditor
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
+
+    patch:
+      summary: Update a service broker
+      description: Updates a service broker. May trigger catalog sync based on fields updated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+                authentication:
+                  $ref: '#/components/schemas/Authentication'
+                metadata:
+                  $ref: '#/components/schemas/Metadata'
+      responses:
+        "200":
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceBroker'
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceBroker'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.write
+
     delete:
       summary: Delete a service broker
-      description: Creates a job to delete an existing service broker.
+      responses:
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.write
+
+  /v3/service_brokers/{guid}/catalog:
+    parameters:
+    - name: guid
+      in: path
+      required: true
+      schema:
+        type: string
+
+    post:
+      summary: Sync service broker catalog
+      description: Triggers a synchronization of the service broker's catalog
+      responses:
+        "202":
+          description: Accepted
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.write
+
+  /v3/service_brokers/{guid}/jobs/synchronization:
+    parameters:
+    - name: guid
+      in: path
+      required: true
+      schema:
+        type: string
+
+    get:
+      summary: Get broker synchronization job status
+      description: Retrieves status of the last catalog synchronization job
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LastOperation'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - SpaceDeveloper:
+        - cloud_controller.write
+      - SpaceSupporter:
+        - cloud_controller.get
+
+  /v3/service_brokers/{guid}/relationships/space:
+    get:
+      summary: Get space relationship for a service broker
+      description: |
+        Retrieve the space relationship for a space-scoped service broker.
+        This endpoint only returns data for space-scoped brokers.
       parameters:
         - name: guid
           in: path
           required: true
           schema:
             type: string
-          description: The service broker GUID
       responses:
-        '202':
-          description: Accepted
-          headers:
-            Location:
-              description: URL to the created job
+        '200':
+          description: OK
+          content:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      space:
+                        type: object
+                        nullable: true
+                        properties:
+                          href:
+                            type: string
+        '404':
+          description: Service broker not found
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update space relationship for a service broker
+      description: |
+        Update the space relationship for a service broker.
+        This can be used to convert a global broker to space-scoped or vice versa.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  nullable: true
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                      description: Space GUID to scope the broker to, or null for global
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+        '422':
+          description: Invalid request
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
+    Authentication:
+      type: object
+      required:
+        - type
+        - credentials
+      properties:
+        type:
+          type: string
+          enum: [basic]
+        credentials:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+
     ServiceBroker:
       type: object
       properties:
         guid:
           type: string
+          format: uuid
         created_at:
           type: string
           format: date-time
@@ -167,122 +396,16 @@ components:
           type: object
           properties:
             space:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    guid:
-                      type: string
+              $ref: '#/components/schemas/ToOneRelationship'
         metadata:
-          type: object
-          properties:
-            labels:
-              type: object
-            annotations:
-              type: object
+          $ref: '#/components/schemas/Metadata'
         links:
           type: object
           properties:
             self:
-              type: object
-              properties:
-                href:
-                  type: string
+              $ref: '#/components/schemas/Link'
             service_offerings:
-              type: object
-              properties:
-                href:
-                  type: string
+              $ref: '#/components/schemas/Link'
             space:
-              type: object
-              properties:
-                href:
-                  type: string
-    ServiceBrokerCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        url:
-          type: string
-        authentication:
-          $ref: '#/components/schemas/Authentication'
-        relationships:
-          type: object
-          properties:
-            space:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    guid:
-                      type: string
-    ServiceBrokerUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        url:
-          type: string
-        authentication:
-          $ref: '#/components/schemas/Authentication'
-        metadata:
-          type: object
-          properties:
-            labels:
-              type: object
-            annotations:
-              type: object
-    ServiceBrokerList:
-      type: object
-      properties:
-        pagination:
-          type: object
-          properties:
-            total_results:
-              type: integer
-            total_pages:
-              type: integer
-            first:
-              type: object
-              properties:
-                href:
-                  type: string
-            last:
-              type: object
-              properties:
-                href:
-                  type: string
-            next:
-              type: object
-              nullable: true
-              properties:
-                href:
-                  type: string
-            previous:
-              type: object
-              nullable: true
-              properties:
-                href:
-                  type: string
-        resources:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServiceBroker'
-    Authentication:
-      type: object
-      properties:
-        type:
-          type: string
-          description: Type of the authentication mechanisms. Valid value is basic.
-        credentials:
-          type: object
-          properties:
-            username:
-              type: string
-              description: The username to authenticate against the service broker.
-            password:
-              type: string
-              description: The password to authenticate against the service broker.
+              $ref: '#/components/schemas/Link'
+

@@ -1,0 +1,205 @@
+components:
+  schemas:
+    Error:
+      type: "object"
+      required:
+        - code
+        - title
+        - detail
+      properties:
+        code:
+          type: integer
+          description: A numeric code for this error
+          example: 10008
+        title:
+          type: string
+          description: Name of the error
+          example: CF-UnprocessableEntity
+        detail:
+          type: string
+          description: Detailed description of the error
+          example: The request body is semantically invalid
+
+    Errors:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          description: List of error objects
+          items:
+            $ref: "#/components/schemas/Error"
+
+    # Specific error types for common scenarios
+    BadRequestError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 1001
+                title: CF-MessageParseError
+                detail: Request body is not valid JSON
+
+    UnauthorizedError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 10002
+                title: CF-NotAuthenticated
+                detail: Authentication error
+
+    ForbiddenError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 10003
+                title: CF-NotAuthorized
+                detail: You are not authorized to perform the requested action
+
+    NotFoundError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 10010
+                title: CF-ResourceNotFound
+                detail: The resource could not be found
+
+    UnprocessableEntityError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 10008
+                title: CF-UnprocessableEntity
+                detail: The request body is semantically invalid
+
+    ServiceUnavailableError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          example:
+            errors:
+              - code: 10015
+                title: CF-ServiceUnavailable
+                detail: Service is currently unavailable
+
+    RateLimitExceededError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      retry_after:
+                        type: integer
+                        description: Number of seconds before the client should retry
+          example:
+            errors:
+              - code: 10013
+                title: CF-RateLimitExceeded
+                detail: Rate limit exceeded
+                retry_after: 60
+
+    AsyncOperationInProgressError:
+      allOf:
+        - $ref: "#/components/schemas/Errors"
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      job_guid:
+                        type: string
+                        format: uuid
+                        description: GUID of the job tracking this async operation
+          example:
+            errors:
+              - code: 10022
+                title: CF-AsyncServiceInstanceOperationInProgress
+                detail: An operation for the service instance is in progress
+                job_guid: 12345678-1234-1234-1234-123456789012
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadRequestError"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedError"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenError"
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
+
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnprocessableEntityError"
+
+    TooManyRequests:
+      description: Too Many Requests
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per period
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          description: Remaining requests for the period
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          description: Time when the rate limit window resets (Unix timestamp)
+          schema:
+            type: integer
+        Retry-After:
+          description: Time to wait before retrying (in seconds)
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitExceededError"
+
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ServiceUnavailableError"

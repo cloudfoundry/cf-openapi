@@ -217,6 +217,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
 
+  /v3/tasks/{guid}/actions/cancel:
+    post:
+      summary: Cancel a task
+      description: |
+        Cancel a running task.
+        This sets the task state to FAILED and terminates the task process.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The task GUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     Task:

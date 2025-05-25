@@ -90,7 +90,7 @@ paths:
               format: date-time
           style: form
           explode: false
-          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators"
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])"
         - name: "updated_ats"
           in: query
           schema:
@@ -100,7 +100,28 @@ paths:
               format: date-time
           style: form
           explode: false
-          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators"
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])"
+        - name: "include"
+          in: query
+          description: |
+            Comma-delimited list of resources to include in the response.
+            Supported resources:
+            - app: Include the associated application
+            - space: Include the space containing the package
+            - space.organization: Include the organization containing the space
+          schema:
+            type: "string"
+            example: "app,space"
+        - name: "fields"
+          in: query
+          description: |
+            Comma-delimited list of field groups to include/exclude from the response.
+            Use a - (minus sign) prefix to exclude a field group.
+            Example: ?fields=guid,name,-relationships.app
+          schema:
+            type: "string"
+            example: "guid,name"
+      security: []
       responses:
         '200':
           description: "A JSON array of packages."
@@ -189,6 +210,11 @@ paths:
                     annotations:
                       type: object
                       description: "Annotations applied to the package"
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.write
       responses:
         '201':
           description: "The created package."
@@ -210,6 +236,7 @@ paths:
             type: "string"
             format: uuid
             description: "GUID of the package"
+      security: []
       responses:
         '200':
           description: "A package object."
@@ -252,6 +279,11 @@ paths:
                 password:
                   type: "string"
                   description: "The password for the image's registry. Only possible for Docker package."
+      security:
+      - Admin
+        - cloud_controller.admin
+      - SpaceDeveloper
+        - cloud_controller.write
       responses:
         '200':
           description: "The updated package."
@@ -272,6 +304,11 @@ paths:
             type: "string"
             format: uuid
             description: "GUID of the package"
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.write
       responses:
         '202':
           description: "The job to delete the package."
@@ -325,6 +362,11 @@ paths:
                         properties:
                           value:
                             type: "string"
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.write
       responses:
         '200':
           description: "The uploaded package."
@@ -334,6 +376,220 @@ paths:
                 $ref: '#/components/schemas/Package'
         'default':
           description: "An unexpected error."
+
+  /v3/packages/{guid}/download:
+    get:
+      summary: Download a package
+      description: |
+        Download the bits for a package.
+        
+        For bits type packages, this returns a zip file containing the source code.
+        For docker type packages, this returns a JSON file containing the docker image reference.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The package GUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image:
+                    type: string
+                    description: Docker image reference
+        '302':
+          description: Redirect to download URL
+          headers:
+            Location:
+              description: URL to download the package
+              schema:
+                type: string
+        '404':
+          description: Not Found
+      security:
+        - bearerAuth: []
+
+  /v3/packages/{guid}/upload:
+    post:
+      summary: Upload package bits
+      description: |
+        Upload bits to a package of type 'bits'.
+        
+        The upload must be a zip file containing the application source code.
+        The maximum size is determined by the cc.packages.max_package_size configuration value.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The package GUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - bits
+              properties:
+                bits:
+                  type: string
+                  format: binary
+                  description: A zip file containing the package bits
+                resources:
+                  type: string
+                  description: |
+                    JSON string of cached resources. 
+                    Can be used to avoid uploading already-cached files.
+                  example: '[{"fn":"path/to/file","size":1234,"sha1":"abc123"}]'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        '422':
+          description: Unprocessable Entity - Package is not of type 'bits'
+      security:
+        - bearerAuth: []
+
+  /v3/packages/{guid}/builds:
+    post:
+      summary: Create a build from a package
+      description: |
+        Stage a package to create a build.
+        This endpoint is used to stage a package and create a droplet.
+        The package must be of type 'bits' and in the 'READY' state.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The package GUID
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                staging_memory_in_mb:
+                  type: integer
+                  description: Memory limit for staging in MB
+                staging_disk_in_mb:
+                  type: integer
+                  description: Disk limit for staging in MB
+                environment_variables:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Environment variables to use during staging
+                lifecycle:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [buildpack, cnb, docker]
+                    data:
+                      type: object
+                      properties:
+                        buildpacks:
+                          type: array
+                          items:
+                            type: string
+                          description: List of buildpacks to use
+                        stack:
+                          type: string
+                          description: Stack to use for staging
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '422':
+          description: Unprocessable Entity - Package not ready or invalid state
+      security:
+        - bearerAuth: []
+
+  /v3/packages/{guid}/droplets:
+    post:
+      summary: Copy a package's droplet
+      description: |
+        Copy the droplet from a source package to create a new droplet.
+        This is useful for copying droplets between packages or apps.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The package GUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - relationships
+              properties:
+                relationships:
+                  type: object
+                  required:
+                    - source_droplet
+                  properties:
+                    source_droplet:
+                      type: object
+                      required:
+                        - data
+                      properties:
+                        data:
+                          type: object
+                          required:
+                            - guid
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+                              description: GUID of the source droplet to copy
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+        '422':
+          description: Unprocessable Entity - Invalid source droplet
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     Package:

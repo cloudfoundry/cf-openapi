@@ -79,6 +79,7 @@ paths:
           description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -161,6 +162,13 @@ paths:
                       type: object
                     annotations:
                       type: object
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.admin
+        - SpaceSupporter:
+          - cloud_controller.admin
       responses:
         '201':
           description: Created
@@ -168,8 +176,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Route'
-      security:
-        - bearerAuth: []
 
   /v3/routes/{guid}:
     get:
@@ -187,6 +193,23 @@ paths:
           description: Optionally include additional related resources in the response. Valid values are domain, space.organization, space
           schema:
             type: string
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.read
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -194,11 +217,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Route'
-      security:
-        - bearerAuth: []
-
-      security:
-        - bearerAuth: []
 
   /v3/apps/{guid}/routes:
     get:
@@ -273,6 +291,7 @@ paths:
           description: A query string containing a list of label selector requirements
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -280,6 +299,425 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RouteList'
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/relationships/space:
+    get:
+      summary: Get the space relationship for a route
+      description: This endpoint retrieves the space relationship for a route.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The guid of the route
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+
+  /v3/routes/{guid}/relationships/domain:
+    get:
+      summary: Get the domain relationship for a route
+      description: This endpoint retrieves the domain relationship for a route.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The guid of the route
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+
+  /v3/routes/{guid}/destinations:
+    get:
+      summary: List destinations for a route
+      description: Retrieve all destinations for the route.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: guids
+          in: query
+          description: Comma-delimited list of destination guids to filter by
+          schema:
+            type: string
+        - name: app_guids
+          in: query
+          description: Comma-delimited list of app guids to filter by
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      route:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Add destinations to a route
+      description: Add one or more destinations to a route.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                destinations:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - app
+                    properties:
+                      app:
+                        type: object
+                        required:
+                          - guid
+                        properties:
+                          guid:
+                            type: string
+                          process:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                      weight:
+                        type: integer
+                        minimum: 1
+                        maximum: 128
+                      port:
+                        type: integer
+                        minimum: 1024
+                        maximum: 65535
+                      protocol:
+                        type: string
+                        enum: [http1, http2, tcp]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+                  links:
+                    type: object
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Replace all destinations for a route
+      description: Replace all destinations for a route with the provided list.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                destinations:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - app
+                    properties:
+                      app:
+                        type: object
+                        required:
+                          - guid
+                        properties:
+                          guid:
+                            type: string
+                          process:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                      weight:
+                        type: integer
+                        minimum: 1
+                        maximum: 128
+                      port:
+                        type: integer
+                        minimum: 1024
+                        maximum: 65535
+                      protocol:
+                        type: string
+                        enum: [http1, http2, tcp]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+                  links:
+                    type: object
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/destinations/{destination_guid}:
+    delete:
+      summary: Remove a destination from a route
+      description: Remove a specific destination from a route.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: destination_guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/relationships/shared_spaces:
+    get:
+      summary: List shared spaces relationship
+      description: Retrieve the spaces that this route is shared with (experimental).
+      x-experimental: true
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                  links:
+                    type: object
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Share a route with spaces
+      description: Share this route with one or more spaces (experimental).
+      x-experimental: true
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - guid
+                    properties:
+                      guid:
+                        type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                  links:
+                    type: object
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
+    delete:
+      summary: Unshare a route from a space
+      description: Unshare this route from a specific space (experimental).
+      x-experimental: true
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: space_guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/transfer_owner:
+    patch:
+      summary: Transfer route ownership
+      description: Transfer ownership of a route to another space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - guid
+                  properties:
+                    guid:
+                      type: string
+                      description: GUID of the space to transfer ownership to
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
       security:
         - bearerAuth: []
 

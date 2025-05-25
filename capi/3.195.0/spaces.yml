@@ -1,0 +1,437 @@
+paths:
+  /v3/spaces:
+    get:
+      summary: List spaces
+      description: Retrieve all spaces the user has access to.
+      parameters:
+        - name: names
+          in: query
+          schema:
+            type: string
+        - name: guids
+          in: query
+          schema:
+            type: string
+        - name: organization_guids
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, -created_at, updated_at, -updated_at, name, -name]
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+        - name: include
+          in: query
+          schema:
+            type: string
+            enum: [organization]
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+
+    post:
+      summary: Create a space
+      description: Create a space.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - relationships
+              properties:
+                name:
+                  type: string
+                relationships:
+                  type: object
+                  properties:
+                    organization:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                    annotations:
+                      type: object
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+
+  /v3/spaces/{guid}:
+    get:
+      summary: Get a space
+      description: Retrieve a space by GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+
+    patch:
+      summary: Update a space
+      description: Update a space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                    annotations:
+                      type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+
+    delete:
+      summary: Delete a space
+      description: Delete a space by GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Accepted
+
+  /v3/spaces/{guid}/relationships/isolation_segment:
+    get:
+      summary: Get assigned isolation segment
+      description: Retrieve the isolation segment assigned to the space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+
+    patch:
+      summary: Manage isolation segment
+      description: Assign or unassign an isolation segment to a space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+
+  /v3/spaces/{guid}/users:
+    get:
+      summary: List users for a space
+      description: Retrieve all users with a role in the specified space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: guids
+          in: query
+          schema:
+            type: string
+        - name: usernames
+          in: query
+          schema:
+            type: string
+        - name: partial_usernames
+          in: query
+          schema:
+            type: string
+        - name: origins
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, -created_at, updated_at, -updated_at]
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    Space:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        relationships:
+          type: object
+          properties:
+            organization:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+            quota:
+              type: object
+              nullable: true
+              properties:
+                data:
+                  type: object
+                  nullable: true
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            features:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            organization:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+            apply_manifest:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        next:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              format: uri
+
+    User:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        username:
+          type: string
+          nullable: true
+        presentation_name:
+          type: string
+        origin:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  format: uri

@@ -1,0 +1,328 @@
+paths:
+  /v3/tasks:
+    get:
+      summary: List all tasks
+      description: Retrieve all tasks the user has access to.
+      parameters:
+        - name: guids
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of task guids to filter by
+        - name: names
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of task names to filter by
+        - name: states
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of task states to filter by
+        - name: app_guids
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of app guids to filter by
+        - name: space_guids
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of space guids to filter by
+        - name: organization_guids
+          in: query
+          schema:
+            type: string
+            description: Comma-delimited list of organization guids to filter by
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            default: 50
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at]
+            description: Value to sort by. Defaults to ascending; prepend with - to sort descending
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+            description: A query string containing a list of label selector requirements
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+            description: Timestamp to filter by
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+            description: Timestamp to filter by
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+
+  /v3/apps/{guid}/tasks:
+    post:
+      summary: Create a task
+      description: Create a new task for an app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  description: Command that will be executed; optional if a template.process.guid is provided
+                name:
+                  type: string
+                  description: Name of the task; auto-generated if not provided
+                disk_in_mb:
+                  type: integer
+                  description: Amount of disk to allocate for the task in MB
+                memory_in_mb:
+                  type: integer
+                  description: Amount of memory to allocate for the task in MB
+                log_rate_limit_in_bytes_per_second:
+                  type: integer
+                  description: Amount of log rate to allocate for the task in bytes
+                droplet_guid:
+                  type: string
+                  format: uuid
+                  description: The guid of the droplet that will be used to run the command
+                template:
+                  type: object
+                  properties:
+                    process:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                          description: The guid of the process that will be used as a template
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /v3/tasks/{guid}:
+    get:
+      summary: Get a task
+      description: Retrieve a specific task by GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    patch:
+      summary: Update a task
+      description: Update the specified parameters of a task.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    post:
+      summary: Cancel a task
+      description: Cancels a running task.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        sequence_id:
+          type: integer
+        name:
+          type: string
+        command:
+          type: string
+        state:
+          type: string
+          enum: [PENDING, RUNNING, SUCCEEDED, CANCELING, FAILED]
+        memory_in_mb:
+          type: integer
+        disk_in_mb:
+          type: integer
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+        result:
+          type: object
+          properties:
+            failure_reason:
+              type: string
+        droplet_guid:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+              additionalProperties:
+                type: string
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        relationships:
+          type: object
+          properties:
+            app:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              format: uri
+            app:
+              type: string
+              format: uri
+            cancel:
+              type: string
+              format: uri
+            droplet:
+              type: string
+              format: uri
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+              format: uri
+        next:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              format: uri
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              format: uri
+

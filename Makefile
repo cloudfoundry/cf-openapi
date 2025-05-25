@@ -7,7 +7,7 @@
 SHELL := /bin/bash
 UNAME_S := $(shell uname -s)
 OPENAPI_GEN_VERSION := 7.2.0
-CAPI_VERSION ?= 3.181.0
+CAPI_VERSION ?= 3.195.0
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -82,8 +82,6 @@ deps-jq: ## Install jq
 
 check-deps: ## Check if all dependencies are installed
 	@echo "Checking dependencies..."
-	@command -v java >/dev/null 2>&1 || { echo "Java is not installed. Run 'make deps-java'"; exit 1; }
-	@command -v openapi-generator-cli >/dev/null 2>&1 || { echo "openapi-generator-cli is not installed. Run 'make deps-openapi'"; exit 1; }
 	@command -v spruce >/dev/null 2>&1 || { echo "spruce is not installed. Run 'make deps-spruce'"; exit 1; }
 	@command -v jq >/dev/null 2>&1 || { echo "jq is not installed. Run 'make deps-jq'"; exit 1; }
 	@echo "All dependencies are installed!"
@@ -94,7 +92,7 @@ prepare: check-deps ## Prepare the OpenAPI specification
 
 gen-openapi-spec: check-deps ## Merge the CAPI OpenAPI specifications
 	@echo "Merging CAPI OpenAPI specifications..."
-	./bin/capi-openapi merge
+	./bin/capi-openapi gen openapi spec
 
 gen-go-client: check-deps gen-openapi-spec ## Generate Go client from OpenAPI spec
 	@echo "Generating Go client..."

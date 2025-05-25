@@ -3,6 +3,7 @@ paths:
     get:
       summary: List service route bindings
       description: Retrieves the service route bindings the user has access to.
+      x-experimental: true
       parameters:
         - name: route_guids
           in: query

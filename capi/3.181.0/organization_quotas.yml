@@ -80,6 +80,9 @@ paths:
                             type: string
                             format: uuid
                             description: GUID of the organization
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '201':
           description: Created
@@ -145,6 +148,8 @@ paths:
             type: string
             format: date-time
             description: Timestamp to filter by updated_at
+
+      security: []
       responses:
         '200':
           description: OK
@@ -202,6 +207,8 @@ paths:
             type: string
             format: uuid
             description: GUID of the organization quota
+
+      security: []
       responses:
         '200':
           description: OK
@@ -238,6 +245,9 @@ paths:
                   $ref: '#/components/schemas/RoutesQuota'
                 domains:
                   $ref: '#/components/schemas/DomainsQuota'
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '200':
           description: OK
@@ -256,6 +266,9 @@ paths:
             type: string
             format: uuid
             description: GUID of the organization quota
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '202':
           description: Accepted
@@ -268,6 +281,7 @@ paths:
                     type: string
                     format: uri
                     description: URL to track the deletion job
+
   /v3/organization_quotas/{quota_guid}/relationships/organizations:
     post:
       summary: Apply an organization quota to organizations
@@ -296,6 +310,9 @@ paths:
                         type: string
                         format: uuid
                         description: GUID of the organization
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '201':
           description: Created

@@ -21,8 +21,31 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/SpaceFeature'
+
+  /v3/spaces/{guid}/features/{name}:
+    get:
+      summary: Get a space feature
+      description: Retrieve a space feature by name.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceFeature'
     patch:
-      summary: Update space features
+      summary: Update a space feature
       description: Update a space feature.
       parameters:
         - name: guid
@@ -44,29 +67,6 @@ paths:
               properties:
                 enabled:
                   type: boolean
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SpaceFeature'
-
-  /v3/spaces/{guid}/features/{name}:
-    get:
-      summary: Get a space feature
-      description: Retrieve a space feature by name.
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: name
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: OK

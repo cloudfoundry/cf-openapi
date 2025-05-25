@@ -10,6 +10,23 @@ paths:
           schema:
             type: string
           description: Unique identifier for the revision
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -28,6 +45,13 @@ paths:
           schema:
             type: string
           description: Unique identifier for the revision
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - SpaceDeveloper:
+          - cloud_controller.write
       responses:
         '200':
           description: OK
@@ -86,6 +110,23 @@ paths:
           schema:
             type: string
           description: Timestamp to filter by; supports filtering with relational operators
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -122,6 +163,23 @@ paths:
           schema:
             type: string
           description: Value to sort by. Defaults to ascending; prepend with - to sort descending.
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -157,6 +215,11 @@ paths:
                       type: object
                       additionalProperties:
                         type: string
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.write
       responses:
         '200':
           description: OK
@@ -164,6 +227,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Revision'
+
+  /v3/revisions/{guid}/deployed_processes:
+    get:
+      summary: Get deployed processes for a revision
+      description: |
+        Retrieve information about the processes that are currently deployed for this revision.
+        This shows which process types are running with this revision's configuration.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          example: web
+      security:
+        - bearerAuth: []
+
+  /v3/revisions/{guid}/environment_variables:
+    get:
+      summary: Get environment variables for a revision
+      description: |
+        Retrieve the environment variables that were set when this revision was created.
+        This includes both user-provided environment variables and system environment variables.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  var:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: User-provided environment variables
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      revision:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     Revision:

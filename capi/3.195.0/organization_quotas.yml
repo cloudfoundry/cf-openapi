@@ -1,0 +1,871 @@
+paths:
+  /v3/organization_quotas:
+    post:
+      summary: Create an organization quota
+      description: |
+        Create a new organization quota to define resource limits.
+        
+        Organization quotas are used to limit the resources that can be consumed by all
+        spaces and applications within an organization. They provide control over memory,
+        services, routes, domains, and other resources at the organization level.
+      tags:
+        - Organization Quotas
+      operationId: createOrganizationQuota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationQuotaCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+    get:
+      summary: List organization quotas
+      description: |
+        List all organization quota resources.
+        
+        Organization quotas define resource limits that can be applied to organizations.
+      tags:
+        - Organization Quotas
+      operationId: listOrganizationQuotas
+      parameters:
+        - name: guids
+          in: query
+          description: Comma-delimited list of organization quota guids to filter by
+          schema:
+            type: string
+            example: 1234,5678
+        - name: names
+          in: query
+          description: Comma-delimited list of organization quota names to filter by
+          schema:
+            type: string
+            example: small,medium,large
+        - name: organization_guids
+          in: query
+          description: Comma-delimited list of organization guids to filter by
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          description: Filter by label selector
+          schema:
+            type: string
+            example: environment==production,tier!=backend
+        - name: page
+          in: query
+          description: Page to display
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            default: 50
+        - name: order_by
+          in: query
+          description: Value to sort by
+          schema:
+            type: string
+            enum: [created_at, -created_at, updated_at, -updated_at, name, -name]
+            default: created_at
+        - name: created_ats
+          in: query
+          description: Filter by creation time
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          description: Filter by update time
+          schema:
+            type: string
+        - name: include
+          in: query
+          description: Optionally include related resources in the response
+          schema:
+            type: string
+            enum: [organizations]
+            example: organizations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - pagination
+                  - resources
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizationQuota'
+                  included:
+                    type: object
+                    description: Included resources when using include parameter
+                    properties:
+                      organizations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      security:
+        - bearerAuth: []
+
+  /v3/organization_quotas/{guid}:
+    get:
+      summary: Get an organization quota
+      description: Retrieve detailed information about a specific organization quota.
+      tags:
+        - Organization Quotas
+      operationId: getOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The organization quota GUID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: Optionally include related resources in the response
+          schema:
+            type: string
+            enum: [organizations]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update an organization quota
+      description: |
+        Update the specified attributes of an organization quota.
+        
+        Only the fields provided in the request body will be updated.
+      tags:
+        - Organization Quotas
+      operationId: updateOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The organization quota GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationQuotaUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationQuota'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete an organization quota
+      description: |
+        Delete an organization quota.
+        
+        The organization quota cannot be deleted if it is currently applied to any organizations.
+      tags:
+        - Organization Quotas
+      operationId: deleteOrganizationQuota
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The organization quota GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                    format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+  /v3/organization_quotas/{guid}/relationships/organizations:
+    post:
+      summary: Apply an organization quota to organizations
+      description: |
+        Apply an organization quota to one or more organizations.
+        
+        This sets resource limits for the specified organizations.
+      tags:
+        - Organization Quotas
+      operationId: applyOrganizationQuotaToOrganizations
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The organization quota GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  description: List of organization relationships to apply the quota to
+                  items:
+                    type: object
+                    required:
+                      - guid
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                        description: Organization GUID
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - links
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - guid
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                  links:
+                    type: object
+                    required:
+                      - self
+                    properties:
+                      self:
+                        type: object
+                        required:
+                          - href
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    OrganizationQuota:
+      type: object
+      required:
+        - guid
+        - name
+        - apps
+        - services
+        - routes
+        - domains
+        - relationships
+        - created_at
+        - updated_at
+        - links
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the organization quota
+        name:
+          type: string
+          description: Human-readable name for the organization quota
+          example: default-quota
+        apps:
+          type: object
+          description: Application resource limits
+          required:
+            - total_memory_in_mb
+            - per_process_memory_in_mb
+            - log_rate_limit_in_bytes_per_second
+            - total_instances
+            - per_app_tasks
+          properties:
+            total_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Total memory limit for all apps (null = unlimited)
+              example: 10240
+            per_process_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Memory limit per app process (null = unlimited)
+              example: 1024
+            log_rate_limit_in_bytes_per_second:
+              type: integer
+              nullable: true
+              description: Log rate limit per second (null = unlimited)
+              example: 1048576
+            total_instances:
+              type: integer
+              nullable: true
+              description: Total app instances allowed (null = unlimited)
+              example: 100
+            per_app_tasks:
+              type: integer
+              nullable: true
+              description: Maximum tasks per app (null = unlimited)
+              example: 5
+        services:
+          type: object
+          description: Service resource limits
+          required:
+            - paid_services_allowed
+            - total_service_instances
+            - total_service_keys
+          properties:
+            paid_services_allowed:
+              type: boolean
+              description: Whether paid services are allowed
+              example: true
+            total_service_instances:
+              type: integer
+              nullable: true
+              description: Total service instances allowed (null = unlimited)
+              example: 100
+            total_service_keys:
+              type: integer
+              nullable: true
+              description: Total service keys allowed (null = unlimited)
+              example: 500
+        routes:
+          type: object
+          description: Route resource limits
+          required:
+            - total_routes
+            - total_reserved_ports
+          properties:
+            total_routes:
+              type: integer
+              nullable: true
+              description: Total routes allowed (null = unlimited)
+              example: 50
+            total_reserved_ports:
+              type: integer
+              nullable: true
+              description: Total reserved ports allowed (null = unlimited)
+              example: 10
+        domains:
+          type: object
+          description: Domain resource limits
+          required:
+            - total_domains
+          properties:
+            total_domains:
+              type: integer
+              nullable: true
+              description: Total private domains allowed (null = unlimited)
+              example: 5
+        metadata:
+          type: object
+          description: Additional metadata for the organization quota
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+              example:
+                tier: default
+                environment: production
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+              example:
+                contact: admin@example.com
+                purpose: Default quota for all organizations
+        relationships:
+          type: object
+          required:
+            - organizations
+          properties:
+            organizations:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  description: Organizations this quota is applied to
+                  items:
+                    type: object
+                    required:
+                      - guid
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the organization quota was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the organization quota was last updated
+        links:
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  format: uri
+                  example: https://api.example.org/v3/organization_quotas/1cb006ee-fb05-47e1-b541-c34179ddc446
+
+    OrganizationQuotaCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the organization quota
+          minLength: 1
+          maxLength: 250
+          example: default-quota
+        apps:
+          type: object
+          description: Application resource limits
+          properties:
+            total_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Total memory limit for all apps (null = unlimited)
+              minimum: 0
+              example: 10240
+            per_process_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Memory limit per app process (null = unlimited)
+              minimum: 0
+              example: 1024
+            log_rate_limit_in_bytes_per_second:
+              type: integer
+              nullable: true
+              description: Log rate limit per second (null = unlimited)
+              minimum: -1
+              example: 1048576
+            total_instances:
+              type: integer
+              nullable: true
+              description: Total app instances allowed (null = unlimited)
+              minimum: 0
+              example: 100
+            per_app_tasks:
+              type: integer
+              nullable: true
+              description: Maximum tasks per app (null = unlimited)
+              minimum: 0
+              example: 5
+        services:
+          type: object
+          description: Service resource limits
+          properties:
+            paid_services_allowed:
+              type: boolean
+              description: Whether paid services are allowed
+              default: true
+              example: true
+            total_service_instances:
+              type: integer
+              nullable: true
+              description: Total service instances allowed (null = unlimited)
+              minimum: 0
+              example: 100
+            total_service_keys:
+              type: integer
+              nullable: true
+              description: Total service keys allowed (null = unlimited)
+              minimum: 0
+              example: 500
+        routes:
+          type: object
+          description: Route resource limits
+          properties:
+            total_routes:
+              type: integer
+              nullable: true
+              description: Total routes allowed (null = unlimited)
+              minimum: 0
+              example: 50
+            total_reserved_ports:
+              type: integer
+              nullable: true
+              description: Total reserved ports allowed (null = unlimited)
+              minimum: 0
+              example: 10
+        domains:
+          type: object
+          description: Domain resource limits
+          properties:
+            total_domains:
+              type: integer
+              nullable: true
+              description: Total private domains allowed (null = unlimited)
+              minimum: 0
+              example: 5
+        metadata:
+          type: object
+          description: Additional metadata for the organization quota
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+                maxLength: 63
+              example:
+                tier: default
+                environment: production
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+                maxLength: 5000
+              example:
+                contact: admin@example.com
+                purpose: Default quota for all organizations
+        relationships:
+          type: object
+          description: Initial relationships to create
+          properties:
+            organizations:
+              type: object
+              properties:
+                data:
+                  type: array
+                  description: Organizations to apply this quota to
+                  items:
+                    type: object
+                    required:
+                      - guid
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+
+    OrganizationQuotaUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the organization quota
+          minLength: 1
+          maxLength: 250
+          example: default-quota
+        apps:
+          type: object
+          description: Application resource limits
+          properties:
+            total_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Total memory limit for all apps (null = unlimited)
+              minimum: 0
+              example: 10240
+            per_process_memory_in_mb:
+              type: integer
+              nullable: true
+              description: Memory limit per app process (null = unlimited)
+              minimum: 0
+              example: 1024
+            log_rate_limit_in_bytes_per_second:
+              type: integer
+              nullable: true
+              description: Log rate limit per second (null = unlimited)
+              minimum: -1
+              example: 1048576
+            total_instances:
+              type: integer
+              nullable: true
+              description: Total app instances allowed (null = unlimited)
+              minimum: 0
+              example: 100
+            per_app_tasks:
+              type: integer
+              nullable: true
+              description: Maximum tasks per app (null = unlimited)
+              minimum: 0
+              example: 5
+        services:
+          type: object
+          description: Service resource limits
+          properties:
+            paid_services_allowed:
+              type: boolean
+              description: Whether paid services are allowed
+              example: true
+            total_service_instances:
+              type: integer
+              nullable: true
+              description: Total service instances allowed (null = unlimited)
+              minimum: 0
+              example: 100
+            total_service_keys:
+              type: integer
+              nullable: true
+              description: Total service keys allowed (null = unlimited)
+              minimum: 0
+              example: 500
+        routes:
+          type: object
+          description: Route resource limits
+          properties:
+            total_routes:
+              type: integer
+              nullable: true
+              description: Total routes allowed (null = unlimited)
+              minimum: 0
+              example: 50
+            total_reserved_ports:
+              type: integer
+              nullable: true
+              description: Total reserved ports allowed (null = unlimited)
+              minimum: 0
+              example: 10
+        domains:
+          type: object
+          description: Domain resource limits
+          properties:
+            total_domains:
+              type: integer
+              nullable: true
+              description: Total private domains allowed (null = unlimited)
+              minimum: 0
+              example: 5
+        metadata:
+          type: object
+          description: Additional metadata for the organization quota
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+                maxLength: 63
+              example:
+                tier: default
+                environment: production
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+                maxLength: 5000
+              example:
+                contact: admin@example.com
+                purpose: Default quota for all organizations
+
+    Organization:
+      type: object
+      description: Organization resource when included
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    Pagination:
+      type: object
+      required:
+        - total_results
+        - total_pages
+        - first
+        - last
+      properties:
+        total_results:
+          type: integer
+          description: Total number of results across all pages
+          minimum: 0
+        total_pages:
+          type: integer
+          description: Total number of pages
+          minimum: 0
+        first:
+          type: object
+          required:
+            - href
+          properties:
+            href:
+              type: string
+              format: uri
+              description: URL to the first page of results
+        last:
+          type: object
+          required:
+            - href
+          properties:
+            href:
+              type: string
+              format: uri
+              description: URL to the last page of results
+        next:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              format: uri
+              description: URL to the next page of results
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              format: uri
+              description: URL to the previous page of results
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityError:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Cloud Foundry UAA token

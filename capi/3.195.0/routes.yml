@@ -1,0 +1,1114 @@
+paths:
+  /v3/routes:
+    get:
+      summary: List routes
+      description: Retrieve a paginated list of routes the user has access to
+      tags:
+        - routes
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          description: Field to sort results by
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at, host, path, -created_at, -updated_at, -host, -path]
+        - name: app_guids
+          in: query
+          description: Filter by app GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: domain_guids
+          in: query
+          description: Filter by domain GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: space_guids
+          in: query
+          description: Filter by space GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: organization_guids
+          in: query
+          description: Filter by organization GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: hosts
+          in: query
+          description: Filter by hostnames (comma-separated)
+          required: false
+          schema:
+            type: string
+            example: "app,api"
+        - name: paths
+          in: query
+          description: Filter by paths (comma-separated)
+          required: false
+          schema:
+            type: string
+            example: "/api/v1,/api/v2"
+        - name: ports
+          in: query
+          description: Filter by ports (comma-separated)
+          required: false
+          schema:
+            type: string
+            example: "8080,9000"
+        - name: service_instance_guids
+          in: query
+          description: Filter by service instance GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          description: Filter by labels using label selector syntax
+          required: false
+          schema:
+            type: string
+            example: "environment=production,tier!=backend"
+        - name: include
+          in: query
+          description: Include related resources
+          required: false
+          schema:
+            type: string
+            enum: [domain, space, space.organization]
+        - name: created_ats
+          in: query
+          description: |
+            Filter by creation timestamp. Supports multiple formats:
+            - Range: created_ats=2020-01-01T00:00:00Z,2020-12-31T23:59:59Z
+            - Greater than: created_ats[gt]=2020-01-01T00:00:00Z
+            - Greater than or equal: created_ats[gte]=2020-01-01T00:00:00Z
+            - Less than: created_ats[lt]=2020-12-31T23:59:59Z
+            - Less than or equal: created_ats[lte]=2020-12-31T23:59:59Z
+          required: false
+          schema:
+            type: string
+            example: "created_ats[gte]=2020-01-01T00:00:00Z"
+        - name: updated_ats
+          in: query
+          description: |
+            Filter by update timestamp. Supports multiple formats:
+            - Range: updated_ats=2020-01-01T00:00:00Z,2020-12-31T23:59:59Z
+            - Greater than: updated_ats[gt]=2020-01-01T00:00:00Z
+            - Greater than or equal: updated_ats[gte]=2020-01-01T00:00:00Z
+            - Less than: updated_ats[lt]=2020-12-31T23:59:59Z
+            - Less than or equal: updated_ats[lte]=2020-12-31T23:59:59Z
+          required: false
+          schema:
+            type: string
+            example: "updated_ats[lt]=2020-12-31T23:59:59Z"
+        - name: fields
+          in: query
+          description: |
+            Fields to include in the response. Use dot notation for nested fields.
+            Example: fields[routes]=guid,host,path or fields[domain]=name,guid
+          required: false
+          schema:
+            type: string
+            example: "fields[routes]=guid,host,path"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Route'
+                  included:
+                    type: object
+                    properties:
+                      domains:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Domain'
+                      spaces:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Space'
+                      organizations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Create a route
+      description: Create a new route in a space
+      tags:
+        - routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - relationships
+              properties:
+                host:
+                  type: string
+                  description: Hostname for the route
+                  pattern: '^[\w\-]+$'
+                  maxLength: 63
+                path:
+                  type: string
+                  description: Path for the route
+                  pattern: '^(/.*)?$'
+                  maxLength: 128
+                port:
+                  type: integer
+                  description: Port for TCP route
+                  minimum: 1
+                  maximum: 65535
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        maxLength: 63
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        maxLength: 5000
+                relationships:
+                  type: object
+                  required:
+                    - domain
+                    - space
+                  properties:
+                    domain:
+                      type: object
+                      required:
+                        - data
+                      properties:
+                        data:
+                          type: object
+                          required:
+                            - guid
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+                    space:
+                      type: object
+                      required:
+                        - data
+                      properties:
+                        data:
+                          type: object
+                          required:
+                            - guid
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}:
+    get:
+      summary: Get a route
+      description: Retrieve details of a specific route
+      tags:
+        - routes
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: Include related resources
+          required: false
+          schema:
+            type: string
+            enum: [domain, space, space.organization]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update a route
+      description: Update a route's metadata
+      tags:
+        - routes
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        maxLength: 63
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        maxLength: 5000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete a route
+      description: Delete a route. This will unmap all apps associated with the route.
+      tags:
+        - routes
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/destinations:
+    get:
+      summary: List destinations for a route
+      description: List all destinations (app/port combinations) mapped to a route
+      tags:
+        - routes
+        - route-mappings
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: app_guids
+          in: query
+          description: Filter by app GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        $ref: '#/components/schemas/Link'
+                      route:
+                        $ref: '#/components/schemas/Link'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Add destinations to a route
+      description: Add one or more destinations (app/port combinations) to a route
+      tags:
+        - routes
+        - route-mappings
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                destinations:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - app
+                    properties:
+                      app:
+                        type: object
+                        required:
+                          - guid
+                        properties:
+                          guid:
+                            type: string
+                            format: uuid
+                          process:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                default: web
+                                description: Process type to route to
+                      port:
+                        type: integer
+                        description: Port on the app process
+                        minimum: 1
+                        maximum: 65535
+                      weight:
+                        type: integer
+                        description: Percentage of traffic for weighted routing
+                        minimum: 1
+                        maximum: 100
+                      protocol:
+                        type: string
+                        enum: [http1, http2]
+                        description: Protocol for the destination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update destinations for a route
+      description: Update or replace destinations for a route
+      tags:
+        - routes
+        - route-mappings
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                destinations:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - app
+                    properties:
+                      app:
+                        type: object
+                        required:
+                          - guid
+                        properties:
+                          guid:
+                            type: string
+                            format: uuid
+                          process:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                      port:
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
+                      weight:
+                        type: integer
+                        minimum: 1
+                        maximum: 100
+                      protocol:
+                        type: string
+                        enum: [http1, http2]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/destinations/{destination_guid}:
+    delete:
+      summary: Remove destination from a route
+      description: Remove a specific destination from a route
+      tags:
+        - routes
+        - route-mappings
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+        - name: destination_guid
+          in: path
+          required: true
+          description: The destination GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+  /v3/routes/{guid}/relationships/space:
+    patch:
+      summary: Share a route to another space (experimental)
+      description: Share a route with another space, allowing apps in that space to be mapped to the route. This is an experimental feature.
+      tags:
+        - routes
+        - experimental
+        - route-sharing
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  description: List of spaces to share the route with
+                  items:
+                    type: object
+                    required:
+                      - guid
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                        description: GUID of the space to share with
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-experimental: true
+
+  /v3/routes/{guid}/relationships/shared_spaces:
+    get:
+      summary: List shared spaces for a route (experimental)
+      description: List all spaces that a route is shared with. This is an experimental feature.
+      tags:
+        - routes
+        - experimental
+        - route-sharing
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: List of spaces the route is shared with
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                          format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        $ref: '#/components/schemas/Link'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-experimental: true
+
+  /v3/routes/{guid}/transfer_owner:
+    post:
+      summary: Transfer route ownership
+      description: Transfer ownership of a route to another space
+      tags:
+        - routes
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The route GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - relationships
+              properties:
+                relationships:
+                  type: object
+                  required:
+                    - space
+                  properties:
+                    space:
+                      type: object
+                      required:
+                        - data
+                      properties:
+                        data:
+                          type: object
+                          required:
+                            - guid
+                          properties:
+                            guid:
+                              type: string
+                              format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    Route:
+      type: object
+      required:
+        - guid
+        - created_at
+        - updated_at
+        - host
+        - path
+        - url
+        - port
+        - protocol
+        - destinations
+        - relationships
+        - metadata
+        - links
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the route
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        host:
+          type: string
+          nullable: true
+          description: Hostname for the route
+        path:
+          type: string
+          description: Path for the route
+        url:
+          type: string
+          description: Full URL constructed from host, domain, path, and port
+          example: "example.com/api/v1"
+        port:
+          type: integer
+          nullable: true
+          description: Port for TCP routes
+        protocol:
+          type: string
+          enum: [http, tcp]
+          description: Protocol for the route
+        destinations:
+          type: array
+          description: List of destinations mapped to this route
+          items:
+            $ref: '#/components/schemas/Destination'
+        relationships:
+          type: object
+          properties:
+            space:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+            domain:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+            shared_spaces:
+              type: object
+              description: Spaces this route is shared with
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+              additionalProperties:
+                type: string
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
+        links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/Link'
+            space:
+              $ref: '#/components/schemas/Link'
+            domain:
+              $ref: '#/components/schemas/Link'
+            destinations:
+              $ref: '#/components/schemas/Link'
+            shared_spaces:
+              $ref: '#/components/schemas/Link'
+
+    Destination:
+      type: object
+      required:
+        - guid
+        - app
+        - port
+        - weight
+        - protocol
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the destination
+        app:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+            process:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Process type
+        port:
+          type: integer
+          nullable: true
+          description: Port on the app process
+        weight:
+          type: integer
+          nullable: true
+          description: Percentage of traffic for weighted routing
+        protocol:
+          type: string
+          nullable: true
+          enum: [http1, http2]
+          description: Protocol for the destination
+
+    Domain:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        internal:
+          type: boolean
+
+    Space:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        relationships:
+          type: object
+          properties:
+            organization:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+
+    Organization:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+        next:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+
+    Link:
+      type: object
+      required:
+        - href
+      properties:
+        href:
+          type: string
+          format: uri
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

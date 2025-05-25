@@ -72,13 +72,19 @@ paths:
             type: "string"
         - name: "created_ats"
           in: "query"
-          description: "Filter results by creation timestamps."
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: created_ats[gt]=2020-01-01T00:00:00Z, created_ats[gte]=2020-01-01T00:00:00Z, created_ats[lt]=2020-01-01T00:00:00Z, created_ats[lte]=2020-01-01T00:00:00Z. Range queries: created_ats[gt]=2020-01-01T00:00:00Z&created_ats[lt]=2020-12-31T00:00:00Z"
           required: false
           schema:
             type: "string"
         - name: "updated_ats"
           in: "query"
-          description: "Filter results by update timestamps."
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: updated_ats[gt]=2020-01-01T00:00:00Z, updated_ats[gte]=2020-01-01T00:00:00Z, updated_ats[lt]=2020-01-01T00:00:00Z, updated_ats[lte]=2020-01-01T00:00:00Z. Range queries: updated_ats[gt]=2020-01-01T00:00:00Z&updated_ats[lt]=2020-12-31T00:00:00Z"
+          required: false
+          schema:
+            type: "string"
+        - name: "fields"
+          in: "query"
+          description: "Fields to include in the response. Allowed values are specified per endpoint."
           required: false
           schema:
             type: "string"
@@ -940,6 +946,848 @@ paths:
                           users:
                             type: string
                             nullable: true
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/features/{name}:
+    patch:
+      summary: Update an app feature
+      description: Update the specified feature for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [revisions, ssh, diego_docker]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  enabled:
+                    type: boolean
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/sidecars:
+    get:
+      summary: List sidecars for an app
+      description: Retrieve all sidecars associated with the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sidecar'
+      security:
+        - bearerAuth: []
+    
+    post:
+      summary: Create a sidecar for an app
+      description: Create a new sidecar associated with the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - command
+                - process_types
+              properties:
+                name:
+                  type: string
+                command:
+                  type: string
+                process_types:
+                  type: array
+                  items:
+                    type: string
+                memory_in_mb:
+                  type: integer
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sidecar'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/revisions:
+    get:
+      summary: List revisions for an app
+      description: Retrieve all revisions for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versions
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Revision'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/revisions/deployed:
+    get:
+      summary: List deployed revisions for an app
+      description: Retrieve revisions that are currently deployed for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Revision'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/routes:
+    get:
+      summary: List routes for an app
+      description: Retrieve all routes mapped to the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Route'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/droplets:
+    get:
+      summary: List droplets for an app
+      description: Retrieve all droplets for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: states
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Droplet'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/packages:
+    get:
+      summary: List packages for an app
+      description: Retrieve all packages for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: states
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes:
+    get:
+      summary: List processes for an app
+      description: Retrieve all processes for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Process'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes/{type}:
+    get:
+      summary: Get a specific process for an app
+      description: Retrieve a specific process type for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update a specific process for an app
+      description: Update a specific process type for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  nullable: true
+                health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [port, process, http]
+                    data:
+                      type: object
+                      properties:
+                        timeout:
+                          type: integer
+                        invocation_timeout:
+                          type: integer
+                        endpoint:
+                          type: string
+                        interval:
+                          type: integer
+                readiness_health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [port, process, http]
+                    data:
+                      type: object
+                      properties:
+                        invocation_timeout:
+                          type: integer
+                        endpoint:
+                          type: string
+                        interval:
+                          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes/{type}/stats:
+    get:
+      summary: Get stats for a process type
+      description: Retrieve resource usage statistics for all instances of a specific process type.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProcessStats'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes/{type}/actions/scale:
+    post:
+      summary: Scale a process type
+      description: Scale the number of instances for a specific process type.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instances:
+                  type: integer
+                  minimum: 0
+                  description: Number of instances
+                memory_in_mb:
+                  type: integer
+                  minimum: 1
+                  description: Memory limit per instance in MB
+                disk_in_mb:
+                  type: integer
+                  minimum: 1
+                  description: Disk limit per instance in MB
+                log_rate_limit_in_bytes_per_second:
+                  type: integer
+                  minimum: -1
+                  description: Log rate limit per instance (-1 for unlimited)
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes/{type}/instances:
+    get:
+      summary: List instances for a process type
+      description: Retrieve all instances of a specific process type for an app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProcessInstance'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/processes/{type}/sidecars:
+    get:
+      summary: List sidecars for a specific process type
+      description: Retrieve all sidecars for a specific process type of the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sidecar'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/tasks:
+    get:
+      summary: List tasks for an app
+      description: Retrieve all tasks for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: names
+          in: query
+          schema:
+            type: string
+        - name: states
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/builds:
+    get:
+      summary: List builds for an app
+      description: Retrieve all builds for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: states
+          in: query
+          description: Comma-delimited list of build states to filter by
+          schema:
+            type: string
+            example: STAGING,STAGED,FAILED
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, -created_at, updated_at, -updated_at]
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Build'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/environment_variable_groups:
+    get:
+      summary: Get environment variable groups for an app
+      description: |
+        Retrieve the environment variable groups that will be applied to the app.
+        This includes both running and staging environment variable groups that are
+        set at the platform level and will be injected into the app's environment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  var:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Combined environment variables from running and staging groups
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/manifest:
+    get:
+      summary: Get app manifest
+      description: |
+        Generate a manifest for the app and its underlying processes.
+        The manifest returned is a representation of the current state of the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+                example: |
+                  ---
+                  applications:
+                  - name: my-app
+                    memory: 512M
+                    instances: 2
+                    disk_quota: 1024M
+                    health-check-type: http
+                    health-check-http-endpoint: /health
+                    timeout: 60
+                    env:
+                      VAR1: value1
+                      VAR2: value2
+                    routes:
+                    - route: my-app.example.com
+                    - route: my-app.example.com/path
+                    services:
+                    - my-database
+                    - my-cache
+                    stack: cflinuxfs3
+                    buildpacks:
+                    - ruby_buildpack
+                    metadata:
+                      labels:
+                        contact: team@example.com
+                      annotations:
+                        version: 1.2.3
+        '404':
+          description: App not found
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/deployments:
+    get:
+      summary: List deployments for an app
+      description: Retrieve all deployments for the app.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: states
+          in: query
+          description: Comma-delimited list of deployment states to filter by
+          schema:
+            type: string
+            example: ACTIVE,FINALIZED,CANCELING
+        - name: status_values
+          in: query
+          description: Comma-delimited list of deployment status values to filter by
+          schema:
+            type: string
+            example: ACTIVE,FINALIZED
+        - name: status_reasons
+          in: query
+          description: Comma-delimited list of deployment status reasons to filter by
+          schema:
+            type: string
+            example: DEPLOYED,CANCELED
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, -created_at, updated_at, -updated_at]
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deployment'
       security:
         - bearerAuth: []
 

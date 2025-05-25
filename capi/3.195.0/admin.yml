@@ -1,0 +1,124 @@
+paths:
+  /v3/admin/actions/clear_buildpack_cache:
+    post:
+      summary: Clear buildpack cache
+      description: This endpoint will delete all of the existing buildpack caches in the blobstore. This endpoint will return a job; the client will need to poll the job's status to determine when the operation is complete.
+      tags:
+        - admin
+      responses:
+        '202':
+          description: Accepted - The buildpack cache clearing job has been queued
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have required permissions
+        default:
+          description: An unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+
+components:
+  schemas:
+    Job:
+      type: object
+      required:
+        - guid
+        - created_at
+        - updated_at
+        - operation
+        - state
+        - links
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the job
+        created_at:
+          type: string
+          format: date-time
+          description: The time the job was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time the job was last updated
+        operation:
+          type: string
+          description: The type of operation the job is performing
+          example: "admin.clear_buildpack_cache"
+        state:
+          type: string
+          enum:
+            - PROCESSING
+            - COMPLETE
+            - FAILED
+          description: Current state of the job
+        errors:
+          type: array
+          description: List of errors if job failed
+          items:
+            $ref: '#/components/schemas/Error'
+        warnings:
+          type: array
+          description: List of warnings from job execution
+          items:
+            $ref: '#/components/schemas/Warning'
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to this job resource
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Name of the error
+        code:
+          type: integer
+          description: Numeric error code
+        description:
+          type: string
+          description: Description of the error
+        backtrace:
+          type: array
+          items:
+            type: string
+          description: Stack trace (only in development environments)
+
+    Warning:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Warning message detail
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

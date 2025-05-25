@@ -3,5 +3,3 @@ info:
   title: Cloud Foundry API
   description: OpenAPI specification for the Cloud Foundry API.
   version: 3.181.0
-paths:
-

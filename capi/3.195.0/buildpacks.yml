@@ -1,0 +1,550 @@
+paths:
+  /v3/buildpacks:
+    get:
+      summary: List buildpacks
+      description: Retrieve a paginated list of buildpacks. Buildpacks are used during the staging process to compile and prepare applications for runtime.
+      tags:
+        - buildpacks
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          description: Field by which to order results
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at, position, -created_at, -updated_at, -position]
+        - name: names
+          in: query
+          description: Filter by buildpack names (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: stacks
+          in: query
+          description: Filter by stack names (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          description: Filter by label selector
+          required: false
+          schema:
+            type: string
+        - name: created_ats
+          in: query
+          description: Filter by creation timestamps
+          required: false
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          description: Filter by update timestamps
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paginated list of buildpacks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Buildpack'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+    post:
+      summary: Create a buildpack
+      description: Create a new buildpack. Only admins can create buildpacks.
+      tags:
+        - buildpacks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Name of the buildpack
+                  example: "nodejs_buildpack"
+                stack:
+                  type: string
+                  description: Stack the buildpack runs on
+                  example: "cflinuxfs3"
+                position:
+                  type: integer
+                  description: Priority position for automatic detection
+                  minimum: 1
+                enabled:
+                  type: boolean
+                  description: Whether buildpack is available for use
+                  default: true
+                locked:
+                  type: boolean
+                  description: Whether buildpack updates are prevented
+                  default: false
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '201':
+          description: The created buildpack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Buildpack'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+
+  /v3/buildpacks/{guid}:
+    get:
+      summary: Get a buildpack
+      description: Retrieve details of a specific buildpack
+      tags:
+        - buildpacks
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the buildpack
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The buildpack details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Buildpack'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+    patch:
+      summary: Update a buildpack
+      description: Update an existing buildpack. Only admins can update buildpacks.
+      tags:
+        - buildpacks
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the buildpack
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the buildpack
+                stack:
+                  type: string
+                  description: Stack the buildpack runs on
+                position:
+                  type: integer
+                  description: Priority position for automatic detection
+                  minimum: 1
+                enabled:
+                  type: boolean
+                  description: Whether buildpack is available for use
+                locked:
+                  type: boolean
+                  description: Whether buildpack updates are prevented
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '200':
+          description: The updated buildpack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Buildpack'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+
+    delete:
+      summary: Delete a buildpack
+      description: Delete a buildpack. Only admins can delete buildpacks.
+      tags:
+        - buildpacks
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the buildpack
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Accepted - deletion job queued
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+
+  /v3/buildpacks/{guid}/upload:
+    post:
+      summary: Upload buildpack bits
+      description: Upload a zip file containing a buildpack. For traditional buildpacks, upload a zip of the buildpack directory. For Cloud Native Buildpacks (experimental), upload the buildpack image or reference.
+      tags:
+        - buildpacks
+      parameters:
+        - name: guid
+          in: path
+          description: The GUID of the buildpack
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - bits
+              properties:
+                bits:
+                  type: string
+                  format: binary
+                  description: Zip file containing buildpack contents
+          application/json:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  description: Docker image reference for Cloud Native Buildpack (experimental)
+                  example: "gcr.io/paketo-buildpacks/nodejs:latest"
+                username:
+                  type: string
+                  description: Username for private registry authentication
+                password:
+                  type: string
+                  description: Password for private registry authentication
+      responses:
+        '202':
+          description: The accepted upload job
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+
+components:
+  schemas:
+    Buildpack:
+      type: object
+      required:
+        - guid
+        - created_at
+        - updated_at
+        - name
+        - state
+        - filename
+        - stack
+        - position
+        - enabled
+        - locked
+        - metadata
+        - links
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the buildpack
+        created_at:
+          type: string
+          format: date-time
+          description: The time the buildpack was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time the buildpack was last updated
+        name:
+          type: string
+          description: Name of the buildpack
+          example: "nodejs_buildpack"
+        state:
+          type: string
+          enum: [AWAITING_UPLOAD, READY, PROCESSING_UPLOAD, FAILED]
+          description: Current state of the buildpack
+        filename:
+          type: string
+          nullable: true
+          description: Filename of uploaded buildpack
+          example: "nodejs-buildpack-v1.7.zip"
+        stack:
+          type: string
+          nullable: true
+          description: Stack the buildpack runs on
+          example: "cflinuxfs3"
+        position:
+          type: integer
+          description: Priority position for automatic detection
+          minimum: 1
+        enabled:
+          type: boolean
+          description: Whether buildpack is available for use
+        locked:
+          type: boolean
+          description: Whether buildpack updates are prevented
+        lifecycle:
+          type: object
+          description: Lifecycle information (for Cloud Native Buildpacks)
+          properties:
+            type:
+              type: string
+              enum: [buildpack, cnb]
+              description: Type of buildpack lifecycle
+            data:
+              type: object
+              properties:
+                image:
+                  type: string
+                  description: Image reference for Cloud Native Buildpack
+                version:
+                  type: string
+                  description: Version of the buildpack
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+              additionalProperties:
+                type: string
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to this buildpack
+            upload:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to upload buildpack bits
+                method:
+                  type: string
+                  enum: [POST]
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+          description: Total number of results
+        total_pages:
+          type: integer
+          description: Total number of pages
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+              description: URL to first page
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+              description: URL to last page
+        next:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              description: URL to next page
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+              description: URL to previous page
+
+    Job:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        state:
+          type: string
+          enum: [PROCESSING, COMPLETE, FAILED]
+        links:
+          type: object
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

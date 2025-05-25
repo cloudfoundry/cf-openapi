@@ -43,6 +43,12 @@ paths:
                           properties:
                             guid:
                               type: string
+      security:
+      - OrgManager:
+        - cloud_controller.write
+      - SpaceManager:
+        - cloud_controller.write
+
       responses:
         '201':
           description: Created
@@ -128,6 +134,7 @@ paths:
             items:
               type: string
           description: Timestamp to filter by, supports filtering with relational operators
+      security: []
       responses:
         '200':
           description: OK
@@ -154,6 +161,25 @@ paths:
             items:
               type: string
           description: Optionally include a list of unique related resources in the response
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - OrgBillingManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -172,6 +198,11 @@ paths:
           schema:
             type: string
           description: Unique identifier for the role
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - OrgManager:
+          - cloud_controller.write
       responses:
         '202':
           description: Accepted

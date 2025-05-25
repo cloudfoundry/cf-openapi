@@ -9,5 +9,6 @@ paths:
         'default':
           description: An unexpected error.
       security:
-        - Admin: []
+        - Admin:
+          - cloud_controller.admin
 

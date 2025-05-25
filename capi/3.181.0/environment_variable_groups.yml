@@ -5,53 +5,99 @@ info:
   description: API specification for managing environment variable groups in Cloud Controller.
 
 paths:
-  /v3/environment_variable_groups/{name}:
+  /v3/environment_variable_groups/running:
     get:
-      summary: Get an environment variable group
-      description: Retrieve a specific environment variable group.
-      parameters:
-        - in: path
-          name: name
-          required: true
-          schema:
-            type: string
-          description: The name of the environment variable group (running or staging)
+      summary: Get the running environment variable group
+      description: |
+        Retrieve the environment variable group for running applications.
+        These environment variables will be injected into all running applications.
       responses:
         '200':
-          description: Environment variable group retrieved successfully
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvironmentVariableGroup'
+      security:
+        - bearerAuth: []
 
     patch:
-      summary: Update environment variable group
-      description: Update the environment variable group. The variables given in the request will be merged with the existing environment variable group. Any requested variables with a value of null will be removed from the group. Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
-      parameters:
-        - in: path
-          name: name
-          required: true
-          schema:
-            type: string
-          description: The name of the environment variable group (running or staging)
+      summary: Update the running environment variable group
+      description: |
+        Update the environment variable group for running applications.
+        The variables given in the request will be merged with the existing environment variable group.
+        Any requested variables with a value of null will be removed from the group.
+        Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - var
               properties:
                 var:
                   type: object
                   additionalProperties:
                     type: string
+                  description: Environment variables to set or update (null values remove the variable)
       responses:
         '200':
-          description: Environment variable group updated successfully
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvironmentVariableGroup'
+      security:
+        - bearerAuth: []
+
+  /v3/environment_variable_groups/staging:
+    get:
+      summary: Get the staging environment variable group
+      description: |
+        Retrieve the environment variable group for staging applications.
+        These environment variables will be injected during the staging process.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentVariableGroup'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update the staging environment variable group
+      description: |
+        Update the environment variable group for staging applications.
+        The variables given in the request will be merged with the existing environment variable group.
+        Any requested variables with a value of null will be removed from the group.
+        Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - var
+              properties:
+                var:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Environment variables to set or update (null values remove the variable)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentVariableGroup'
+      security:
+        - bearerAuth: []
 
 components:
   schemas:

@@ -29,6 +29,8 @@ paths:
             type: string
             format: date-time
           description: Timestamp to filter by
+      security: []
+
       responses:
         '200':
           description: List of feature flags retrieved successfully
@@ -55,6 +57,8 @@ paths:
           schema:
             type: string
           description: The name of the feature flag
+      security: []
+
       responses:
         '200':
           description: Feature flag retrieved successfully
@@ -84,6 +88,10 @@ paths:
                   type: boolean
                 custom_error_message:
                   type: string
+      security:
+        - Admin:
+          - cloud_controller.admin
+
       responses:
         '200':
           description: Feature flag updated successfully

@@ -1,0 +1,342 @@
+paths:
+  /v3/apps/{guid}/manifest:
+    get:
+      summary: Get app manifest
+      description: |
+        Retrieve the manifest for a specific application.
+        
+        The manifest is returned as a YAML document that describes the application's
+        configuration, including environment variables, services, routes, and other settings.
+      tags:
+        - Manifests
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+                description: YAML manifest content
+                example: |
+                  applications:
+                  - name: my-app
+                    memory: 512M
+                    instances: 2
+                    routes:
+                    - route: my-app.example.com
+                    services:
+                    - my-database
+                    env:
+                      FEATURE_FLAG: enabled
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+  /v3/spaces/{guid}/manifest:
+    post:
+      summary: Apply manifest to a space
+      description: |
+        Apply a manifest to create or update multiple applications in a space.
+        
+        This endpoint processes a YAML manifest and creates or updates applications
+        according to the manifest specification. This is an asynchronous operation
+        that returns a job to track progress.
+      tags:
+        - Manifests
+        - Spaces
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The space GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+              description: YAML manifest content
+              example: |
+                applications:
+                - name: app-1
+                  memory: 512M
+                  instances: 2
+                  routes:
+                  - route: app-1.example.com
+                - name: app-2
+                  memory: 1G
+                  instances: 1
+                  routes:
+                  - route: app-2.example.com
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                    format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      job:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+  /v3/spaces/{guid}/manifest_diff:
+    post:
+      summary: Generate manifest diff for a space
+      description: |
+        Compare a provided manifest with the current state of applications in the space.
+        
+        This endpoint returns a diff showing what would change if the manifest were applied,
+        without actually making any changes. This is useful for preview and validation.
+        
+        This feature is experimental and subject to change.
+      tags:
+        - Manifests
+        - Spaces
+      x-experimental: true
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The space GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+              description: YAML manifest content to compare
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestDiff'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/actions/apply_manifest:
+    post:
+      summary: Apply manifest to an app
+      description: |
+        Apply a manifest to update a specific application.
+        
+        This endpoint updates the application configuration based on the provided
+        manifest. Only the first application in the manifest is used, and its name
+        must match the target application.
+      tags:
+        - Manifests
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+              description: YAML manifest content
+              example: |
+                applications:
+                - name: my-app
+                  memory: 1G
+                  instances: 3
+                  env:
+                    NEW_FEATURE: enabled
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                    format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      job:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    ManifestDiff:
+      type: object
+      required:
+        - diff
+      properties:
+        diff:
+          type: array
+          description: List of differences between manifest and current state
+          items:
+            type: object
+            required:
+              - app_name
+              - changes
+            properties:
+              app_name:
+                type: string
+                description: Name of the application
+                example: my-app
+              changes:
+                type: array
+                description: List of changes for this application
+                items:
+                  type: object
+                  required:
+                    - type
+                    - property
+                  properties:
+                    type:
+                      type: string
+                      description: Type of change
+                      enum: [create, update, delete]
+                      example: update
+                    property:
+                      type: string
+                      description: Property being changed
+                      example: instances
+                    current_value:
+                      description: Current value of the property
+                      example: 2
+                    new_value:
+                      description: New value from the manifest
+                      example: 3
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityError:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Cloud Foundry UAA token

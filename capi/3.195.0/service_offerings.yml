@@ -1,0 +1,362 @@
+paths:
+  /v3/service_offerings:
+    get:
+      summary: List service offerings
+      description: Retrieves the service offerings the user has access to.
+      parameters:
+        - name: names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of names to filter by
+        - name: available
+          in: query
+          schema:
+            type: boolean
+          description: Filter by the available property; valid values are true or false
+        - name: service_broker_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service broker GUIDs to filter by
+        - name: service_broker_names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service broker names to filter by
+        - name: space_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space GUIDs to filter by
+        - name: organization_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of organization GUIDs to filter by
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+        - name: order_by
+          in: query
+          schema:
+            type: string
+          description: Value to sort by. Defaults to ascending; prepend with - to sort descending. Valid values are created_at, updated_at, name
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page to display; valid values are integers >= 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: Number of results per page; valid values are 1 through 5000
+        - name: created_ats
+          in: query
+          schema:
+            type: string
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+        - name: updated_ats
+          in: query
+          schema:
+            type: string
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOfferingList'
+    post:
+      summary: Create a service offering
+      description: Creates a new service offering.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceOfferingCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOffering'
+  /v3/service_offerings/{guid}:
+    get:
+      summary: Get a service offering
+      description: Retrieves the service offering by GUID.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The service offering GUID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOffering'
+    patch:
+      summary: Update a service offering
+      description: Updates a service offering.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The service offering GUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceOfferingUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOffering'
+    delete:
+      summary: Delete a service offering
+      description: Deletes a service offering.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The service offering GUID
+        - name: purge
+          in: query
+          schema:
+            type: boolean
+          description: If true, any service plans, instances, and bindings associated with this service offering will also be deleted
+      responses:
+        '204':
+          description: No Content
+components:
+  schemas:
+    ServiceOffering:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        description:
+          type: string
+        available:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        requires:
+          type: array
+          items:
+            type: string
+        shareable:
+          type: boolean
+        documentation_url:
+          type: string
+        broker_catalog:
+          $ref: '#/components/schemas/BrokerCatalog'
+        relationships:
+          type: object
+          properties:
+            service_broker:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+            service_plans:
+              type: object
+              properties:
+                href:
+                  type: string
+            service_broker:
+              type: object
+              properties:
+                href:
+                  type: string
+    ServiceOfferingCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        available:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        requires:
+          type: array
+          items:
+            type: string
+        shareable:
+          type: boolean
+        documentation_url:
+          type: string
+        broker_catalog:
+          $ref: '#/components/schemas/BrokerCatalog'
+        relationships:
+          type: object
+          properties:
+            service_broker:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+    ServiceOfferingUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        available:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        requires:
+          type: array
+          items:
+            type: string
+        shareable:
+          type: boolean
+        documentation_url:
+          type: string
+        broker_catalog:
+          $ref: '#/components/schemas/BrokerCatalog'
+        relationships:
+          type: object
+          properties:
+            service_broker:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+    ServiceOfferingList:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            total_results:
+              type: integer
+            total_pages:
+              type: integer
+            first:
+              type: object
+              properties:
+                href:
+                  type: string
+            last:
+              type: object
+              properties:
+                href:
+                  type: string
+            next:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+            previous:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceOffering'
+    BrokerCatalog:
+      type: object
+      properties:
+        id:
+          type: string
+        metadata:
+          type: object
+          properties:
+            shareable:
+              type: boolean
+        features:
+          type: object
+          properties:
+            plan_updateable:
+              type: boolean
+            bindable:
+              type: boolean
+            instances_retrievable:
+              type: boolean
+            bindings_retrievable:
+              type: boolean
+            allow_context_updates:
+              type: boolean
+

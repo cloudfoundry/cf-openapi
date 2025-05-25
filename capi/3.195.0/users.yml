@@ -1,0 +1,279 @@
+paths:
+  /v3/users:
+    post:
+      summary: "Create a user"
+      description: "Creates a user in the Cloud Controller database."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guid:
+                  type: string
+                  description: "Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user’s GUID; in the case of UAA clients, this will match the UAA client ID"
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      description: "Labels applied to the user"
+                    annotations:
+                      type: object
+                      description: "Annotations added to the user"
+      responses:
+        '201':
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+    get:
+      summary: "List users"
+      description: "Retrieve all users that the current user can see."
+      parameters:
+        - name: guids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: "Comma-delimited list of user guids to filter by"
+        - name: usernames
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: "Comma-delimited list of usernames to filter by. Mutually exclusive with partial_usernames"
+        - name: partial_usernames
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: "Comma-delimited list of strings to search by. When using this query parameter, all the users that contain the string provided in their username will be returned. Mutually exclusive with usernames"
+        - name: origins
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: "Comma-delimited list of user origins (user stores) to filter by, for example, users authenticated by UAA have the origin “uaa”; users authenticated by an LDAP provider have the origin “ldap”; when filtering by origins, usernames must be included"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: "Page to display; valid values are integers >= 1"
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+          description: "Number of results per page"
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at]
+          description: "Value to sort by. Defaults to ascending; prepend with - to sort descending"
+        - name: label_selector
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "A query string containing a list of label selector requirements"
+        - name: created_ats
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators"
+        - name: updated_ats
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators"
+      responses:
+        '200':
+          description: "List of users"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      next:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      previous:
+                        type: object
+                        nullable: true
+                        properties:
+                          href:
+                            type: string
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+  /v3/users/{guid}:
+    get:
+      summary: "Get a user"
+      description: "Retrieve a user by GUID."
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier for the user"
+      responses:
+        '200':
+          description: "User details"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+    patch:
+      summary: "Update a user"
+      description: "Update a user’s metadata."
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier for the user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      description: "Labels applied to the user"
+                    annotations:
+                      type: object
+                      description: "Annotations added to the user"
+      responses:
+        '201':
+          description: "User updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+    delete:
+      summary: "Delete a user"
+      description: "Delete a user by GUID."
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier for the user"
+      responses:
+        '202':
+          description: "User deletion accepted"
+          headers:
+            Location:
+              schema:
+                type: string
+                description: "URL to the job monitoring the deletion"
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        guid:
+          type: string
+          description: "Unique identifier for the user"
+        created_at:
+          type: string
+          format: date-time
+          description: "The time with zone when the object was created"
+        updated_at:
+          type: string
+          format: date-time
+          description: "The time with zone when the object was last updated"
+        username:
+          type: string
+          nullable: true
+          description: "The name registered in UAA; will be null for UAA clients and non-UAA users"
+        presentation_name:
+          type: string
+          description: "The name displayed for the user; for UAA users, this is the same as the username. For UAA clients, this is the UAA client ID"
+        origin:
+          type: string
+          nullable: true
+          description: "The identity provider for the UAA user; will be null for UAA clients"
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+              description: "Labels applied to the user"
+            annotations:
+              type: object
+              description: "Annotations added to the user"
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string

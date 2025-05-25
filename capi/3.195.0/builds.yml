@@ -1,0 +1,609 @@
+paths:
+  /v3/builds:
+    get:
+      summary: List builds
+      description: Retrieve a paginated list of builds. Builds represent the process of staging an application package into a droplet.
+      tags:
+        - builds
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          description: Field by which to order results
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at, -created_at, -updated_at]
+        - name: states
+          in: query
+          description: Filter by build states (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: app_guids
+          in: query
+          description: Filter by app GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: package_guids
+          in: query
+          description: Filter by package GUIDs (comma-separated)
+          required: false
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          description: Filter by label selector
+          required: false
+          schema:
+            type: string
+        - name: created_ats
+          in: query
+          description: Filter by creation timestamps
+          required: false
+          schema:
+            type: string
+        - name: updated_ats
+          in: query
+          description: Filter by update timestamps
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paginated list of builds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Build'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+    post:
+      summary: Create a build
+      description: Create a new build to stage an application package into a droplet
+      tags:
+        - builds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - package
+              properties:
+                package:
+                  type: object
+                  required:
+                    - guid
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                      description: GUID of the package to stage
+                lifecycle:
+                  type: object
+                  description: Lifecycle information for staging
+                  properties:
+                    type:
+                      type: string
+                      enum: [buildpack, cnb, docker]
+                      description: Type of lifecycle
+                    data:
+                      type: object
+                      properties:
+                        buildpacks:
+                          type: array
+                          description: List of buildpacks to use (buildpack lifecycle)
+                          items:
+                            type: string
+                        stack:
+                          type: string
+                          description: Stack to use for staging
+                        credentials:
+                          type: object
+                          description: Docker registry credentials (docker lifecycle)
+                          properties:
+                            username:
+                              type: string
+                            password:
+                              type: string
+                staging_memory_in_mb:
+                  type: integer
+                  description: Memory limit for staging container
+                  minimum: 128
+                staging_disk_in_mb:
+                  type: integer
+                  description: Disk limit for staging container
+                  minimum: 1024
+                staging_log_rate_limit_bytes_per_second:
+                  type: integer
+                  description: Log rate limit during staging
+                  minimum: -1
+                environment_variables:
+                  type: object
+                  description: Environment variables for staging
+                  additionalProperties:
+                    type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '201':
+          description: The created build
+          headers:
+            Location:
+              description: URL to the created build
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+        - space_developer
+
+  /v3/builds/{guid}:
+    get:
+      summary: Get a build
+      description: Retrieve details of a specific build
+      tags:
+        - builds
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the build
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The build details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+    patch:
+      summary: Update a build
+      description: Update a build's state, metadata or annotations. Used by staging components to report build progress.
+      tags:
+        - builds
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the build
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum: [STAGING, STAGED, FAILED]
+                  description: New state for the build
+                error:
+                  type: string
+                  description: Error message if build failed
+                lifecycle:
+                  type: object
+                  description: Updated lifecycle data
+                  properties:
+                    type:
+                      type: string
+                      enum: [buildpack, cnb, docker]
+                    data:
+                      type: object
+                      properties:
+                        image:
+                          type: string
+                          description: Resulting image reference
+                        buildpack_lifecycle_buildpacks:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              version:
+                                type: string
+                              detect_output:
+                                type: string
+                created_by:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    email:
+                      type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      responses:
+        '200':
+          description: The updated build
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+      x-roles:
+        - cloud_controller.admin
+        - space_developer
+        - build_state_updater
+
+  /v3/apps/{guid}/builds:
+    get:
+      summary: List builds for an app
+      description: Retrieve all builds associated with a specific app
+      tags:
+        - builds
+        - apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The GUID of the app
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: order_by
+          in: query
+          description: Field by which to order results
+          required: false
+          schema:
+            type: string
+            enum: [created_at, updated_at, -created_at, -updated_at]
+        - name: states
+          in: query
+          description: Filter by build states (comma-separated)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paginated list of builds for the app
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Build'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+components:
+  schemas:
+    Build:
+      type: object
+      required:
+        - guid
+        - created_at
+        - updated_at
+        - state
+        - staging_memory_in_mb
+        - staging_disk_in_mb
+        - staging_log_rate_limit_bytes_per_second
+        - error
+        - lifecycle
+        - package
+        - droplet
+        - created_by
+        - metadata
+        - links
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the build
+        created_at:
+          type: string
+          format: date-time
+          description: The time the build was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time the build was last updated
+        state:
+          type: string
+          enum: [STAGING, STAGED, FAILED]
+          description: Current state of the build
+        staging_memory_in_mb:
+          type: integer
+          description: Memory allocated for staging
+        staging_disk_in_mb:
+          type: integer
+          description: Disk space allocated for staging
+        staging_log_rate_limit_bytes_per_second:
+          type: integer
+          description: Log rate limit during staging (-1 for unlimited)
+        error:
+          type: string
+          nullable: true
+          description: Error message if build failed
+        lifecycle:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [buildpack, cnb, docker]
+              description: Type of lifecycle used
+            data:
+              type: object
+              properties:
+                buildpacks:
+                  type: array
+                  description: Buildpacks used (buildpack lifecycle)
+                  items:
+                    type: string
+                stack:
+                  type: string
+                  description: Stack used for staging
+                image:
+                  type: string
+                  description: Docker image (docker lifecycle) or resulting image (cnb)
+                buildpack_lifecycle_buildpacks:
+                  type: array
+                  description: Detected buildpacks with versions
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      version:
+                        type: string
+                      detect_output:
+                        type: string
+        package:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+              description: GUID of the package being staged
+        droplet:
+          type: object
+          nullable: true
+          properties:
+            guid:
+              type: string
+              format: uuid
+              description: GUID of the resulting droplet (if successful)
+        created_by:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+              description: GUID of the user who created the build
+            name:
+              type: string
+              description: Name of the user
+            email:
+              type: string
+              description: Email of the user
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+              additionalProperties:
+                type: string
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to this build
+            app:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to the app
+            package:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: URL to the package
+            droplet:
+              type: object
+              nullable: true
+              properties:
+                href:
+                  type: string
+                  description: URL to the resulting droplet
+
+    Pagination:
+      type: object
+      properties:
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+        first:
+          type: object
+          properties:
+            href:
+              type: string
+        last:
+          type: object
+          properties:
+            href:
+              type: string
+        next:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+        previous:
+          type: object
+          nullable: true
+          properties:
+            href:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

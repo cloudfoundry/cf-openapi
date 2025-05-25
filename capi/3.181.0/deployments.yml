@@ -3,11 +3,125 @@ paths:
     get:
       summary: List deployments
       description: Retrieve a list of all deployments.
+      parameters:
+        - name: states
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-delimited list of deployment states to filter by
+        - name: status_reasons
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-delimited list of deployment status reasons to filter by
+        - name: status_values
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-delimited list of deployment status values to filter by
+        - name: app_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-delimited list of app guids to filter by
+        - name: created_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+          style: form
+          explode: false
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])
+        - name: updated_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+          style: form
+          explode: false
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Page to display
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+          description: Number of results per page
+        - name: order_by
+          in: query
+          schema:
+            type: string
+          description: Value to sort by; defaults to ascending. Prepend with - to sort descending. Valid values are created_at, updated_at
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+        - name: include
+          in: query
+          description: Optionally include app, space, or space.organization in the response
+          schema:
+            type: string
+            enum: ['app', 'space', 'space.organization']
+        - name: fields
+          in: query
+          description: |
+            Comma-delimited list of field groups to include/exclude from the response.
+            Use a - (minus sign) prefix to exclude a field group.
+            Example: ?fields=guid,state,-relationships.app
+          schema:
+            type: string
+            example: "guid,state"
       responses:
         '200':
           description: A JSON array of deployments.
         'default':
           description: An unexpected error.
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
+        - BuildStateUpdater:
+          - cloud_controller.update_build_state
 
     post:
       summary: Create a deployment
@@ -17,6 +131,13 @@ paths:
           application/json:
             schema:
               type: object
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceSupporter:
+          - cloud_controller.write
       responses:
         '201':
           description: The created deployment.
@@ -40,14 +161,22 @@ paths:
         'default':
           description: An unexpected error.
       security:
-        - Admin: []
-        - AdminReadOnly: []
-        - GlobalAuditor: []
-        - OrgManager: []
-        - SpaceAuditor: []
-        - SpaceDeveloper: []
-        - SpaceManager: []
-        - SpaceSupporter: []
+        - Admin:
+          - cloud_controller.admin
+        - AdminReadOnly:
+          - cloud_controller.admin_read_only
+        - GlobalAuditor:
+          - cloud_controller.global_auditor
+        - OrgManager:
+          - cloud_controller.read
+        - SpaceAuditor:
+          - cloud_controller.read
+        - SpaceDeveloper:
+          - cloud_controller.read
+        - SpaceManager:
+          - cloud_controller.read
+        - SpaceSupporter:
+          - cloud_controller.read
 
   /v3/deployments/{guid}/actions/cancel:
     post:

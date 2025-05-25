@@ -23,6 +23,9 @@ paths:
                       type: object
                     annotations:
                       type: object
+      secuity:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '201':
           description: Created
@@ -60,12 +63,36 @@ paths:
             type: string
         - name: created_ats
           in: query
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: created_ats[gt]=2020-01-01T00:00:00Z, created_ats[gte]=2020-01-01T00:00:00Z, created_ats[lt]=2020-01-01T00:00:00Z, created_ats[lte]=2020-01-01T00:00:00Z. Range queries: created_ats[gt]=2020-01-01T00:00:00Z&created_ats[lt]=2020-12-31T00:00:00Z
           schema:
             type: string
         - name: updated_ats
           in: query
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: updated_ats[gt]=2020-01-01T00:00:00Z, updated_ats[gte]=2020-01-01T00:00:00Z, updated_ats[lt]=2020-01-01T00:00:00Z, updated_ats[lte]=2020-01-01T00:00:00Z. Range queries: updated_ats[gt]=2020-01-01T00:00:00Z&updated_ats[lt]=2020-12-31T00:00:00Z
           schema:
             type: string
+        - name: fields
+          in: query
+          description: Fields to include in the response. Allowed values are specified per endpoint.
+          schema:
+            type: string
+        - name: include
+          in: query
+          description: |
+            Comma-delimited list of resources to include in the response.
+            Supported resources:
+            - domains: Include private domains associated with the organization
+            - default_domain: Include the default private domain if one exists
+            - users: Include all users with a role in the organization
+            - managers: Include organization managers
+            - billing_managers: Include organization billing managers
+            - auditors: Include organization auditors
+          schema:
+            type: string
+            example: domains,users
+      secuity:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '200':
           description: OK
@@ -85,6 +112,9 @@ paths:
           required: true
           schema:
             type: string
+
+      security: []
+
       responses:
         '200':
           description: OK
@@ -118,6 +148,11 @@ paths:
                       type: object
                     annotations:
                       type: object
+      secuity:
+        - Admin:
+          - cloud_controller.admin
+        - OrgManager:
+          - cloud_controller.write
       responses:
         '200':
           description: OK
@@ -134,6 +169,9 @@ paths:
           required: true
           schema:
             type: string
+      secuity:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '202':
           description: Accepted
@@ -141,6 +179,7 @@ paths:
             application/json:
               schema:
                 type: object
+
   /v3/organizations/{guid}/relationships/default_isolation_segment:
     patch:
       summary: Assign Default Isolation Segment
@@ -162,6 +201,11 @@ paths:
                   properties:
                     guid:
                       type: string
+      secuity:
+        - Admin:
+          - cloud_controller.admin
+        - OrgManager:
+          - cloud_controller.write
       responses:
         '200':
           description: OK
@@ -178,6 +222,7 @@ paths:
           required: true
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -195,6 +240,7 @@ paths:
           required: true
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -212,6 +258,7 @@ paths:
           required: true
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -269,6 +316,7 @@ paths:
           in: query
           schema:
             type: string
+      security: []
       responses:
         '200':
           description: OK
@@ -278,6 +326,193 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+
+  /v3/organizations/{guid}/domains:
+    get:
+      summary: List domains for an organization
+      description: |
+        Retrieve all domains available in the organization.
+        This includes both private domains owned by the organization and shared domains.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: names
+          in: query
+          description: Comma-delimited list of domain names to filter by
+          schema:
+            type: string
+        - name: guids
+          in: query
+          description: Comma-delimited list of domain guids to filter by
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Domain'
+      security:
+        - bearerAuth: []
+
+  /v3/organizations/{guid}/usage_summary:
+    get:
+      summary: Get organization usage summary
+      description: |
+        Retrieve usage summary for the organization.
+        This includes memory and instance usage across all spaces and apps.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usage_summary:
+                    type: object
+                    properties:
+                      started_instances:
+                        type: integer
+                        description: Number of running app instances
+                      memory_in_mb:
+                        type: integer
+                        description: Total memory used by running instances in MB
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      organization:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+      security:
+        - bearerAuth: []
+
+  /v3/organizations/{guid}/relationships/quota:
+    get:
+      summary: Get organization quota relationship
+      description: Retrieve the quota applied to the organization.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update organization quota relationship
+      description: Apply a quota to the organization.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  nullable: true
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      guid:
+                        type: string
+                        format: uuid
+                  links:
+                    type: object
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     Organization:

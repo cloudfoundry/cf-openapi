@@ -9,6 +9,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/IsolationSegment'
+      security:
+        - Admin:
+          - cloud_controller.admin
+
       responses:
         '201':
           description: Isolation segment created successfully
@@ -16,6 +20,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IsolationSegment'
+
     get:
       summary: List isolation segments
       description: Retrieve all isolation segments to which the user has access.
@@ -77,6 +82,8 @@ paths:
             type: string
             format: date-time
           description: Timestamp to filter by
+      security: []
+
       responses:
         '200':
           description: List of isolation segments retrieved successfully
@@ -103,6 +110,7 @@ paths:
           schema:
             type: string
           description: The guid of the isolation segment
+      security: []
       responses:
         '200':
           description: Isolation segment retrieved successfully
@@ -126,6 +134,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/IsolationSegment'
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '200':
           description: Isolation segment updated successfully
@@ -143,6 +154,9 @@ paths:
           schema:
             type: string
           description: The guid of the isolation segment
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '204':
           description: Isolation segment deleted successfully
@@ -212,6 +226,9 @@ paths:
                     properties:
                       guid:
                         type: string
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '200':
           description: Organizations entitled successfully
@@ -260,6 +277,9 @@ paths:
           schema:
             type: string
           description: The guid of the organization
+      security:
+        - Admin:
+          - cloud_controller.admin
       responses:
         '204':
           description: Entitlement revoked successfully
@@ -275,6 +295,7 @@ paths:
           schema:
             type: string
           description: The guid of the isolation segment
+      security: []
       responses:
         '200':
           description: List of spaces retrieved successfully
@@ -299,6 +320,109 @@ paths:
                           href:
                             type: string
                             format: uri
+
+  /v3/isolation_segments/{guid}/organizations:
+    get:
+      summary: List organizations for an isolation segment
+      description: Retrieve all organizations that have been entitled to use this isolation segment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: names
+          in: query
+          description: Comma-delimited list of organization names to filter by
+          schema:
+            type: string
+        - name: guids
+          in: query
+          description: Comma-delimited list of organization guids to filter by
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+      security:
+        - bearerAuth: []
+
+  /v3/isolation_segments/{guid}/spaces:
+    get:
+      summary: List spaces for an isolation segment
+      description: Retrieve all spaces that are assigned to this isolation segment.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: names
+          in: query
+          description: Comma-delimited list of space names to filter by
+          schema:
+            type: string
+        - name: guids
+          in: query
+          description: Comma-delimited list of space guids to filter by
+          schema:
+            type: string
+        - name: organization_guids
+          in: query
+          description: Comma-delimited list of organization guids to filter by
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+      security:
+        - bearerAuth: []
 
 components:
   schemas:

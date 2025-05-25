@@ -1,0 +1,330 @@
+paths:
+  /v3/service_plans/{guid}/visibility:
+    get:
+      summary: Get a service plan visibility
+      description: |
+        Retrieves the service plan visibility for a given plan.
+        
+        Service plan visibility controls which organizations and spaces can access
+        a particular service plan. Plans can be public, admin-only, organization-restricted,
+        or space-restricted.
+      tags:
+        - Service Plan Visibility
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The service plan GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicePlanVisibility'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update a service plan visibility
+      description: |
+        Updates a service plan visibility.
+        
+        This replaces the existing list of organizations when the service plan
+        is organization-visible. Only administrators can modify service plan visibility.
+      tags:
+        - Service Plan Visibility
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The service plan GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicePlanVisibilityUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicePlanVisibility'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Apply a service plan visibility
+      description: |
+        Applies a service plan visibility.
+        
+        This appends to the existing list of organizations when the service plan
+        is organization-visible. Only administrators can modify service plan visibility.
+      tags:
+        - Service Plan Visibility
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The service plan GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicePlanVisibilityApply'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicePlanVisibility'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+  /v3/service_plans/{guid}/visibility/{organization_guid}:
+    delete:
+      summary: Remove organization from a service plan visibility
+      description: |
+        Removes an organization from a service plan visibility list of organizations.
+        
+        This endpoint is only available for service plans that are organization-restricted.
+        Only administrators can modify service plan visibility.
+      tags:
+        - Service Plan Visibility
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The service plan GUID
+          schema:
+            type: string
+            format: uuid
+        - name: organization_guid
+          in: path
+          required: true
+          description: The organization GUID to remove
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    ServicePlanVisibility:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Denotes the visibility of the plan
+          enum: [public, admin, organization, space]
+          example: organization
+        organizations:
+          type: array
+          description: List of organizations where the plan is visible (only for organization type)
+          items:
+            $ref: '#/components/schemas/OrganizationVisibility'
+        space:
+          type: object
+          description: Space where the plan is visible (only for space type)
+          properties:
+            guid:
+              type: string
+              format: uuid
+              description: Space GUID
+            name:
+              type: string
+              description: Space name
+              example: development
+        metadata:
+          type: object
+          description: Additional metadata for the service plan visibility
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+              example:
+                visibility-reason: partner-plan
+                managed-by: service-team
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+              example:
+                contact: service-team@example.com
+                approved-date: "2024-01-15"
+
+    ServicePlanVisibilityUpdate:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Denotes the visibility of the plan
+          enum: [public, admin, organization]
+          example: organization
+        organizations:
+          type: array
+          description: List of organizations where the plan should be visible (required for organization type)
+          items:
+            type: object
+            required:
+              - guid
+            properties:
+              guid:
+                type: string
+                format: uuid
+                description: Organization GUID
+        metadata:
+          type: object
+          description: Additional metadata for the service plan visibility
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+                maxLength: 63
+              example:
+                visibility-reason: partner-plan
+                managed-by: service-team
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+                maxLength: 5000
+              example:
+                contact: service-team@example.com
+                approved-date: "2024-01-15"
+
+    ServicePlanVisibilityApply:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Denotes the visibility of the plan
+          enum: [organization]
+          example: organization
+        organizations:
+          type: array
+          description: List of organizations to add to the visibility list
+          minItems: 1
+          items:
+            type: object
+            required:
+              - guid
+            properties:
+              guid:
+                type: string
+                format: uuid
+                description: Organization GUID
+
+    OrganizationVisibility:
+      type: object
+      required:
+        - guid
+        - name
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Unique identifier for the organization
+        name:
+          type: string
+          description: Name of the organization
+          example: my-organization
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityError:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Cloud Foundry UAA token

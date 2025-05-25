@@ -1,0 +1,456 @@
+paths:
+  /v3/service_instances:
+    get:
+      summary: Retrieve service instances
+      description: Retrieves the service instances the user has access to, including access granted by service instance sharing.
+      parameters:
+        - name: names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service instance names to filter by
+        - name: guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service instance guids to filter by
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [managed, user-provided]
+          description: Filter by type
+        - name: space_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of space guids to filter by
+        - name: organization_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of organization guids to filter by
+        - name: service_plan_guids
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service plan guids to filter by
+        - name: service_plan_names
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Comma-delimited list of service plan names to filter by
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page to display
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: Number of results per page
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at, name, -created_at, -updated_at, -name]
+          description: Value to sort by
+        - name: label_selector
+          in: query
+          schema:
+            type: string
+          description: A query string containing a list of label selector requirements
+        - name: created_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+          description: Timestamp to filter by
+        - name: updated_ats
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+          description: Timestamp to filter by
+      responses:
+        '200':
+          description: List of service instances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceInstance'
+  /v3/service_instances/{guid}:
+    delete:
+      summary: Delete a service instance
+      description: Deletes a service instance and any associated service credential bindings or service route bindings.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+        - name: purge
+          in: query
+          schema:
+            type: boolean
+          description: If true, deletes the service instance and all associated resources without any interaction with the service broker
+      responses:
+        '204':
+          description: User-provided service instance deleted
+        '202':
+          description: Managed service instance deletion initiated
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the job status
+  /v3/service_instances/{guid}:
+    patch:
+      summary: Update a service instance
+      description: Updates a service instance with the provided attributes.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ManagedServiceInstanceUpdate'
+                - $ref: '#/components/schemas/UserProvidedServiceInstanceUpdate'
+      responses:
+        '200':
+          description: Service instance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInstance'
+        '202':
+          description: Service instance update initiated
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the job status
+  /v3/service_instances/{guid}/credentials:
+    get:
+      summary: Get credentials for a user-provided service instance
+      description: Retrieves the credentials for a user-provided service instance.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+      responses:
+        '200':
+          description: Credentials retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
+    get:
+      summary: Get usage summary in shared spaces (experimental)
+      description: |
+        Returns the number of bound apps in spaces where the service instance has been shared to.
+        
+        This feature is experimental and subject to change.
+      x-experimental: true
+      tags:
+        - Service Instances
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+      responses:
+        '200':
+          description: Usage summary retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+  /v3/service_instances/{guid}/relationships/shared_spaces:
+    get:
+      summary: List shared spaces relationship (experimental)
+      description: |
+        Lists the spaces that the service instance has been shared to.
+        
+        This feature is experimental and subject to change.
+      x-experimental: true
+      tags:
+        - Service Instances
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+      responses:
+        '200':
+          description: Shared spaces retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+  /v3/service_instances/{guid}/relationships/shared_spaces:
+    post:
+      summary: Share a service instance to other spaces
+      description: Shares the service instance with the specified spaces.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Space'
+      responses:
+        '200':
+          description: Service instance shared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+  /v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}:
+    delete:
+      summary: Unshare a service instance from another space
+      description: Unshares the service instance from the specified space.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the service instance
+        - name: space_guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GUID of the space
+      responses:
+        '204':
+          description: Service instance unshared
+components:
+  schemas:
+    ServiceInstance:
+      type: object
+      properties:
+        guid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        type:
+          type: string
+          enum: [managed, user-provided]
+        tags:
+          type: array
+          items:
+            type: string
+        maintenance_info:
+          type: object
+          properties:
+            version:
+              type: string
+        upgrade_available:
+          type: boolean
+        dashboard_url:
+          type: string
+        last_operation:
+          $ref: '#/components/schemas/LastOperation'
+        relationships:
+          type: object
+          properties:
+            service_plan:
+              $ref: '#/components/schemas/ToOneRelationship'
+            space:
+              $ref: '#/components/schemas/ToOneRelationship'
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+        links:
+          $ref: '#/components/schemas/Links'
+    ManagedServiceInstanceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: object
+        relationships:
+          type: object
+          properties:
+            service_plan:
+              $ref: '#/components/schemas/ToOneRelationship'
+        maintenance_info:
+          type: object
+          properties:
+            version:
+              type: string
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+    UserProvidedServiceInstanceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        credentials:
+          type: object
+        syslog_drain_url:
+          type: string
+        route_service_url:
+          type: string
+        metadata:
+          type: object
+          properties:
+            labels:
+              type: object
+            annotations:
+              type: object
+    LastOperation:
+      type: object
+      properties:
+        type:
+          type: string
+        state:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ToOneRelationship:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            guid:
+              type: string
+    Links:
+      type: object
+      properties:
+        self:
+          $ref: '#/components/schemas/Link'
+        service_plan:
+          $ref: '#/components/schemas/Link'
+        space:
+          $ref: '#/components/schemas/Link'
+        parameters:
+          $ref: '#/components/schemas/Link'
+        shared_spaces:
+          $ref: '#/components/schemas/Link'
+        service_credential_bindings:
+          $ref: '#/components/schemas/Link'
+        service_route_bindings:
+          $ref: '#/components/schemas/Link'
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+    UsageSummary:
+      type: object
+      properties:
+        usage_summary:
+          type: array
+          items:
+            type: object
+            properties:
+              space:
+                $ref: '#/components/schemas/Space'
+              bound_app_count:
+                type: integer
+    Space:
+      type: object
+      properties:
+        guid:
+          type: string
+        name:
+          type: string
+        relationships:
+          type: object
+          properties:
+            organization:
+              $ref: '#/components/schemas/ToOneRelationship'
+

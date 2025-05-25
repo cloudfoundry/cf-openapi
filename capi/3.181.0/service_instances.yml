@@ -80,7 +80,7 @@ paths:
             items:
               type: string
               format: date-time
-          description: Timestamp to filter by
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: created_ats[gt]=2020-01-01T00:00:00Z, created_ats[gte]=2020-01-01T00:00:00Z, created_ats[lt]=2020-01-01T00:00:00Z, created_ats[lte]=2020-01-01T00:00:00Z. Range queries: created_ats[gt]=2020-01-01T00:00:00Z&created_ats[lt]=2020-12-31T00:00:00Z
         - name: updated_ats
           in: query
           schema:
@@ -88,7 +88,18 @@ paths:
             items:
               type: string
               format: date-time
-          description: Timestamp to filter by
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators: [gt] (greater than), [gte] (greater than or equal to), [lt] (less than), [lte] (less than or equal to). Examples: updated_ats[gt]=2020-01-01T00:00:00Z, updated_ats[gte]=2020-01-01T00:00:00Z, updated_ats[lt]=2020-01-01T00:00:00Z, updated_ats[lte]=2020-01-01T00:00:00Z. Range queries: updated_ats[gt]=2020-01-01T00:00:00Z&updated_ats[lt]=2020-12-31T00:00:00Z
+        - name: fields
+          in: query
+          description: Fields to include in the response. Allowed values are specified per endpoint.
+          schema:
+            type: string
+        - name: include
+          in: query
+          description: Optionally include related resources in the response
+          schema:
+            type: string
+            enum: ['service_plan', 'service_plan.service_offering', 'space', 'space.organization', 'shared_spaces']
       responses:
         '200':
           description: List of service instances
@@ -273,6 +284,73 @@ paths:
       responses:
         '204':
           description: Service instance unshared
+
+  /v3/service_instances/{guid}/credentials:
+    get:
+      summary: Get credentials for a managed service instance
+      description: |
+        Retrieve the credentials for a managed service instance.
+        This endpoint is only available for managed service instances (not user-provided).
+        The credentials are those returned by the service broker during provisioning.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                description: Credentials object as provided by the service broker
+                example:
+                  username: admin
+                  password: secret
+                  uri: mysql://admin:secret@mysql.example.com:3306/db
+                  ports:
+                    - 3306
+        '404':
+          description: Service instance not found or not a managed instance
+        '422':
+          description: Credentials not available (instance may still be provisioning)
+      security:
+        - bearerAuth: []
+
+  /v3/service_instances/{guid}/parameters:
+    get:
+      summary: Get parameters for a managed service instance
+      description: |
+        Retrieve the parameters used to provision a managed service instance.
+        This endpoint is only available for managed service instances (not user-provided).
+        The parameters returned are those that were passed to the service broker during provisioning.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                description: Parameters object as passed to the service broker
+                example:
+                  plan: large
+                  encryption: true
+                  backup_frequency: daily
+        '404':
+          description: Service instance not found or not a managed instance
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     ServiceInstance:

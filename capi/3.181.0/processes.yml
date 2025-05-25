@@ -8,6 +8,23 @@ paths:
           required: true
           schema:
             type: string
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - GlobalAuditor:
+        - cloud_controller.global_auditor
+      - OrgManager:
+        - cloud_controller.read
+      - SpaceAuditor:
+        - cloud_controller.read
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceManager:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -24,6 +41,23 @@ paths:
           required: true
           schema:
             type: string
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - GlobalAuditor:
+        - cloud_controller.global_auditor
+      - OrgManager:
+        - cloud_controller.read
+      - SpaceAuditor:
+        - cloud_controller.read
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceManager:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -81,6 +115,13 @@ paths:
           in: query
           schema:
             type: string
+        - name: include
+          in: query
+          description: Optionally include app, space, or space.organization in the response
+          schema:
+            type: string
+            enum: ['app', 'space', 'space.organization']
+      security: []
       responses:
         '200':
           description: OK
@@ -129,6 +170,29 @@ paths:
           in: query
           schema:
             type: string
+        - name: include
+          in: query
+          description: Optionally include app, space, or space.organization in the response
+          schema:
+            type: string
+            enum: ['app', 'space', 'space.organization']
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - AdminReadOnly:
+        - cloud_controller.admin_read_only
+      - GlobalAuditor:
+        - cloud_controller.global_auditor
+      - OrgManager:
+        - cloud_controller.read
+      - SpaceAuditor:
+        - cloud_controller.read
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceManager:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -150,6 +214,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProcessUpdate'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '200':
           description: OK
@@ -171,6 +242,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProcessScale'
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '202':
           description: Accepted
@@ -178,7 +256,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Process'
+
+  /v3/processes/{guid}/instances:
+    get:
+      summary: List process instances
+      description: Retrieve all instances for a specific process.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProcessInstance'
+      security:
+        - bearerAuth: []
+
   /v3/processes/{guid}/instances/{index}:
+    get:
+      summary: Get a process instance
+      description: Retrieve information about a specific instance of a process.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessInstance'
+        '404':
+          description: Process or instance not found
+      security:
+        - bearerAuth: []
+
     delete:
       summary: Terminate a process instance
       parameters:
@@ -192,9 +323,85 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+      - Admin:
+        - cloud_controller.admin
+      - SpaceDeveloper:
+        - cloud_controller.read
+      - SpaceSupporter:
+        - cloud_controller.read
       responses:
         '204':
           description: No Content
+
+  /v3/processes/{guid}/sidecars:
+    get:
+      summary: List sidecars for a process
+      description: Retrieve all sidecars associated with the process.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sidecar'
+      security:
+        - bearerAuth: []
+
+  /v3/processes/{guid}/actions/terminate_instance:
+    post:
+      summary: Terminate a specific process instance
+      description: |
+        Terminate a specific instance of a process.
+        This is useful for restarting a misbehaving instance.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - index
+              properties:
+                index:
+                  type: integer
+                  minimum: 0
+                  description: The instance index to terminate
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Process or instance not found
+      security:
+        - bearerAuth: []
+
 components:
   schemas:
     Process:
@@ -421,3 +628,67 @@ components:
         method:
           type: string
           nullable: true
+
+    ProcessInstance:
+      type: object
+      properties:
+        state:
+          type: string
+          enum: [RUNNING, CRASHED, STARTING, DOWN]
+          description: The state of the process instance
+        uptime:
+          type: integer
+          description: The uptime in seconds for the process instance
+        since:
+          type: integer
+          description: The Unix timestamp when the process instance was created
+        routable:
+          type: boolean
+          description: Whether the instance is routable
+          deprecated: true
+        index:
+          type: integer
+          description: The index of the process instance
+        instance_ports:
+          type: array
+          items:
+            type: object
+            properties:
+              external:
+                type: integer
+                description: The external port
+              internal:
+                type: integer
+                description: The internal port
+              external_tls_proxy_port:
+                type: integer
+                description: The external TLS proxy port
+              internal_tls_proxy_port:
+                type: integer
+                description: The internal TLS proxy port
+        usage:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+            cpu:
+              type: number
+              format: double
+              description: The current CPU usage as a percentage
+            mem:
+              type: integer
+              description: The current memory usage in bytes
+            disk:
+              type: integer
+              description: The current disk usage in bytes
+        host:
+          type: string
+          description: The host where the instance is running
+        instance_internal_ip:
+          type: string
+          description: The internal IP address of the instance
+        details:
+          type: string
+          nullable: true
+          description: Additional details about the instance state

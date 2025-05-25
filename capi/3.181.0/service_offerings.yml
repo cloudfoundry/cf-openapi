@@ -68,12 +68,27 @@ paths:
           in: query
           schema:
             type: string
-          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])
         - name: updated_ats
           in: query
           schema:
             type: string
-          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with relational operators
+          description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with advanced operators (lt[e], gt[e])
+        - name: include
+          in: query
+          description: Optionally include service_plans or service_broker in the response
+          schema:
+            type: string
+            enum: ['service_plans', 'service_broker']
+        - name: fields
+          in: query
+          description: |
+            Comma-delimited list of field groups to include/exclude from the response.
+            Use a - (minus sign) prefix to exclude a field group.
+            Example: ?fields=guid,name,-relationships.service_broker
+          schema:
+            type: string
+            example: "guid,name"
       responses:
         '200':
           description: OK

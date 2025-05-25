@@ -9,7 +9,7 @@ use File::Basename;
 use Cwd qw(abs_path);
 use File::Path qw(make_path);
 
-$ENV{CAPI_VERSION} ||= '3.181.0';
+$ENV{CAPI_VERSION} ||= '3.195.0';
 $ENV{OPENAPI_VERSION} ||= '3.1.1';
 
 # Get project root directory (one level up from bin/)
@@ -70,16 +70,12 @@ my @endpoints = (qw(
   ));
 
 sub check_deps {
-  my @deps = qw(spruce jq openapi-generator);
+  my @deps = qw(spruce jq);
   for my $dep (@deps) {
     my $cmd = "which $dep";
     my $result = `$cmd`;
     if ($result eq '') {
       print "Dependency '$dep' not found. Please install it.\n";
-      if ($dep eq 'openapi-generator') {
-        print "For openapi-generator, you can install it via:\n";
-        print 'bun install \@openapitools/openapi-generator -g', "\n";
-      }
       exit 1;
     }
   }

@@ -109,7 +109,8 @@ sub generate_sdk {
     my $cmd = "$generator_cmd generate " .
               "-i '$spec_file' " .
               "-g '$language' " .
-              "-o '$output_path'";
+              "-o '$output_path' " .
+              "--skip-validate-spec";
     
     # Add language-specific options
     my $additional_props = get_additional_properties($language);

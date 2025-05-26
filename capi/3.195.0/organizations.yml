@@ -23,7 +23,7 @@ paths:
                       type: object
                     annotations:
                       type: object
-      secuity:
+      security:
         - Admin:
           - cloud_controller.admin
       responses:
@@ -69,7 +69,7 @@ paths:
           in: query
           schema:
             type: string
-      secuity:
+      security:
         - Admin:
           - cloud_controller.admin
       responses:
@@ -127,7 +127,7 @@ paths:
                       type: object
                     annotations:
                       type: object
-      secuity:
+      security:
         - Admin:
           - cloud_controller.admin
         - OrgManager:
@@ -148,7 +148,7 @@ paths:
           required: true
           schema:
             type: string
-      secuity:
+      security:
         - Admin:
           - cloud_controller.admin
       responses:
@@ -180,7 +180,7 @@ paths:
                   properties:
                     guid:
                       type: string
-      secuity:
+      security:
         - Admin:
           - cloud_controller.admin
         - OrgManager:

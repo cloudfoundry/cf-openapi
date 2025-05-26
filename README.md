@@ -41,12 +41,76 @@ This repository contains a comprehensive OpenAPI specification that fully descri
    ```bash
    make gen-openapi-spec
    ```
-   This creates `capi/3.181.0.openapi.yaml` and `capi/3.181.0.openapi.json`
+   This creates `capi/3.195.0.openapi.yaml` and `capi/3.195.0.openapi.json`
 
 3. **Generate a client SDK** (example for Go)
    ```bash
    make gen-go-client
    ```
+
+## SDK Generation
+
+The `bin/gen` script provides a flexible way to generate SDKs for different languages and CAPI versions.
+
+### Usage
+```bash
+./bin/gen --version=VERSION --language=LANGUAGE [--output=PATH]
+```
+
+### Examples
+
+#### Generate Go SDK for latest CAPI version (3.195.0)
+```bash
+./bin/gen --version=3.195.0 --language=go
+# Output: ./sdk/3.195.0/go/
+```
+
+#### Generate Ruby SDK for latest CAPI version
+```bash
+./bin/gen --version=3.195.0 --language=ruby
+# Output: ./sdk/3.195.0/ruby/
+```
+
+#### Generate Python SDK with custom output path
+```bash
+./bin/gen --version=3.195.0 --language=python --output=/path/to/my-sdk
+```
+
+#### Generate SDKs for older CAPI version
+```bash
+# Go SDK for CAPI 3.181.0
+./bin/gen --version=3.181.0 --language=go
+
+# Ruby SDK for CAPI 3.181.0  
+./bin/gen --version=3.181.0 --language=ruby
+```
+
+### Supported Languages
+
+The generator supports all languages provided by OpenAPI Generator, including:
+- **go** - Go client library
+- **ruby** - Ruby gem
+- **python** - Python package
+- **java** - Java library
+- **javascript** - JavaScript/Node.js
+- **typescript-node** - TypeScript for Node.js
+- **csharp** - C# / .NET
+- **php** - PHP library
+- **rust** - Rust crate
+- **swift5** - Swift 5
+- **kotlin** - Kotlin
+- And many more...
+
+Run `./bin/gen --help` to see the full list of supported languages.
+
+### Post-Generation Steps
+
+After generating an SDK, you may need to:
+
+1. **Go**: Run `go mod tidy` in the generated directory
+2. **Ruby**: Build the gem with `gem build *.gemspec`
+3. **Python**: Install with `pip install -e .`
+4. **Java**: Build with Maven or Gradle
 
 ## Version Information
 
@@ -106,13 +170,19 @@ Features marked as experimental using the `x-experimental` extension:
 ### Project Structure
 ```
 capi/
-├── 3.181.0/
+├── 3.195.0/
 │   ├── apps.yml
 │   ├── processes.yml
 │   ├── services.yml
-│   └── ... (44 resource files)
-├── 3.181.0.openapi.yaml  (generated)
-└── 3.181.0.openapi.json  (generated)
+│   └── ... (41 resource files)
+├── 3.195.0.openapi.yaml  (generated)
+└── 3.195.0.openapi.json  (generated)
+bin/
+├── capi-openapi  (main processing script)
+└── gen           (SDK generation script)
+sdk/
+└── VERSION/
+    └── LANGUAGE/ (generated SDKs)
 ```
 
 ### Validation
@@ -120,10 +190,10 @@ capi/
 Validate the OpenAPI specification:
 ```bash
 # Using openapi-generator
-openapi-generator validate -i capi/3.181.0.openapi.yaml
+openapi-generator validate -i capi/3.195.0.openapi.yaml
 
 # Using swagger-cli
-swagger-cli validate capi/3.181.0.openapi.yaml
+swagger-cli validate capi/3.195.0.openapi.yaml
 ```
 
 ### Contributing

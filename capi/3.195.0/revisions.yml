@@ -34,6 +34,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Revision'
+    
+    patch:
+      summary: Update a revision
+      description: Update metadata for a specific revision.
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the revision
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+      security:
+        - Admin:
+          - cloud_controller.admin
+        - OrgManager:
+          - cloud_controller.write
+        - SpaceDeveloper:
+          - cloud_controller.write
+        - SpaceManager:
+          - cloud_controller.write
+        - SpaceSupporter:
+          - cloud_controller.write
+      responses:
+        '200':
+          description: Revision updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revision'
+
   /v3/revisions/{guid}/environment_variables:
     get:
       summary: Get environment variables for a revision
@@ -187,46 +234,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RevisionsList'
-  /v3/revisions/{guid}:
-    patch:
-      summary: Update a revision
-      description: Update metadata for a specific revision.
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Unique identifier for the revision
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                metadata:
-                  type: object
-                  properties:
-                    labels:
-                      type: object
-                      additionalProperties:
-                        type: string
-                    annotations:
-                      type: object
-                      additionalProperties:
-                        type: string
-      security:
-        - Admin:
-          - cloud_controller.admin
-        - SpaceDeveloper:
-          - cloud_controller.write
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Revision'
 components:
   schemas:
     Revision:

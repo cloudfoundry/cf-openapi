@@ -545,131 +545,6 @@ paths:
       security:
         - bearerAuth: []
 
-  /v3/apps/{guid}/revisions:
-    get:
-      summary: List app revisions
-      description: List revisions for an app. Revisions represent code and configuration used by an app at a specific time.
-      tags:
-        - apps
-        - revisions
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          description: The app GUID
-          schema:
-            type: string
-            format: uuid
-        - name: page
-          in: query
-          description: Page number for pagination
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-        - name: per_page
-          in: query
-          description: Number of results per page
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 5000
-        - name: order_by
-          in: query
-          description: Field to sort results by
-          required: false
-          schema:
-            type: string
-            enum: [created_at, updated_at, -created_at, -updated_at]
-        - name: versions
-          in: query
-          description: Filter by revision versions (comma-separated)
-          required: false
-          schema:
-            type: string
-        - name: deployable
-          in: query
-          description: Filter by deployable revisions
-          required: false
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-                  resources:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Revision'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        default:
-          $ref: '#/components/responses/UnexpectedError'
-      security:
-        - bearerAuth: []
-
-  /v3/apps/{guid}/revisions/deployed:
-    get:
-      summary: List deployed app revisions
-      description: List revisions that are currently deployed for an app
-      tags:
-        - apps
-        - revisions
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          description: The app GUID
-          schema:
-            type: string
-            format: uuid
-        - name: page
-          in: query
-          description: Page number for pagination
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-        - name: per_page
-          in: query
-          description: Number of results per page
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 5000
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-                  resources:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Revision'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        default:
-          $ref: '#/components/responses/UnexpectedError'
-      security:
-        - bearerAuth: []
-
   /v3/apps/{guid}/manifest_diff:
     post:
       summary: Generate manifest diff (experimental)
@@ -819,6 +694,263 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         default:
           $ref: '#/components/responses/UnexpectedError'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/features:
+    get:
+      summary: List app features
+      description: |
+        Retrieve the list of features for the specified app.
+        
+        App features control specific capabilities at the application level. Features include:
+        - revisions: Enable revision tracking for the app
+        - ssh: Enable SSH access to app instances
+      tags:
+        - App Features
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - resources
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppFeature'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/features/{name}:
+    get:
+      summary: Get an app feature
+      description: Retrieve a specific app feature by name.
+      tags:
+        - App Features
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+        - name: name
+          in: path
+          required: true
+          description: The feature name
+          schema:
+            type: string
+            enum: [revisions, ssh]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppFeature'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Update an app feature
+      description: |
+        Update an app feature.
+        
+        Only space developers and administrators can update app features.
+      tags:
+        - App Features
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+        - name: name
+          in: path
+          required: true
+          description: The feature name
+          schema:
+            type: string
+            enum: [revisions, ssh]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppFeatureUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppFeature'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/manifest:
+    get:
+      summary: Get app manifest
+      description: |
+        Retrieve the manifest for a specific application.
+        
+        The manifest is returned as a YAML document that describes the application's
+        configuration, including environment variables, services, routes, and other settings.
+      tags:
+        - Manifests
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+                description: YAML manifest content
+                example: |
+                  applications:
+                  - name: my-app
+                    memory: 512M
+                    instances: 2
+                    routes:
+                    - route: my-app.example.com
+                    services:
+                    - my-database
+                    env:
+                      FEATURE_FLAG: enabled
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
+
+  /v3/apps/{guid}/actions/apply_manifest:
+    post:
+      summary: Apply manifest to an app
+      description: |
+        Apply a manifest to update a specific application.
+        
+        This endpoint updates the application configuration based on the provided
+        manifest. Only the first application in the manifest is used, and its name
+        must match the target application.
+      tags:
+        - Manifests
+        - Apps
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          description: The app GUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+              description: YAML manifest content
+              example: |
+                applications:
+                - name: my-app
+                  memory: 1G
+                  instances: 3
+                  env:
+                    NEW_FEATURE: enabled
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: URL to poll for job status
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                    format: uuid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+                      job:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                            format: uri
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
       security:
         - bearerAuth: []
 
@@ -1012,63 +1144,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-      security:
-        - bearerAuth: []
-
-  /v3/apps/{guid}/sidecars:
-    get:
-      summary: List sidecars for app
-      description: Retrieve all sidecars associated with an app.
-      tags:
-        - Apps
-        - Sidecars
-      parameters:
-        - name: guid
-          in: path
-          required: true
-          description: The app GUID
-          schema:
-            type: string
-            format: uuid
-        - name: page
-          in: query
-          description: Page to display
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: per_page
-          in: query
-          description: Number of results per page
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 5000
-            default: 50
-        - name: order_by
-          in: query
-          description: Value to sort by
-          schema:
-            type: string
-            enum: [created_at, -created_at, updated_at, -updated_at, name, -name]
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-                  resources:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Sidecar'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
       security:
         - bearerAuth: []
 
@@ -1388,6 +1463,79 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
+    AppFeature:
+      type: object
+      required:
+        - name
+        - description
+        - enabled
+      properties:
+        name:
+          type: string
+          description: The feature identifier
+          enum: [revisions, ssh]
+          example: revisions
+        description:
+          type: string
+          description: Human-readable description of the feature
+          example: Enable versioning for application deployments
+        enabled:
+          type: boolean
+          description: Whether the feature is enabled for this app
+          example: true
+        metadata:
+          type: object
+          description: Additional metadata for the app feature
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+              example:
+                feature-set: advanced
+                stability: stable
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+              example:
+                enabled-by: platform-team@example.com
+                enabled-date: "2024-01-15"
+
+    AppFeatureUpdate:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: Whether to enable or disable the feature
+          example: true
+        metadata:
+          type: object
+          description: Additional metadata for the app feature
+          properties:
+            labels:
+              type: object
+              description: Key-value pairs for organizing and filtering
+              additionalProperties:
+                type: string
+                maxLength: 63
+              example:
+                feature-set: advanced
+                stability: stable
+            annotations:
+              type: object
+              description: Key-value pairs for storing additional information
+              additionalProperties:
+                type: string
+                maxLength: 5000
+              example:
+                enabled-by: platform-team@example.com
+                enabled-date: "2024-01-15"
 
   securitySchemes:
     bearerAuth:

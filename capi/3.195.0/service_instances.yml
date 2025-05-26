@@ -127,7 +127,7 @@ paths:
               schema:
                 type: string
               description: URL of the job status
-  /v3/service_instances/{guid}:
+    
     patch:
       summary: Update a service instance
       description: Updates a service instance with the provided attributes.
@@ -232,7 +232,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Space'
-  /v3/service_instances/{guid}/relationships/shared_spaces:
+    
     post:
       summary: Share a service instance to other spaces
       description: Shares the service instance with the specified spaces.

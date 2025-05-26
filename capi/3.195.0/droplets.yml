@@ -1,8 +1,16 @@
 paths:
   /v3/droplets:
     post:
-      summary: Create a droplet
-      description: Create a droplet without a package.
+      summary: Create or copy a droplet
+      description: Create a droplet without a package, or copy a droplet to a different app.
+      parameters:
+        - in: query
+          name: source_guid
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Source guid of the droplet to be copied (for copy operation)
       requestBody:
         required: true
         content:
@@ -26,7 +34,7 @@ paths:
                 - relationships
       responses:
         '201':
-          description: Droplet created successfully
+          description: Droplet created or copied successfully
           content:
             application/json:
               schema:
@@ -139,6 +147,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/Droplet'
       security: []
+    
+    patch:
+      summary: Update a droplet
+      description: Update the metadata of a droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                    annotations:
+                      type: object
+      responses:
+        '200':
+          description: Droplet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Droplet'
+    
+    delete:
+      summary: Delete a droplet
+      description: Delete a specific droplet.
+      parameters:
+        - in: path
+          name: guid
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The guid of the droplet
+      responses:
+        '202':
+          description: Droplet deletion accepted
+          headers:
+            Location:
+              description: URL to check the status of the deletion job
+              schema:
+                type: string
+                format: uri
 
   /v3/packages/{guid}/droplets:
     get:
@@ -410,119 +472,6 @@ components:
         previous:
           type: string
           format: uri
-
-  /v3/droplets/{guid}:
-    get:
-      summary: Get a droplet
-      description: Retrieve a specific droplet.
-      parameters:
-        - in: path
-          name: guid
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: The guid of the droplet
-      responses:
-        '200':
-          description: Droplet retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Droplet'
-
-    patch:
-      summary: Update a droplet
-      description: Update the metadata of a droplet.
-      parameters:
-        - in: path
-          name: guid
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: The guid of the droplet
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                metadata:
-                  type: object
-                  properties:
-                    labels:
-                      type: object
-                    annotations:
-                      type: object
-      responses:
-        '200':
-          description: Droplet updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Droplet'
-
-    delete:
-      summary: Delete a droplet
-      description: Delete a specific droplet.
-      parameters:
-        - in: path
-          name: guid
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: The guid of the droplet
-      responses:
-        '202':
-          description: Droplet deletion accepted
-          headers:
-            Location:
-              description: URL to check the status of the deletion job
-              schema:
-                type: string
-                format: uri
-
-  /v3/droplets:
-    post:
-      summary: Copy a droplet
-      description: Copy a droplet to a different app.
-      parameters:
-        - in: query
-          name: source_guid
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Source guid of the droplet to be copied
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                relationships:
-                  type: object
-                  properties:
-                    app:
-                      type: object
-                      properties:
-                        data:
-                          type: object
-                          properties:
-                            guid:
-                              type: string
-                              format: uuid
-      responses:
-        '201':
-          description: Droplet copied successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Droplet'
 
   /v3/droplets/{guid}/download:
     get:

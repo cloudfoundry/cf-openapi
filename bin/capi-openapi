@@ -33,15 +33,18 @@ my @endpoints = (qw(
   app_usage_events
   apps
   audit_events
+  auth
   buildpacks
   builds
   deployments
   domains
   droplets
   environment_variable_groups
+  errors
   feature_flags
   info
   isolation_segments
+  jobs
   organization_quotas
   organizations
   packages
@@ -61,7 +64,6 @@ my @endpoints = (qw(
   service_route_bindings
   service_usage_events
   sidecars
-  space_features
   space_quotas
   spaces
   stacks

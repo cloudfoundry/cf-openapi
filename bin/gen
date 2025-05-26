@@ -1,0 +1,149 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+use File::Basename;
+use File::Path qw(make_path);
+use File::Spec;
+use Cwd qw(abs_path);
+use Getopt::Long;
+
+# Get project root directory (one level up from bin/)
+my $script_dir = dirname(abs_path($0));
+my $project_root = dirname($script_dir);
+
+# Parse command line arguments
+my $capi_version;
+my $language;
+my $output_path;
+my $help;
+
+GetOptions(
+    'version=s' => \$capi_version,
+    'language=s' => \$language,
+    'output=s' => \$output_path,
+    'help' => \$help,
+) or die usage();
+
+# Show usage if help requested or missing required arguments
+if ($help || !$capi_version || !$language) {
+    print usage();
+    exit($help ? 0 : 1);
+}
+
+# Set default output path if not provided
+$output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language);
+
+# Validate inputs
+validate_inputs();
+
+# Generate SDK
+generate_sdk();
+
+sub usage {
+    return <<EOF;
+Usage: $0 --version=VERSION --language=LANGUAGE [--output=PATH]
+
+Generate SDK from CAPI OpenAPI specification
+
+Required options:
+  --version=VERSION   CAPI version (e.g., 3.195.0)
+  --language=LANGUAGE Target language for SDK generation
+  
+Optional options:
+  --output=PATH       Output directory (default: ./sdk/VERSION/LANGUAGE/)
+  --help              Show this help message
+
+Supported languages:
+  ada, android, apex, bash, c, clojure, cpp-qt-client, cpp-rest-sdk-client,
+  cpp-tiny, cpp-ue4, cpp-pistache-server, cpp-restbed-server, crystal, csharp,
+  csharp-netcore, dart, eiffel, elixir, elm, erlang-client, erlang-server, go,
+  go-server, groovy, haskell-http-client, haskell, java, java-micronaut-client,
+  java-micronaut-server, javascript, javascript-closure-angular, jaxrs-cxf-client,
+  jaxrs-cxf, jaxrs-cxf-extended, jaxrs-jersey, jaxrs-resteasy, jaxrs-resteasy-eap,
+  jaxrs-spec, kotlin, kotlin-server, kotlin-spring, lua, nim, objc, ocaml, perl,
+  php, php-laravel, php-lumen, php-slim4, php-symfony, powershell, python,
+  python-fastapi, python-flask, python-aiohttp, r, ruby, rust, rust-server,
+  scala-akka, scala-akka-http-server, scala-finch, scala-gatling, scala-lagom-server,
+  scala-play-server, scala-sttp, scalaz, spring, swift5, typescript-angular,
+  typescript-aurelia, typescript-axios, typescript-fetch, typescript-inversify,
+  typescript-jquery, typescript-nestjs, typescript-node, typescript-redux-query,
+  typescript-rxjs
+
+Examples:
+  $0 --version=3.195.0 --language=go
+  $0 --version=3.181.0 --language=python --output=/tmp/capi-python-sdk
+EOF
+}
+
+sub validate_inputs {
+    # Check if spec file exists
+    my $spec_file = File::Spec->catfile($project_root, 'capi', "${capi_version}.openapi.json");
+    unless (-f $spec_file) {
+        die "Error: OpenAPI spec file not found: $spec_file\n" .
+            "Please run 'make gen-openapi-spec' first to generate the specification.\n";
+    }
+    
+    # Check if openapi-generator is available
+    my $generator_check = `which openapi-generator 2>/dev/null || which openapi-generator-cli 2>/dev/null`;
+    chomp $generator_check;
+    unless ($generator_check) {
+        die "Error: openapi-generator-cli not found.\n" .
+            "Please run 'make deps' to install dependencies.\n";
+    }
+}
+
+sub generate_sdk {
+    my $spec_file = File::Spec->catfile($project_root, 'capi', "${capi_version}.openapi.json");
+    
+    # Create output directory if it doesn't exist
+    make_path($output_path) unless -d $output_path;
+    
+    # Determine which command to use (openapi-generator or openapi-generator-cli)
+    my $generator_cmd = `which openapi-generator 2>/dev/null`;
+    chomp $generator_cmd;
+    $generator_cmd = 'openapi-generator-cli' unless $generator_cmd;
+    
+    # Build the command
+    my $cmd = "$generator_cmd generate " .
+              "-i '$spec_file' " .
+              "-g '$language' " .
+              "-o '$output_path'";
+    
+    # Add language-specific options
+    my $additional_props = get_additional_properties($language);
+    $cmd .= " --additional-properties='$additional_props'" if $additional_props;
+    
+    # Execute the command
+    say "Generating $language SDK for CAPI $capi_version...";
+    say "Command: $cmd";
+    
+    my $result = system($cmd);
+    
+    if ($result == 0) {
+        say "\nSDK generated successfully!";
+        say "Output directory: $output_path";
+    } else {
+        die "\nError: Failed to generate SDK. Exit code: " . ($result >> 8) . "\n";
+    }
+}
+
+sub get_additional_properties {
+    my ($lang) = @_;
+    
+    # Language-specific additional properties
+    my %lang_props = (
+        'go' => 'packageName=capiclient,isGoSubmodule=true,generateInterfaces=true',
+        'python' => 'packageName=capi_client,projectName=capi-client',
+        'java' => 'groupId=org.cloudfoundry,artifactId=capi-client,artifactVersion=' . $capi_version,
+        'javascript' => 'npmName=@cloudfoundry/capi-client,npmVersion=' . $capi_version,
+        'typescript-node' => 'npmName=@cloudfoundry/capi-client,npmVersion=' . $capi_version,
+        'ruby' => 'gemName=capi_client,gemVersion=' . $capi_version,
+        'php' => 'packageName=CloudFoundry\\\\CAPI,composerPackageName=cloudfoundry/capi-client',
+        'csharp' => 'packageName=CloudFoundry.CAPI,packageVersion=' . $capi_version,
+        'rust' => 'packageName=capi_client,packageVersion=' . $capi_version,
+    );
+    
+    return $lang_props{$lang} // '';
+}

@@ -3,3 +3,4 @@ capi/*.yml
 .DS_Store
 openapitools.json
 clients/
+sdk/

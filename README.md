@@ -37,15 +37,22 @@ This repository contains a comprehensive OpenAPI specification that fully descri
    cd capi-openapi-spec
    ```
 
-2. **Generate the unified OpenAPI specification**
+2. **Install dependencies**
+   ```bash
+   make deps
+   ```
+
+3. **Generate the unified OpenAPI specification**
    ```bash
    make gen-openapi-spec
    ```
    This creates `capi/3.195.0.openapi.yaml` and `capi/3.195.0.openapi.json`
 
-3. **Generate a client SDK** (example for Go)
+4. **Generate a client SDK** (example for Go)
    ```bash
    make gen-go-client
+   # Or for any language:
+   make gen-sdk LANGUAGE=python VERSION=3.195.0
    ```
 
 ## SDK Generation
@@ -54,7 +61,14 @@ The `bin/gen` script provides a flexible way to generate SDKs for different lang
 
 ### Usage
 ```bash
+# Generate SDK
 ./bin/gen --version=VERSION --language=LANGUAGE [--output=PATH]
+
+# Prepare specifications (download and create YAML files)
+./bin/gen prepare --version=VERSION
+
+# Merge YAML files into unified OpenAPI spec
+./bin/gen merge --version=VERSION
 ```
 
 ### Examples
@@ -178,8 +192,8 @@ capi/
 ├── 3.195.0.openapi.yaml  (generated)
 └── 3.195.0.openapi.json  (generated)
 bin/
-├── capi-openapi  (main processing script)
-└── gen           (SDK generation script)
+├── gen           (main processing script for prepare, merge, and SDK generation)
+└── validate      (OpenAPI spec validation script)
 sdk/
 └── VERSION/
     └── LANGUAGE/ (generated SDKs)

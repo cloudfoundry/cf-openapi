@@ -13,7 +13,12 @@ use Getopt::Long;
 my $script_dir = dirname(abs_path($0));
 my $project_root = dirname($script_dir);
 
+# Default environment variables
+$ENV{CAPI_VERSION} ||= '3.195.0';
+$ENV{OPENAPI_VERSION} ||= '3.1.1';
+
 # Parse command line arguments
+my $command;
 my $capi_version;
 my $language;
 my $output_path;
@@ -26,28 +31,49 @@ GetOptions(
     'help' => \$help,
 ) or die usage();
 
-# Show usage if help requested or missing required arguments
-if ($help || !$capi_version || !$language) {
+# Get command from remaining args
+$command = shift @ARGV || '';
+
+# Show usage if help requested
+if ($help) {
     print usage();
-    exit($help ? 0 : 1);
+    exit(0);
 }
 
-# Set default output path if not provided
-$output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language);
-
-# Validate inputs
-validate_inputs();
-
-# Generate SDK
-generate_sdk();
+# Handle different commands
+if ($command eq 'prepare') {
+    # Prepare command doesn't need version/language
+    $capi_version //= $ENV{CAPI_VERSION};
+    prepare($capi_version);
+} elsif ($command eq 'merge') {
+    # Merge OpenAPI spec command
+    $capi_version //= $ENV{CAPI_VERSION};
+    merge_openapi_spec($capi_version);
+} elsif ($capi_version && $language) {
+    # Generate SDK (original functionality)
+    # Set default output path if not provided
+    $output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language);
+    
+    # Validate inputs
+    validate_inputs();
+    
+    # Generate SDK
+    generate_sdk();
+} else {
+    print usage();
+    exit(1);
+}
 
 sub usage {
     return <<EOF;
-Usage: $0 --version=VERSION --language=LANGUAGE [--output=PATH]
+Usage: $0 [COMMAND] [OPTIONS]
 
-Generate SDK from CAPI OpenAPI specification
+Commands:
+  prepare [--version=VERSION]       Fetch specs and create CAPI files
+  merge [--version=VERSION]         Merge YAML files into unified OpenAPI spec
+  (no command)                      Generate SDK (requires --version and --language)
 
-Required options:
+SDK Generation Options:
   --version=VERSION   CAPI version (e.g., 3.195.0)
   --language=LANGUAGE Target language for SDK generation
   
@@ -72,6 +98,8 @@ Supported languages:
   typescript-rxjs
 
 Examples:
+  $0 prepare --version=3.195.0
+  $0 merge --version=3.195.0
   $0 --version=3.195.0 --language=go
   $0 --version=3.181.0 --language=python --output=/tmp/capi-python-sdk
 EOF
@@ -82,7 +110,7 @@ sub validate_inputs {
     my $spec_file = File::Spec->catfile($project_root, 'capi', "${capi_version}.openapi.json");
     unless (-f $spec_file) {
         die "Error: OpenAPI spec file not found: $spec_file\n" .
-            "Please run 'make gen-openapi-spec' first to generate the specification.\n";
+            "Please run './bin/gen merge --version=$capi_version' first to generate the specification.\n";
     }
     
     # Check if openapi-generator is available
@@ -147,4 +175,125 @@ sub get_additional_properties {
     );
     
     return $lang_props{$lang} // '';
+}
+
+sub check_deps {
+    my @deps = qw(spruce jq);
+    for my $dep (@deps) {
+        my $cmd = "which $dep";
+        my $result = `$cmd`;
+        if ($result eq '') {
+            print "Dependency '$dep' not found. Please install it.\n";
+            exit 1;
+        }
+    }
+}
+
+sub fetch_spec {
+    my ($spec_name, $spec_version, $spec_url) = @_;
+    my $specs_path = "${project_root}/specs";
+    my $spec_file = "${specs_path}/${spec_name}/${spec_version}.html";
+
+    if (-e $spec_file) {
+        print "Spec file '${spec_file}' already downloaded.\n";
+        return
+    } else {
+        print "Fetching spec from '${spec_url}' to '${spec_file}'\n";
+        make_path(dirname($spec_file)) unless -d dirname($spec_file);
+        my $cmd = "curl -sL '${spec_url}' -o '${spec_file}'";
+        printf("Running command: '%s'\n", $cmd);
+        system($cmd);
+        if ($? == -1) {
+            print "Failed to execute: $!\n";
+        }
+    }
+}
+
+sub create_capi_files {
+    my ($version) = @_;
+    my @endpoints = qw(
+        capi admin app_usage_events apps audit_events auth buildpacks builds
+        deployments domains droplets environment_variable_groups errors
+        feature_flags info isolation_segments jobs organization_quotas
+        organizations packages processes resource_matches revisions roles
+        root routes security_groups service_brokers service_credential_bindings
+        service_instances service_offerings service_plan_visibility
+        service_plans service_route_bindings service_usage_events sidecars
+        space_quotas spaces stacks tasks users
+    );
+    
+    my $capi_dir = "${project_root}/capi/${version}";
+    make_path($capi_dir) unless -d $capi_dir;
+    
+    for my $endpoint (@endpoints) {
+        my $endpoint_file = "${capi_dir}/${endpoint}.yml";
+        `touch ${endpoint_file}` unless -e $endpoint_file;
+    }
+}
+
+sub prepare {
+    my ($version) = @_;
+    print "Preparing CAPI specifications for version $version...\n";
+    
+    my $specs = {
+        'capi' => {
+            version => $version,
+            url => "https://v3-apidocs.cloudfoundry.org/version/${version}/index.html",
+        },
+        'openapi' => {
+            version => $ENV{OPENAPI_VERSION},
+            url => "https://spec.openapis.org/oas/$ENV{OPENAPI_VERSION}.html",
+        },
+    };
+    
+    for my $spec (keys %$specs) {
+        fetch_spec($spec, $specs->{$spec}->{version}, $specs->{$spec}->{url});
+    }
+    create_capi_files($version);
+    print "Preparation complete!\n";
+}
+
+sub merge_openapi_spec {
+    my ($version) = @_;
+    print "Merging CAPI OpenAPI specifications for version $version...\n";
+    
+    check_deps();
+    
+    my @endpoints = qw(
+        capi admin app_usage_events apps audit_events auth buildpacks builds
+        deployments domains droplets environment_variable_groups errors
+        feature_flags info isolation_segments jobs organization_quotas
+        organizations packages processes resource_matches revisions roles
+        root routes security_groups service_brokers service_credential_bindings
+        service_instances service_offerings service_plan_visibility
+        service_plans service_route_bindings service_usage_events sidecars
+        space_quotas spaces stacks tasks users
+    );
+
+    my @yamls = ();
+    for my $endpoint (@endpoints) {
+        my $endpoint_file = "${project_root}/capi/${version}/${endpoint}.yml";
+        push @yamls, $endpoint_file;
+    }
+
+    my $capi_openapi_prefix = "${project_root}/capi/${version}.openapi";
+    my $cmd = "spruce merge -m '" . join("' '", @yamls) . "' > ${capi_openapi_prefix}.yml";
+    printf("Running command: '%s'\n", $cmd);
+    system($cmd);
+    if ($? == -1) {
+        print "Failed to execute: $!\n";
+        exit 1;
+    }
+    
+    $cmd = "spruce json ${capi_openapi_prefix}.yml | jq > ${capi_openapi_prefix}.json";
+    printf("Running command: '%s'\n", $cmd);
+    system($cmd);
+    if ($? == -1) {
+        print "Failed to execute: $!\n";
+        exit 1;
+    }
+    
+    print "OpenAPI spec merged successfully!\n";
+    print "Generated: ${capi_openapi_prefix}.yml\n";
+    print "Generated: ${capi_openapi_prefix}.json\n";
 }

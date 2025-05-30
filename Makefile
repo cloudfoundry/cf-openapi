@@ -88,14 +88,23 @@ check-deps: ## Check if all dependencies are installed
 
 prepare: check-deps ## Prepare the OpenAPI specification
 	@echo "Preparing OpenAPI specification..."
-	./bin/capi-openapi prepare
+	./bin/gen prepare --version=$(CAPI_VERSION)
 
 gen-openapi-spec: check-deps ## Merge the CAPI OpenAPI specifications
 	@echo "Merging CAPI OpenAPI specifications..."
-	./bin/capi-openapi gen openapi spec
+	./bin/gen merge --version=$(CAPI_VERSION)
 
-gen-go-client: check-deps gen-openapi-spec ## Generate Go client from OpenAPI spec
+gen-go-client: gen-openapi-spec ## Generate Go client from OpenAPI spec
 	@echo "Generating Go client..."
-	./bin/capi-openapi gen go client
+	./bin/gen --version=$(CAPI_VERSION) --language=go
 
 all: deps prepare gen-openapi-spec gen-go-client ## Run all steps to generate the Go client
+
+gen-sdk: ## Generate SDK for specified language (usage: make gen-sdk LANGUAGE=go VERSION=3.195.0)
+	@if [ -z "$(LANGUAGE)" ]; then \
+		echo "Error: LANGUAGE is required. Usage: make gen-sdk LANGUAGE=go VERSION=3.195.0"; \
+		exit 1; \
+	fi
+	@VERSION=$${VERSION:-$(CAPI_VERSION)}; \
+	echo "Generating $$LANGUAGE SDK for version $$VERSION..."; \
+	./bin/gen --version=$$VERSION --language=$(LANGUAGE)

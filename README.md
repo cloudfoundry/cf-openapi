@@ -2,6 +2,23 @@
 
 A complete OpenAPI 3.0.0 specification for the Cloud Foundry Cloud Controller API (CAPI) v3.195.0, providing 100% coverage of all API endpoints, resources, and operations.
 
+## Status
+
+This treats the upstream Cloud Foundry API v3 as the source of truth:
+https://v3-apidocs.cloudfoundry.org/version/3.195.0/index.html#deprecated-endpoints
+
+The api docs are fetched from the versioned url into the ./data directory and
+then processed into the OpenAPI YAML files in ./capi/3.195.0.
+
+Currently the process of carving up the API html file into the individual YAML files is done manually,
+the goal is to automate this part of the process in the future.
+
+Once this has been parsed into the OpenAPI .yml files in ./capi/3.195.0 they are then
+merged into ./capi/3.195.0.openapi.yaml and .capi/3.195.0.openapi.json files.
+
+From there the OpenAPI specification can be used to generate client SDKs, documentation, etc...
+
+
 ## Overview
 
 This repository contains a comprehensive OpenAPI specification that fully describes the Cloud Foundry v3 API. The specification is organized into modular YAML files for maintainability and can be used to:
@@ -95,7 +112,7 @@ The `bin/gen` script provides a flexible way to generate SDKs for different lang
 # Go SDK for CAPI 3.181.0
 ./bin/gen --version=3.181.0 --language=go
 
-# Ruby SDK for CAPI 3.181.0  
+# Ruby SDK for CAPI 3.181.0
 ./bin/gen --version=3.181.0 --language=ruby
 ```
 
@@ -153,7 +170,7 @@ The specification covers all Cloud Foundry v3 resources:
 - Applications, Processes, Builds, Droplets, Packages
 - Revisions, Deployments, Tasks, Sidecars
 
-### Routing & Networking  
+### Routing & Networking
 - Routes, Domains, Route Destinations
 - Security Groups, Route Mappings (deprecated)
 

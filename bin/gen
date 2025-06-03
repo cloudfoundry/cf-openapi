@@ -140,6 +140,11 @@ sub generate_sdk {
               "-o '$output_path' " .
               "--skip-validate-spec";
     
+    # Add GitHub configuration
+    my $github_org = 'cloudfoundry-community';
+    my $github_repo = "capi-openapi-${language}-client";
+    $cmd .= " --git-user-id='$github_org' --git-repo-id='$github_repo'";
+    
     # Add language-specific options
     my $additional_props = get_additional_properties($language);
     $cmd .= " --additional-properties='$additional_props'" if $additional_props;
@@ -166,8 +171,8 @@ sub get_additional_properties {
         'go' => 'packageName=capiclient,isGoSubmodule=true,generateInterfaces=true',
         'python' => 'packageName=capi_client,projectName=capi-client',
         'java' => 'groupId=org.cloudfoundry,artifactId=capi-client,artifactVersion=' . $capi_version,
-        'javascript' => 'npmName=@cloudfoundry/capi-client,npmVersion=' . $capi_version,
-        'typescript-node' => 'npmName=@cloudfoundry/capi-client,npmVersion=' . $capi_version,
+        'javascript' => 'npmName=\@cloudfoundry/capi-client,npmVersion=' . $capi_version,
+        'typescript-node' => 'npmName=\@cloudfoundry/capi-client,npmVersion=' . $capi_version,
         'ruby' => 'gemName=capi_client,gemVersion=' . $capi_version,
         'php' => 'packageName=CloudFoundry\\\\CAPI,composerPackageName=cloudfoundry/capi-client',
         'csharp' => 'packageName=CloudFoundry.CAPI,packageVersion=' . $capi_version,

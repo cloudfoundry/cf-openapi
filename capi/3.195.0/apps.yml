@@ -3,6 +3,7 @@ paths:
     get:
       summary: List apps
       description: Retrieve a paginated list of apps the user has access to
+      operationId: listApps
       tags:
         - apps
       parameters:
@@ -156,6 +157,7 @@ paths:
     post:
       summary: Create an app
       description: Create a new application in the specified space
+      operationId: createApp
       tags:
         - apps
       requestBody:
@@ -259,6 +261,7 @@ paths:
     get:
       summary: Get an app
       description: Retrieve details of a specific app
+      operationId: getApp
       tags:
         - apps
       parameters:
@@ -295,6 +298,7 @@ paths:
     patch:
       summary: Update an app
       description: Update an existing app's configuration
+      operationId: updateApp
       tags:
         - apps
       parameters:
@@ -378,6 +382,7 @@ paths:
     delete:
       summary: Delete an app
       description: Delete an app and all associated resources
+      operationId: deleteApp
       tags:
         - apps
       parameters:
@@ -411,9 +416,9 @@ paths:
     post:
       summary: Start an app
       description: Start an app that is in the STOPPED state
+      operationId: startApp
       tags:
         - apps
-        - app-lifecycle
       parameters:
         - name: guid
           in: path
@@ -446,9 +451,9 @@ paths:
     post:
       summary: Stop an app
       description: Stop an app that is in the STARTED state
+      operationId: stopApp
       tags:
         - apps
-        - app-lifecycle
       parameters:
         - name: guid
           in: path
@@ -481,9 +486,9 @@ paths:
     post:
       summary: Restart an app
       description: Stop and start an app to pick up configuration changes
+      operationId: restartApp
       tags:
         - apps
-        - app-lifecycle
       parameters:
         - name: guid
           in: path
@@ -516,6 +521,7 @@ paths:
     post:
       summary: Clear buildpack cache
       description: Clear the buildpack cache for an app
+      operationId: clearAppBuildpackCache
       tags:
         - apps
       parameters:
@@ -603,6 +609,7 @@ paths:
     get:
       summary: Get app environment variables
       description: Retrieve environment variables for an app
+      operationId: getAppEnvironmentVariables
       tags:
         - apps
         - configuration
@@ -646,6 +653,7 @@ paths:
     patch:
       summary: Update app environment variables
       description: Update environment variables for an app
+      operationId: updateAppEnvironmentVariables
       tags:
         - apps
         - configuration
@@ -707,8 +715,7 @@ paths:
         - revisions: Enable revision tracking for the app
         - ssh: Enable SSH access to app instances
       tags:
-        - App Features
-        - Apps
+        - apps
       parameters:
         - name: guid
           in: path
@@ -745,8 +752,7 @@ paths:
       summary: Get an app feature
       description: Retrieve a specific app feature by name.
       tags:
-        - App Features
-        - Apps
+        - apps
       parameters:
         - name: guid
           in: path
@@ -785,8 +791,7 @@ paths:
         
         Only space developers and administrators can update app features.
       tags:
-        - App Features
-        - Apps
+        - apps
       parameters:
         - name: guid
           in: path
@@ -958,6 +963,7 @@ paths:
     get:
       summary: Get app permissions
       description: Get permissions the current user has for the specified app
+      operationId: getAppPermissions
       tags:
         - apps
         - permissions
@@ -994,6 +1000,7 @@ paths:
     get:
       summary: Get SSH enabled
       description: Check if SSH is enabled for an app
+      operationId: getAppSshEnabled
       tags:
         - apps
         - ssh

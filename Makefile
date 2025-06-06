@@ -1,4 +1,4 @@
-.PHONY: deps deps-openapi deps-spruce deps-jq deps-java help gen-go-client
+.PHONY: deps deps-openapi deps-oapi-codegen deps-spruce deps-jq deps-java help gen-go-client
 
 # Default target
 .DEFAULT_GOAL := help
@@ -12,7 +12,7 @@ CAPI_VERSION ?= 3.195.0
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-deps: deps-java deps-openapi deps-spruce deps-jq ## Install all dependencies
+deps: deps-java deps-openapi deps-oapi-codegen deps-spruce deps-jq ## Install all dependencies
 
 deps-java: ## Install Java Runtime Environment
 	@echo "Checking/Installing Java..."
@@ -45,6 +45,14 @@ deps-openapi: deps-java ## Install OpenAPI Generator CLI
 		exit 1; \
 	fi
 	bun install @openapitools/openapi-generator-cli -g
+
+deps-oapi-codegen: ## Install oapi-codegen for Go client generation
+	@echo "Installing oapi-codegen..."
+	@if ! command -v go &> /dev/null; then \
+		echo "Go is not installed. Please install Go first: https://golang.org/"; \
+		exit 1; \
+	fi
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
 deps-spruce: ## Install Spruce
 	@echo "Installing Spruce..."
@@ -84,6 +92,7 @@ check-deps: ## Check if all dependencies are installed
 	@echo "Checking dependencies..."
 	@command -v spruce >/dev/null 2>&1 || { echo "spruce is not installed. Run 'make deps-spruce'"; exit 1; }
 	@command -v jq >/dev/null 2>&1 || { echo "jq is not installed. Run 'make deps-jq'"; exit 1; }
+	@command -v oapi-codegen >/dev/null 2>&1 || { echo "oapi-codegen is not installed. Run 'make deps-oapi-codegen'"; exit 1; }
 	@echo "All dependencies are installed!"
 
 prepare: check-deps ## Prepare the OpenAPI specification
@@ -94,7 +103,7 @@ gen-openapi-spec: check-deps ## Merge the CAPI OpenAPI specifications
 	@echo "Merging CAPI OpenAPI specifications..."
 	./bin/gen merge --version=$(CAPI_VERSION)
 
-gen-go-client: gen-openapi-spec ## Generate Go client from OpenAPI spec
+gen-go-client: gen-openapi-spec ## Generate Go client from OpenAPI spec (uses oapi-codegen by default)
 	@echo "Generating Go client..."
 	./bin/gen --version=$(CAPI_VERSION) --language=go
 

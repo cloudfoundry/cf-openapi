@@ -22,12 +22,14 @@ my $command;
 my $capi_version;
 my $language;
 my $output_path;
+my $generator;
 my $help;
 
 GetOptions(
     'version=s' => \$capi_version,
     'language=s' => \$language,
     'output=s' => \$output_path,
+    'generator=s' => \$generator,
     'help' => \$help,
 ) or die usage();
 
@@ -51,8 +53,20 @@ if ($command eq 'prepare') {
     merge_openapi_spec($capi_version);
 } elsif ($capi_version && $language) {
     # Generate SDK (original functionality)
+    # Set default generator based on language
+    if ($language eq 'go' && !$generator) {
+        $generator = 'oapi-codegen';
+    } else {
+        $generator //= 'openapi-generator';
+    }
+    
     # Set default output path if not provided
-    $output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language);
+    if ($language eq 'go') {
+        # For Go, append the package name to the path
+        $output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language, 'capiclient');
+    } else {
+        $output_path //= File::Spec->catfile($project_root, 'sdk', $capi_version, $language);
+    }
     
     # Validate inputs
     validate_inputs();
@@ -79,6 +93,8 @@ SDK Generation Options:
   
 Optional options:
   --output=PATH       Output directory (default: ./sdk/VERSION/LANGUAGE/)
+  --generator=GEN     Generator to use: openapi-generator, oapi-codegen
+                      (default: oapi-codegen for Go, openapi-generator for others)
   --help              Show this help message
 
 Supported languages:
@@ -100,7 +116,8 @@ Supported languages:
 Examples:
   $0 prepare --version=3.195.0
   $0 merge --version=3.195.0
-  $0 --version=3.195.0 --language=go
+  $0 --version=3.195.0 --language=go                    # Uses oapi-codegen by default
+  $0 --version=3.195.0 --language=go --generator=openapi-generator
   $0 --version=3.181.0 --language=python --output=/tmp/capi-python-sdk
 EOF
 }
@@ -113,12 +130,21 @@ sub validate_inputs {
             "Please run './bin/gen merge --version=$capi_version' first to generate the specification.\n";
     }
     
-    # Check if openapi-generator is available
-    my $generator_check = `which openapi-generator 2>/dev/null || which openapi-generator-cli 2>/dev/null`;
-    chomp $generator_check;
-    unless ($generator_check) {
-        die "Error: openapi-generator-cli not found.\n" .
-            "Please run 'make deps' to install dependencies.\n";
+    # Check if selected generator is available
+    if ($generator eq 'oapi-codegen') {
+        my $generator_check = `which oapi-codegen 2>/dev/null`;
+        chomp $generator_check;
+        unless ($generator_check) {
+            die "Error: oapi-codegen not found.\n" .
+                "Please install it with: go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen\@latest\n";
+        }
+    } else {
+        my $generator_check = `which openapi-generator 2>/dev/null || which openapi-generator-cli 2>/dev/null`;
+        chomp $generator_check;
+        unless ($generator_check) {
+            die "Error: openapi-generator-cli not found.\n" .
+                "Please run 'make deps' to install dependencies.\n";
+        }
     }
 }
 
@@ -128,36 +154,73 @@ sub generate_sdk {
     # Create output directory if it doesn't exist
     make_path($output_path) unless -d $output_path;
     
-    # Determine which command to use (openapi-generator or openapi-generator-cli)
-    my $generator_cmd = `which openapi-generator 2>/dev/null`;
-    chomp $generator_cmd;
-    $generator_cmd = 'openapi-generator-cli' unless $generator_cmd;
+    my $cmd;
+    my $result;
     
-    # Build the command
-    my $cmd = "$generator_cmd generate " .
-              "-i '$spec_file' " .
-              "-g '$language' " .
-              "-o '$output_path' " .
-              "--skip-validate-spec";
-    
-    # Add GitHub configuration
-    my $github_org = 'cloudfoundry-community';
-    my $github_repo = "capi-openapi-${language}-client";
-    $cmd .= " --git-user-id='$github_org' --git-repo-id='$github_repo'";
-    
-    # Add language-specific options
-    my $additional_props = get_additional_properties($language);
-    $cmd .= " --additional-properties='$additional_props'" if $additional_props;
-    
-    # Execute the command
-    say "Generating $language SDK for CAPI $capi_version...";
-    say "Command: $cmd";
-    
-    my $result = system($cmd);
+    if ($generator eq 'oapi-codegen') {
+        # Use oapi-codegen for Go
+        if ($language ne 'go') {
+            die "Error: oapi-codegen only supports Go language generation.\n";
+        }
+        
+        # Build output file path
+        my $output_file = File::Spec->catfile($output_path, 'client.go');
+        
+        # Build the command
+        $cmd = "oapi-codegen -generate types,client -package capiclient '$spec_file' > '$output_file'";
+        
+        # Execute the command
+        say "Generating $language SDK for CAPI $capi_version using oapi-codegen...";
+        say "Command: $cmd";
+        
+        $result = system($cmd);
+        
+        # Generate go.mod file if successful
+        if ($result == 0) {
+            generate_go_mod($output_path, $capi_version);
+        }
+    } else {
+        # Use openapi-generator
+        # Determine which command to use (openapi-generator or openapi-generator-cli)
+        my $generator_cmd = `which openapi-generator 2>/dev/null`;
+        chomp $generator_cmd;
+        $generator_cmd = 'openapi-generator-cli' unless $generator_cmd;
+        
+        # Build the command
+        $cmd = "$generator_cmd generate " .
+                  "-i '$spec_file' " .
+                  "-g '$language' " .
+                  "-o '$output_path' " .
+                  "--skip-validate-spec";
+        
+        # Add config file if it exists for Go
+        my $config_file = File::Spec->catfile($project_root, 'openapi-generator-config.yml');
+        if ($language eq 'go' && -f $config_file) {
+            $cmd .= " -c '$config_file'";
+        }
+        
+        # Add GitHub configuration
+        my $github_org = 'cloudfoundry-community';
+        my $github_repo = "capi-openapi-${language}-client";
+        $cmd .= " --git-user-id='$github_org' --git-repo-id='$github_repo'";
+        
+        # Add language-specific options
+        my $additional_props = get_additional_properties($language);
+        $cmd .= " --additional-properties='$additional_props'" if $additional_props;
+        
+        # Execute the command
+        say "Generating $language SDK for CAPI $capi_version using openapi-generator...";
+        say "Command: $cmd";
+        
+        $result = system($cmd);
+    }
     
     if ($result == 0) {
         say "\nSDK generated successfully!";
         say "Output directory: $output_path";
+        if ($generator eq 'oapi-codegen') {
+            say "Generated file: " . File::Spec->catfile($output_path, 'client.go');
+        }
     } else {
         die "\nError: Failed to generate SDK. Exit code: " . ($result >> 8) . "\n";
     }
@@ -168,7 +231,7 @@ sub get_additional_properties {
     
     # Language-specific additional properties
     my %lang_props = (
-        'go' => 'packageName=capiclient,isGoSubmodule=true,generateInterfaces=true',
+        'go' => 'packageName=capiclient,generateInterfaces=true',
         'python' => 'packageName=capi_client,projectName=capi-client',
         'java' => 'groupId=org.cloudfoundry,artifactId=capi-client,artifactVersion=' . $capi_version,
         'javascript' => 'npmName=\@cloudfoundry/capi-client,npmVersion=' . $capi_version,
@@ -180,6 +243,55 @@ sub get_additional_properties {
     );
     
     return $lang_props{$lang} // '';
+}
+
+sub generate_go_mod {
+    my ($output_dir, $version) = @_;
+    
+    my $go_mod_path = File::Spec->catfile($output_dir, 'go.mod');
+    
+    # Extract major version from version string (e.g., 3.195.0 -> v3)
+    my $major_version = '';
+    if ($version =~ /^(\d+)\./) {
+        $major_version = "/v$1" if $1 >= 2;  # Go modules use /v2, /v3, etc for v2+
+    }
+    
+    my $go_mod_content = <<EOF;
+module github.com/cloudfoundry-community/capi-openapi-go-client/capiclient${major_version}
+
+go 1.21
+
+require (
+\tgithub.com/oapi-codegen/runtime v1.1.1
+\tgopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+\tgithub.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
+\tgithub.com/google/uuid v1.5.0 // indirect
+)
+EOF
+    
+    say "Creating go.mod file...";
+    open(my $fh, '>', $go_mod_path) or die "Cannot create go.mod: $!";
+    print $fh $go_mod_content;
+    close($fh);
+    
+    # Run go mod tidy to ensure dependencies are correct
+    my $original_dir = `pwd`;
+    chomp $original_dir;
+    chdir($output_dir);
+    
+    say "Running go mod tidy...";
+    my $tidy_result = system("go mod tidy");
+    
+    chdir($original_dir);
+    
+    if ($tidy_result == 0) {
+        say "go.mod created successfully!";
+    } else {
+        say "Warning: go mod tidy failed. You may need to run it manually.";
+    }
 }
 
 sub check_deps {

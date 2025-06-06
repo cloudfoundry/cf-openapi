@@ -79,7 +79,7 @@ The `bin/gen` script provides a flexible way to generate SDKs for different lang
 ### Usage
 ```bash
 # Generate SDK
-./bin/gen --version=VERSION --language=LANGUAGE [--output=PATH]
+./bin/gen --version=VERSION --language=LANGUAGE [--output=PATH] [--generator=GENERATOR]
 
 # Prepare specifications (download and create YAML files)
 ./bin/gen prepare --version=VERSION
@@ -88,11 +88,22 @@ The `bin/gen` script provides a flexible way to generate SDKs for different lang
 ./bin/gen merge --version=VERSION
 ```
 
+### Generator Options
+
+The script supports multiple code generators:
+- **oapi-codegen** (default for Go) - Generates a single, clean Go file with types and client
+- **openapi-generator** (default for other languages) - Full-featured generator with many customization options
+
 ### Examples
 
 #### Generate Go SDK for latest CAPI version (3.195.0)
 ```bash
+# Using default oapi-codegen generator (creates single client.go file)
 ./bin/gen --version=3.195.0 --language=go
+# Output: ./sdk/3.195.0/go/capiclient/client.go
+
+# Using openapi-generator (creates multiple files)
+./bin/gen --version=3.195.0 --language=go --generator=openapi-generator
 # Output: ./sdk/3.195.0/go/
 ```
 
@@ -138,10 +149,50 @@ Run `./bin/gen --help` to see the full list of supported languages.
 
 After generating an SDK, you may need to:
 
-1. **Go**: Run `go mod tidy` in the generated directory
+1. **Go**: 
+   - With oapi-codegen: `go.mod` is automatically created and `go mod tidy` is run
+   - With openapi-generator: Run `go mod tidy` in the generated directory
 2. **Ruby**: Build the gem with `gem build *.gemspec`
 3. **Python**: Install with `pip install -e .`
 4. **Java**: Build with Maven or Gradle
+
+## Publishing Go Client
+
+The repository includes an automated workflow for publishing the Go client to a separate repository for easy consumption.
+
+### Manual Publishing
+
+```bash
+# Generate the Go client
+./bin/gen --version=3.195.0 --language=go
+
+# Publish to github.com/cloudfoundry-community/capi-openapi-go-client
+./bin/publish --version=3.195.0
+
+# Dry run to preview what will be published
+./bin/publish --version=3.195.0 --dry-run
+
+# Force overwrite if tag already exists
+./bin/publish --version=3.195.0 --force
+```
+
+### Automated Publishing via GitHub Actions
+
+1. Go to the [Actions tab](../../actions)
+2. Select "Publish Go Client" workflow
+3. Click "Run workflow"
+4. Enter the CAPI version (e.g., 3.195.0)
+5. Optionally check "Force" to overwrite existing tags
+
+The published Go module will be available at:
+```go
+import "github.com/cloudfoundry-community/capi-openapi-go-client/capiclient/v3"
+```
+
+### Publishing Requirements
+
+- **SSH Deploy Key**: The GitHub Actions workflow requires a deploy key secret (`CAPI_GO_CLIENT_DEPLOY_KEY`) with write access to the target repository
+- **Target Repository**: `github.com/cloudfoundry-community/capi-openapi-go-client` must exist and be configured to accept the deploy key
 
 ## Version Information
 
@@ -210,10 +261,14 @@ capi/
 └── 3.195.0.openapi.json  (generated)
 bin/
 ├── gen           (main processing script for prepare, merge, and SDK generation)
+├── publish       (publishes Go client to separate repository)
 └── validate      (OpenAPI spec validation script)
 sdk/
 └── VERSION/
     └── LANGUAGE/ (generated SDKs)
+.github/
+└── workflows/
+    └── publish-go-client.yml (automated publishing workflow)
 ```
 
 ### Validation

@@ -1,0 +1,42 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+
+my $version = shift || '3.195.0';
+
+say "Running full integration test suite for v$version";
+say "=" x 60;
+
+# 1. Generate spec
+say "\n1. Generating OpenAPI spec...";
+system("./bin/gen spec --version=$version --format=json") == 0
+    or die "Spec generation failed";
+
+# 2. Fix types
+say "\n2. Fixing type issues...";
+system("./bin/fix-spec-types --input=capi/$version/openapi.json") == 0
+    or die "Type fixing failed";
+
+# 3. Validate spec
+say "\n3. Validating spec...";
+system("./bin/validate-spec --version=$version");
+
+# 4. Validate examples
+say "\n4. Validating examples...";
+system("./bin/validate-examples capi/$version/openapi.json");
+
+# 5. Generate SDK
+say "\n5. Generating Go SDK...";
+system("./bin/gen sdk --version=$version --language=go --generator=openapi-generator") == 0
+    or die "SDK generation failed";
+
+# 6. Test SDK
+say "\n6. Testing SDK against live API...";
+system("./bin/test-cf-sdk --version=$version");
+
+say "\n" . "=" x 60;
+say "Integration test suite completed!";
+say "\nReports available in capi/$version/:";
+system("ls -la capi/$version/*.md");

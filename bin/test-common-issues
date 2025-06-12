@@ -1,0 +1,736 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use YAML::XS;
+use File::Slurp;
+use Term::ANSIColor qw(colored);
+use Data::Dumper;
+use Getopt::Long;
+
+# Command line options
+my $spec_file = 'capi/3.195.0/enhanced/openapi.json';
+my $verbose = 0;
+my $json_output = 0;
+my $fail_on_warnings = 0;
+
+GetOptions(
+    'spec=s' => \$spec_file,
+    'verbose' => \$verbose,
+    'json' => \$json_output,
+    'fail-on-warnings' => \$fail_on_warnings,
+) or die "Usage: $0 [--spec=file] [--verbose] [--json] [--fail-on-warnings]\n";
+
+# Load OpenAPI spec
+print "Loading spec from $spec_file...\n" unless $json_output;
+my $spec_content = read_file($spec_file);
+my $spec = $spec_file =~ /\.ya?ml$/ ? Load($spec_content) : decode_json($spec_content);
+
+# Test results
+my %results = (
+    total_checks => 0,
+    passed => 0,
+    failed => 0,
+    warnings => 0,
+    errors => [],
+    checks => {
+        data_types => { passed => 0, failed => 0, issues => [] },
+        required_fields => { passed => 0, failed => 0, issues => [] },
+        security => { passed => 0, failed => 0, issues => [] },
+        response_codes => { passed => 0, failed => 0, issues => [] },
+        schema_ambiguity => { passed => 0, failed => 0, issues => [] },
+        naming_conventions => { passed => 0, failed => 0, issues => [] },
+    }
+);
+
+unless ($json_output) {
+    print colored("\nCAPI OpenAPI Common Issues Test Harness\n", 'bold');
+    print "=" x 50 . "\n\n";
+}
+
+# Run all checks
+check_data_type_consistency();
+check_required_fields();
+check_security_definitions();
+check_response_code_coverage();
+check_schema_ambiguity();
+check_naming_conventions();
+
+# Output results
+if ($json_output) {
+    print encode_json(\%results);
+} else {
+    print_summary();
+}
+
+# Exit with appropriate code
+my $exit_code = $results{failed} > 0 ? 1 : 0;
+$exit_code = 1 if $fail_on_warnings && $results{warnings} > 0;
+exit($exit_code);
+
+# Check 1: Data Type Consistency
+sub check_data_type_consistency {
+    my $check = $results{checks}{data_types};
+    print colored("Checking Data Type Consistency\n", 'cyan') unless $json_output;
+    
+    # Check for consistent GUID/UUID format
+    check_parameter_type_consistency('guid', 'string', 'uuid');
+    check_parameter_type_consistency('created_at', 'string', 'date-time');
+    check_parameter_type_consistency('updated_at', 'string', 'date-time');
+    
+    # Check schema field types
+    my $schemas = $spec->{components}{schemas} || {};
+    for my $schema_name (keys %$schemas) {
+        my $schema = $schemas->{$schema_name};
+        check_schema_field_types($schema_name, $schema, $check);
+    }
+    
+    # Check response body types match across similar endpoints
+    check_response_consistency($check);
+}
+
+sub check_parameter_type_consistency {
+    my ($param_name, $expected_type, $expected_format) = @_;
+    my $check = $results{checks}{data_types};
+    
+    my $paths = $spec->{paths} || {};
+    for my $path (keys %$paths) {
+        for my $method (keys %{$paths->{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $paths->{$path}{$method};
+            my $parameters = $operation->{parameters} || [];
+            
+            for my $param (@$parameters) {
+                if ($param->{name} && $param->{name} =~ /$param_name/i) {
+                    if ($param->{schema}) {
+                        my $type = $param->{schema}{type} || '';
+                        my $format = $param->{schema}{format} || '';
+                        
+                        if ($type ne $expected_type || ($expected_format && $format ne $expected_format)) {
+                            push @{$check->{issues}}, {
+                                type => 'error',
+                                location => "$method $path - param $param->{name}",
+                                message => "Inconsistent type for $param_name: got $type" . 
+                                          ($format ? " ($format)" : "") . 
+                                          ", expected $expected_type" .
+                                          ($expected_format ? " ($expected_format)" : "")
+                            };
+                            $check->{failed}++;
+                        } else {
+                            $check->{passed}++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+sub check_schema_field_types {
+    my ($schema_name, $schema, $check) = @_;
+    
+    return unless $schema->{properties};
+    
+    # Check common fields have consistent types
+    my %expected_types = (
+        guid => { type => 'string', format => 'uuid' },
+        created_at => { type => 'string', format => 'date-time' },
+        updated_at => { type => 'string', format => 'date-time' },
+        name => { type => 'string' },
+        relationships => { type => 'object' },
+        links => { type => 'object' },
+        metadata => { type => 'object' }
+    );
+    
+    for my $field (keys %expected_types) {
+        if ($schema->{properties}{$field}) {
+            my $actual = $schema->{properties}{$field};
+            my $expected = $expected_types{$field};
+            
+            my $actual_type = $actual->{type} || '';
+            if ($actual_type ne $expected->{type}) {
+                push @{$check->{issues}}, {
+                    type => 'error',
+                    location => "Schema: $schema_name.$field",
+                    message => "Type mismatch: got $actual_type, expected $expected->{type}"
+                };
+                $check->{failed}++;
+            } elsif ($expected->{format} && ($actual->{format} || '') ne $expected->{format}) {
+                push @{$check->{issues}}, {
+                    type => 'warning',
+                    location => "Schema: $schema_name.$field",
+                    message => "Format mismatch: got " . ($actual->{format} || 'none') . 
+                              ", expected $expected->{format}"
+                };
+                $results{warnings}++;
+            } else {
+                $check->{passed}++;
+            }
+        }
+    }
+}
+
+sub check_response_consistency {
+    my ($check) = @_;
+    
+    # Check that list endpoints return consistent pagination structure
+    my $paths = $spec->{paths} || {};
+    for my $path (keys %$paths) {
+        if ($paths->{$path}{get} && $path !~ /\{[^}]+\}$/) {  # List endpoints
+            my $responses = $paths->{$path}{get}{responses} || {};
+            if ($responses->{'200'} && $responses->{'200'}{content}) {
+                my $content = $responses->{'200'}{content}{'application/json'} || {};
+                my $schema = resolve_schema_ref($content->{schema});
+                
+                if ($schema && $schema->{properties}) {
+                    # Should have pagination properties
+                    my @pagination_fields = qw(pagination resources);
+                    for my $field (@pagination_fields) {
+                        unless ($schema->{properties}{$field}) {
+                            push @{$check->{issues}}, {
+                                type => 'warning',
+                                location => "GET $path response",
+                                message => "List endpoint missing $field property"
+                            };
+                            $results{warnings}++;
+                        } else {
+                            $check->{passed}++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Check 2: Required vs Optional Fields
+sub check_required_fields {
+    my $check = $results{checks}{required_fields};
+    print colored("Checking Required vs Optional Fields\n", 'cyan') unless $json_output;
+    
+    # Check schemas
+    my $schemas = $spec->{components}{schemas} || {};
+    for my $schema_name (keys %$schemas) {
+        my $schema = $schemas->{$schema_name};
+        check_schema_required_fields($schema_name, $schema, $check);
+    }
+    
+    # Check request bodies
+    check_request_body_required_fields($check);
+}
+
+sub check_schema_required_fields {
+    my ($schema_name, $schema, $check) = @_;
+    
+    return unless $schema->{properties};
+    
+    my $required = $schema->{required} || [];
+    my %required_hash = map { $_ => 1 } @$required;
+    
+    # Common fields that should typically be required
+    my @should_be_required = qw(guid type);
+    
+    for my $field (@should_be_required) {
+        if ($schema->{properties}{$field} && !$required_hash{$field}) {
+            push @{$check->{issues}}, {
+                type => 'warning',
+                location => "Schema: $schema_name",
+                message => "Field '$field' exists but is not marked as required"
+            };
+            $results{warnings}++;
+        } else {
+            $check->{passed}++;
+        }
+    }
+    
+    # Check that required fields actually exist in properties
+    for my $req_field (@$required) {
+        unless ($schema->{properties}{$req_field}) {
+            push @{$check->{issues}}, {
+                type => 'error',
+                location => "Schema: $schema_name",
+                message => "Required field '$req_field' not found in properties"
+            };
+            $check->{failed}++;
+        } else {
+            $check->{passed}++;
+        }
+    }
+}
+
+sub check_request_body_required_fields {
+    my ($check) = @_;
+    
+    my $paths = $spec->{paths} || {};
+    for my $path (keys %$paths) {
+        for my $method (qw(post put patch)) {
+            next unless $paths->{$path}{$method};
+            
+            my $operation = $paths->{$path}{$method};
+            if ($operation->{requestBody} && $operation->{requestBody}{content}) {
+                my $content = $operation->{requestBody}{content}{'application/json'} || {};
+                my $schema = resolve_schema_ref($content->{schema});
+                
+                if ($schema && $schema->{properties} && !$schema->{required}) {
+                    push @{$check->{issues}}, {
+                        type => 'warning',
+                        location => "$method $path request body",
+                        message => "Request body schema has no required fields defined"
+                    };
+                    $results{warnings}++;
+                } else {
+                    $check->{passed}++;
+                }
+            }
+        }
+    }
+}
+
+# Check 3: Security Definitions
+sub check_security_definitions {
+    my $check = $results{checks}{security};
+    print colored("Checking Security Definitions\n", 'cyan') unless $json_output;
+    
+    # Check global security schemes exist
+    unless ($spec->{components}{securitySchemes}) {
+        push @{$check->{issues}}, {
+            type => 'error',
+            location => 'components.securitySchemes',
+            message => 'No security schemes defined'
+        };
+        $check->{failed}++;
+    } else {
+        $check->{passed}++;
+    }
+    
+    # Check endpoints have security requirements
+    my $paths = $spec->{paths} || {};
+    my $endpoints_without_security = 0;
+    my $total_endpoints = 0;
+    
+    for my $path (keys %$paths) {
+        for my $method (keys %{$paths->{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            $total_endpoints++;
+            my $operation = $paths->{$path}{$method};
+            
+            # Check for security at operation or global level
+            my $has_security = $operation->{security} || $spec->{security};
+            
+            # Some endpoints legitimately don't need auth (like /v3/info)
+            my @no_auth_paths = qw(/v3/info /v3 /);
+            my $needs_auth = !grep { $path eq $_ } @no_auth_paths;
+            
+            if ($needs_auth && !$has_security) {
+                $endpoints_without_security++;
+                push @{$check->{issues}}, {
+                    type => 'error',
+                    location => "$method $path",
+                    message => 'Endpoint missing security definition'
+                };
+                $check->{failed}++;
+            } else {
+                $check->{passed}++;
+            }
+        }
+    }
+    
+    if ($endpoints_without_security > 0) {
+        push @{$check->{issues}}, {
+            type => 'error',
+            location => 'paths',
+            message => "$endpoints_without_security of $total_endpoints endpoints lack security definitions"
+        };
+    }
+}
+
+# Check 4: Response Code Coverage
+sub check_response_code_coverage {
+    my $check = $results{checks}{response_codes};
+    print colored("Checking Response Code Coverage\n", 'cyan') unless $json_output;
+    
+    my $paths = $spec->{paths} || {};
+    
+    for my $path (keys %$paths) {
+        for my $method (keys %{$paths->{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $paths->{$path}{$method};
+            my $responses = $operation->{responses} || {};
+            
+            # Expected response codes by method
+            my %expected_codes = (
+                get => ['200', '404'],
+                post => ['201', '400', '422'],
+                put => ['200', '400', '404', '422'],
+                patch => ['200', '400', '404', '422'],
+                delete => ['204', '404']
+            );
+            
+            # Common error codes that should be documented
+            my @common_errors = qw(401 403);
+            
+            if ($expected_codes{$method}) {
+                for my $code (@{$expected_codes{$method}}) {
+                    unless ($responses->{$code}) {
+                        push @{$check->{issues}}, {
+                            type => 'warning',
+                            location => "$method $path",
+                            message => "Missing expected response code: $code"
+                        };
+                        $results{warnings}++;
+                    } else {
+                        $check->{passed}++;
+                    }
+                }
+            }
+            
+            # Check for common error responses
+            for my $error_code (@common_errors) {
+                unless ($responses->{$error_code} || $responses->{default}) {
+                    push @{$check->{issues}}, {
+                        type => 'warning',
+                        location => "$method $path",
+                        message => "Missing common error response: $error_code"
+                    };
+                    $results{warnings}++;
+                } else {
+                    $check->{passed}++;
+                }
+            }
+        }
+    }
+}
+
+# Check 5: Schema Ambiguity
+sub check_schema_ambiguity {
+    my $check = $results{checks}{schema_ambiguity};
+    print colored("Checking Schema Ambiguity\n", 'cyan') unless $json_output;
+    
+    my $schemas = $spec->{components}{schemas} || {};
+    
+    for my $schema_name (keys %$schemas) {
+        my $schema = $schemas->{$schema_name};
+        
+        # Check for oneOf/anyOf without discriminator
+        if ($schema->{oneOf} || $schema->{anyOf}) {
+            unless ($schema->{discriminator}) {
+                push @{$check->{issues}}, {
+                    type => 'warning',
+                    location => "Schema: $schema_name",
+                    message => "Uses oneOf/anyOf without discriminator - may cause ambiguity"
+                };
+                $results{warnings}++;
+            } else {
+                $check->{passed}++;
+            }
+        }
+        
+        # Check for properties without type
+        if ($schema->{properties}) {
+            for my $prop (keys %{$schema->{properties}}) {
+                my $prop_schema = $schema->{properties}{$prop};
+                unless ($prop_schema->{type} || $prop_schema->{'$ref'} || 
+                        $prop_schema->{oneOf} || $prop_schema->{anyOf} || $prop_schema->{allOf}) {
+                    push @{$check->{issues}}, {
+                        type => 'error',
+                        location => "Schema: $schema_name.$prop",
+                        message => "Property missing type definition"
+                    };
+                    $check->{failed}++;
+                } else {
+                    $check->{passed}++;
+                }
+            }
+        }
+        
+        # Check for conflicting nullable vs required
+        if ($schema->{required} && $schema->{properties}) {
+            for my $req_field (@{$schema->{required}}) {
+                if ($schema->{properties}{$req_field} && 
+                    $schema->{properties}{$req_field}{nullable}) {
+                    push @{$check->{issues}}, {
+                        type => 'warning',
+                        location => "Schema: $schema_name.$req_field",
+                        message => "Field is both required and nullable - may cause confusion"
+                    };
+                    $results{warnings}++;
+                }
+            }
+        }
+    }
+}
+
+# Check 6: Naming Conventions
+sub check_naming_conventions {
+    my $check = $results{checks}{naming_conventions};
+    print colored("Checking Naming Conventions\n", 'cyan') unless $json_output;
+    
+    # Check operation IDs
+    check_operation_id_conventions($check);
+    
+    # Check parameter naming
+    check_parameter_naming($check);
+    
+    # Check schema naming
+    check_schema_naming($check);
+    
+    # Check property naming
+    check_property_naming($check);
+}
+
+sub check_operation_id_conventions {
+    my ($check) = @_;
+    
+    my $paths = $spec->{paths} || {};
+    
+    for my $path (keys %$paths) {
+        for my $method (keys %{$paths->{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $paths->{$path}{$method};
+            
+            # Check operation ID exists
+            unless ($operation->{operationId}) {
+                push @{$check->{issues}}, {
+                    type => 'error',
+                    location => "$method $path",
+                    message => "Missing operationId"
+                };
+                $check->{failed}++;
+                next;
+            }
+            
+            # Check operation ID format (should be camelCase)
+            my $op_id = $operation->{operationId};
+            unless ($op_id =~ /^[a-z][a-zA-Z0-9_]*$/) {
+                push @{$check->{issues}}, {
+                    type => 'warning',
+                    location => "$method $path",
+                    message => "Operation ID '$op_id' doesn't follow camelCase convention"
+                };
+                $results{warnings}++;
+            } else {
+                $check->{passed}++;
+            }
+            
+            # Check operation ID matches method and resource
+            my $resource = extract_resource_from_path($path);
+            my $action = method_to_action($method);
+            
+            my $escaped_resource = quotemeta($resource);
+            my $escaped_action = quotemeta($action);
+            unless ($op_id =~ /$escaped_action.*$escaped_resource/i || $op_id =~ /$escaped_resource.*$escaped_action/i) {
+                push @{$check->{issues}}, {
+                    type => 'warning',
+                    location => "$method $path",
+                    message => "Operation ID '$op_id' doesn't clearly indicate action ($action) and resource ($resource)"
+                };
+                $results{warnings}++;
+            }
+        }
+    }
+}
+
+sub check_parameter_naming {
+    my ($check) = @_;
+    
+    my $paths = $spec->{paths} || {};
+    
+    for my $path (keys %$paths) {
+        for my $method (keys %{$paths->{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $paths->{$path}{$method};
+            my $parameters = $operation->{parameters} || [];
+            
+            for my $param (@$parameters) {
+                my $name = $param->{name} || '';
+                
+                # Path parameters should match the path template
+                if ($param->{in} eq 'path' && $path =~ /\{([^}]+)\}/) {
+                    unless ($path =~ /\{$name\}/) {
+                        push @{$check->{issues}}, {
+                            type => 'error',
+                            location => "$method $path - param $name",
+                            message => "Path parameter doesn't match path template"
+                        };
+                        $check->{failed}++;
+                    } else {
+                        $check->{passed}++;
+                    }
+                }
+                
+                # Query parameters should be snake_case
+                if ($param->{in} eq 'query' && $name !~ /^[a-z][a-z0-9_]*(\[[a-z]+\])?$/) {
+                    push @{$check->{issues}}, {
+                        type => 'warning',
+                        location => "$method $path - param $name",
+                        message => "Query parameter doesn't follow snake_case convention"
+                    };
+                    $results{warnings}++;
+                } else {
+                    $check->{passed}++;
+                }
+            }
+        }
+    }
+}
+
+sub check_schema_naming {
+    my ($check) = @_;
+    
+    my $schemas = $spec->{components}{schemas} || {};
+    
+    for my $schema_name (keys %$schemas) {
+        # Schema names should be PascalCase
+        unless ($schema_name =~ /^[A-Z][a-zA-Z0-9]*$/) {
+            push @{$check->{issues}}, {
+                type => 'warning',
+                location => "Schema: $schema_name",
+                message => "Schema name doesn't follow PascalCase convention"
+            };
+            $results{warnings}++;
+        } else {
+            $check->{passed}++;
+        }
+    }
+}
+
+sub check_property_naming {
+    my ($check) = @_;
+    
+    my $schemas = $spec->{components}{schemas} || {};
+    
+    for my $schema_name (keys %$schemas) {
+        my $schema = $schemas->{$schema_name};
+        next unless $schema->{properties};
+        
+        for my $prop (keys %{$schema->{properties}}) {
+            # Properties should be snake_case
+            unless ($prop =~ /^[a-z][a-z0-9_]*$/) {
+                push @{$check->{issues}}, {
+                    type => 'warning',
+                    location => "Schema: $schema_name.$prop",
+                    message => "Property doesn't follow snake_case convention"
+                };
+                $results{warnings}++;
+            } else {
+                $check->{passed}++;
+            }
+        }
+    }
+}
+
+# Helper functions
+sub resolve_schema_ref {
+    my $ref = shift;
+    
+    return $ref unless $ref->{'$ref'};
+    
+    my $ref_path = $ref->{'$ref'};
+    if ($ref_path =~ m{^#/components/schemas/(.+)$}) {
+        return $spec->{components}{schemas}{$1};
+    }
+    
+    return $ref;
+}
+
+sub extract_resource_from_path {
+    my $path = shift;
+    
+    # Extract the main resource from the path
+    if ($path =~ m{/v3/([^/]+)}) {
+        my $resource = $1;
+        $resource =~ s/_([a-z])/uc($1)/ge;  # Convert to camelCase
+        return $resource;
+    }
+    
+    return 'unknown';
+}
+
+sub method_to_action {
+    my $method = shift;
+    
+    my %actions = (
+        get => 'get',
+        post => 'create',
+        put => 'update',
+        patch => 'update',
+        delete => 'delete'
+    );
+    
+    return $actions{$method} || $method;
+}
+
+sub print_summary {
+    print "\n" . "=" x 50 . "\n";
+    print colored("Test Summary\n", 'bold');
+    print "=" x 50 . "\n\n";
+    
+    # Overall stats
+    my $total_passed = 0;
+    my $total_failed = 0;
+    
+    for my $check_name (sort keys %{$results{checks}}) {
+        my $check = $results{checks}{$check_name};
+        $total_passed += $check->{passed};
+        $total_failed += $check->{failed};
+        
+        my $check_label = $check_name;
+        $check_label =~ s/_/ /g;
+        $check_label =~ s/\b(\w)/uc($1)/ge;
+        
+        print sprintf("%-25s: ", $check_label);
+        print colored("$check->{passed} passed", 'green');
+        if ($check->{failed} > 0) {
+            print ", " . colored("$check->{failed} failed", 'red');
+        }
+        print "\n";
+    }
+    
+    print "\n";
+    print "Total Checks: " . ($total_passed + $total_failed) . "\n";
+    print colored("Passed: $total_passed\n", 'green') if $total_passed;
+    print colored("Failed: $total_failed\n", 'red') if $total_failed;
+    print colored("Warnings: $results{warnings}\n", 'yellow') if $results{warnings};
+    
+    # Print issues
+    if ($total_failed > 0 || $results{warnings} > 0) {
+        print "\n" . colored("Issues Found:\n", 'bold');
+        
+        for my $check_name (sort keys %{$results{checks}}) {
+            my $check = $results{checks}{$check_name};
+            next unless @{$check->{issues}};
+            
+            my $check_label = $check_name;
+            $check_label =~ s/_/ /g;
+            $check_label =~ s/\b(\w)/uc($1)/ge;
+            
+            print "\n" . colored("$check_label:\n", 'cyan');
+            
+            my $count = 0;
+            for my $issue (@{$check->{issues}}) {
+                last if ++$count > 10 && !$verbose;
+                
+                my $color = $issue->{type} eq 'error' ? 'red' : 'yellow';
+                print colored("  [$issue->{type}] ", $color);
+                print "$issue->{location}: $issue->{message}\n";
+            }
+            
+            if (@{$check->{issues}} > 10 && !$verbose) {
+                print "  ... and " . (@{$check->{issues}} - 10) . " more\n";
+            }
+        }
+        
+        print "\n(use --verbose to see all issues)\n" unless $verbose;
+    }
+    
+    if ($total_failed == 0 && $results{warnings} == 0) {
+        print colored("\n✓ All checks passed!\n", 'green');
+    }
+}

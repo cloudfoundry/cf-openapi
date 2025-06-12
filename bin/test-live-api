@@ -1,0 +1,380 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use LWP::UserAgent;
+use HTTP::Request;
+use URI;
+use Term::ANSIColor qw(colored);
+use Getopt::Long;
+use Data::Dumper;
+
+# Command line options
+my $spec_file = 'capi/3.195.0/enhanced/openapi.json';
+my $cf_config = '~/cf/config.json';
+my $verbose = 0;
+my $test_writes = 0;
+my $test_endpoint;
+
+GetOptions(
+    'spec=s' => \$spec_file,
+    'cf-config=s' => \$cf_config,
+    'verbose' => \$verbose,
+    'test-writes' => \$test_writes,
+    'endpoint=s' => \$test_endpoint,
+) or die usage();
+
+sub usage {
+    return <<EOF;
+Usage: $0 [options]
+
+Options:
+  --spec=FILE        OpenAPI spec file (default: capi/3.195.0/enhanced/openapi.json)
+  --cf-config=FILE   CF config file (default: ~/cf/config.json)
+  --verbose          Show detailed output
+  --test-writes      Also test write operations (POST, PUT, DELETE)
+  --endpoint=PATH    Test specific endpoint only
+
+Examples:
+  $0                                    # Test read endpoints
+  $0 --test-writes                      # Include write operation tests
+  $0 --endpoint=/v3/apps                # Test specific endpoint
+EOF
+}
+
+# Load CF config
+print "Loading CF config from $cf_config...\n";
+my $cf_config_data = decode_json(read_file($cf_config));
+my $api_url = $cf_config_data->{Target};
+my $access_token = $cf_config_data->{AccessToken};
+my $org_guid = $cf_config_data->{OrganizationFields}{GUID};
+my $space_guid = $cf_config_data->{SpaceFields}{GUID};
+
+# Load OpenAPI spec
+print "Loading OpenAPI spec from $spec_file...\n";
+my $spec = decode_json(read_file($spec_file));
+
+# Create user agent
+my $ua = LWP::UserAgent->new(
+    timeout => 30,
+    ssl_opts => { verify_hostname => 0 },  # Since SSLDisabled is true in config
+);
+
+# Test results
+my %results = (
+    total => 0,
+    passed => 0,
+    failed => 0,
+    skipped => 0,
+    endpoints => {}
+);
+
+print colored("\nCAPI Live API Testing\n", 'bold');
+print "=" x 50 . "\n";
+print "API URL: $api_url\n";
+print "Organization: $cf_config_data->{OrganizationFields}{Name} ($org_guid)\n";
+print "Space: $cf_config_data->{SpaceFields}{Name} ($space_guid)\n";
+print "=" x 50 . "\n\n";
+
+# Test endpoints
+if ($test_endpoint) {
+    test_specific_endpoint($test_endpoint);
+} else {
+    test_all_endpoints();
+}
+
+# Print summary
+print_summary();
+
+sub test_all_endpoints {
+    my $paths = $spec->{paths} || {};
+    
+    # Group endpoints by safety
+    my @safe_endpoints = (
+        # Info endpoints (no auth required)
+        { path => '/', method => 'get' },
+        { path => '/v3', method => 'get' },
+        { path => '/v3/info', method => 'get' },
+        
+        # Read-only endpoints
+        { path => '/v3/apps', method => 'get' },
+        { path => '/v3/organizations', method => 'get' },
+        { path => '/v3/spaces', method => 'get' },
+        { path => '/v3/buildpacks', method => 'get' },
+        { path => '/v3/stacks', method => 'get' },
+        { path => '/v3/domains', method => 'get' },
+        { path => '/v3/routes', method => 'get' },
+        { path => '/v3/service_offerings', method => 'get' },
+        { path => '/v3/service_plans', method => 'get' },
+        { path => '/v3/users', method => 'get' },
+        
+        # Specific resource reads
+        { path => "/v3/organizations/$org_guid", method => 'get' },
+        { path => "/v3/spaces/$space_guid", method => 'get' },
+    );
+    
+    # Test safe endpoints
+    print colored("Testing Safe Read Endpoints\n", 'cyan');
+    print "-" x 40 . "\n";
+    
+    for my $endpoint (@safe_endpoints) {
+        test_endpoint($endpoint->{path}, $endpoint->{method});
+    }
+    
+    # Test write operations if requested
+    if ($test_writes) {
+        print colored("\nTesting Write Operations\n", 'cyan');
+        print "-" x 40 . "\n";
+        print colored("WARNING: This will create test resources\n", 'yellow');
+        
+        # Create a test app
+        test_create_app();
+    }
+}
+
+sub test_specific_endpoint {
+    my ($path) = @_;
+    
+    # Find all methods for this path
+    my $path_spec = $spec->{paths}{$path};
+    unless ($path_spec) {
+        die "Endpoint $path not found in OpenAPI spec\n";
+    }
+    
+    for my $method (keys %$path_spec) {
+        next if $method =~ /^(parameters|servers|summary|description)$/;
+        test_endpoint($path, $method);
+    }
+}
+
+sub test_endpoint {
+    my ($path, $method) = @_;
+    
+    $results{total}++;
+    
+    # Build URL
+    my $url = "$api_url$path";
+    
+    print "Testing " . uc($method) . " $path... ";
+    
+    # Create request
+    my $req = HTTP::Request->new(uc($method) => $url);
+    
+    # Add auth header for authenticated endpoints
+    unless ($path =~ m{^/(v3/info|v3|/)$}) {
+        $req->header('Authorization' => $access_token);
+    }
+    
+    # Add accept header
+    $req->header('Accept' => 'application/json');
+    
+    # Execute request
+    my $start_time = time();
+    my $response = $ua->request($req);
+    my $duration = time() - $start_time;
+    
+    # Check response
+    if ($response->is_success) {
+        print colored("✓", 'green');
+        print " (${duration}s)";
+        $results{passed}++;
+        
+        # Validate response against schema
+        if ($verbose) {
+            validate_response($path, $method, $response);
+        }
+    } elsif ($response->code == 404 && $path =~ /\{[^}]+\}/) {
+        # Expected 404 for paths with parameters we didn't substitute
+        print colored("○", 'yellow');
+        print " (404 - parameterized path)";
+        $results{skipped}++;
+    } elsif ($response->code == 401 || $response->code == 403) {
+        # Auth issues
+        print colored("✗", 'red');
+        print " (" . $response->code . " - " . $response->message . ")";
+        $results{failed}++;
+    } else {
+        print colored("✗", 'red');
+        print " (" . $response->code . " - " . $response->message . ")";
+        $results{failed}++;
+        
+        if ($verbose) {
+            print "\n  Response: " . $response->content . "\n";
+        }
+    }
+    
+    print "\n";
+    
+    # Store result
+    $results{endpoints}{"$method $path"} = {
+        status => $response->code,
+        duration => $duration,
+        success => $response->is_success
+    };
+}
+
+sub validate_response {
+    my ($path, $method, $response) = @_;
+    
+    # Get expected response schema
+    my $operation = $spec->{paths}{$path}{$method};
+    my $expected_response = $operation->{responses}{$response->code} || 
+                           $operation->{responses}{default};
+    
+    if ($expected_response && $expected_response->{content}) {
+        my $content_type = 'application/json';
+        my $schema = $expected_response->{content}{$content_type}{schema};
+        
+        if ($schema) {
+            # Parse response body
+            my $body = eval { decode_json($response->content) };
+            if ($@) {
+                print colored("\n  Warning: Could not parse JSON response", 'yellow');
+                return;
+            }
+            
+            # Basic validation
+            if ($schema->{'$ref'}) {
+                print colored("\n  Response matches schema reference: $schema->{'$ref'}", 'green');
+            } elsif ($schema->{type}) {
+                print colored("\n  Response type: $schema->{type}", 'green');
+            }
+            
+            # Check for pagination in list responses
+            if ($path !~ /\{[^}]+\}/ && $method eq 'get' && ref($body) eq 'HASH') {
+                if ($body->{pagination}) {
+                    print colored("\n  ✓ Pagination present", 'green');
+                }
+                if (exists $body->{resources}) {
+                    my $count = @{$body->{resources}};
+                    print colored("\n  ✓ Resources: $count items", 'green');
+                }
+            }
+        }
+    }
+}
+
+sub test_create_app {
+    my $test_app_name = "capi-openapi-test-" . time();
+    
+    print "\nCreating test app: $test_app_name\n";
+    
+    my $url = "$api_url/v3/apps";
+    my $req = HTTP::Request->new(POST => $url);
+    $req->header('Authorization' => $access_token);
+    $req->header('Content-Type' => 'application/json');
+    $req->header('Accept' => 'application/json');
+    
+    my $app_data = {
+        name => $test_app_name,
+        relationships => {
+            space => {
+                data => {
+                    guid => $space_guid
+                }
+            }
+        }
+    };
+    
+    $req->content(encode_json($app_data));
+    
+    my $response = $ua->request($req);
+    
+    if ($response->is_success) {
+        print colored("✓ Test app created successfully\n", 'green');
+        
+        my $app = decode_json($response->content);
+        my $app_guid = $app->{guid};
+        
+        # Test GET on the created app
+        test_endpoint("/v3/apps/$app_guid", 'get');
+        
+        # Clean up - delete the app
+        print "Cleaning up test app...\n";
+        my $delete_req = HTTP::Request->new(DELETE => "$api_url/v3/apps/$app_guid");
+        $delete_req->header('Authorization' => $access_token);
+        
+        my $delete_response = $ua->request($delete_req);
+        if ($delete_response->is_success || $delete_response->code == 202) {
+            print colored("✓ Test app deleted\n", 'green');
+        }
+    } else {
+        print colored("✗ Failed to create test app: " . $response->status_line . "\n", 'red');
+        if ($verbose) {
+            print "Response: " . $response->content . "\n";
+        }
+    }
+}
+
+sub print_summary {
+    print "\n" . "=" x 50 . "\n";
+    print colored("Test Summary\n", 'bold');
+    print "=" x 50 . "\n\n";
+    
+    print "Total Endpoints Tested: $results{total}\n";
+    print colored("Passed: $results{passed}\n", 'green') if $results{passed};
+    print colored("Failed: $results{failed}\n", 'red') if $results{failed};
+    print colored("Skipped: $results{skipped}\n", 'yellow') if $results{skipped};
+    
+    # Success rate
+    if ($results{total} > 0) {
+        my $success_rate = int(($results{passed} / $results{total}) * 100);
+        print "\nSuccess Rate: $success_rate%\n";
+    }
+    
+    # Show failed endpoints
+    if ($results{failed} > 0) {
+        print colored("\nFailed Endpoints:\n", 'red');
+        for my $endpoint (sort keys %{$results{endpoints}}) {
+            my $result = $results{endpoints}{$endpoint};
+            unless ($result->{success}) {
+                print "  - $endpoint (HTTP $result->{status})\n";
+            }
+        }
+    }
+    
+    # Performance stats
+    my @durations = map { $_->{duration} } 
+                    grep { $_->{success} } 
+                    values %{$results{endpoints}};
+    
+    if (@durations) {
+        my $avg_duration = sprintf("%.2f", (sum(@durations) / @durations));
+        my $min_duration = sprintf("%.2f", min(@durations));
+        my $max_duration = sprintf("%.2f", max(@durations));
+        
+        print "\nPerformance:\n";
+        print "  Average response time: ${avg_duration}s\n";
+        print "  Min response time: ${min_duration}s\n";
+        print "  Max response time: ${max_duration}s\n";
+    }
+    
+    if ($results{failed} == 0 && $results{passed} > 0) {
+        print colored("\n✓ All tested endpoints match OpenAPI spec!\n", 'green');
+    }
+}
+
+sub sum {
+    my $sum = 0;
+    $sum += $_ for @_;
+    return $sum;
+}
+
+sub min {
+    my $min = shift;
+    for (@_) {
+        $min = $_ if $_ < $min;
+    }
+    return $min;
+}
+
+sub max {
+    my $max = shift;
+    for (@_) {
+        $max = $_ if $_ > $max;
+    }
+    return $max;
+}

@@ -1,0 +1,303 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use v5.30;
+use Getopt::Long;
+use JSON::XS;
+use File::Slurp;
+use File::Basename;
+use Term::ANSIColor;
+
+# Configuration
+my $version;
+my $changes_file;
+my $base_branch = 'main';
+my $draft = 0;
+my $dry_run = 0;
+my $auto_merge = 0;
+
+GetOptions(
+    'version=s'      => \$version,
+    'changes-file=s' => \$changes_file,
+    'base=s'         => \$base_branch,
+    'draft'          => \$draft,
+    'dry-run'        => \$dry_run,
+    'auto-merge'     => \$auto_merge,
+) or die "Error in command line arguments\n";
+
+die "Version required\n" unless $version;
+
+# Branch name
+my $branch_name = "update-capi-$version";
+
+# PR title and body
+my $pr_title = "Update CAPI OpenAPI specification to v$version";
+my $pr_body = generate_pr_body($version, $changes_file);
+
+# Execute Git operations
+unless ($dry_run) {
+    create_branch($branch_name);
+    run_generation($version);
+    commit_changes($version);
+    push_branch($branch_name);
+    create_pull_request($branch_name, $pr_title, $pr_body);
+} else {
+    print_dry_run_summary();
+}
+
+sub create_branch {
+    my ($branch) = @_;
+    
+    print_info("Creating branch: $branch");
+    
+    # Ensure we're on the latest base branch
+    system("git checkout $base_branch") == 0
+        or die "Failed to checkout $base_branch\n";
+    
+    system("git pull origin $base_branch") == 0
+        or die "Failed to pull latest changes\n";
+    
+    # Create new branch
+    system("git checkout -b $branch") == 0
+        or die "Failed to create branch $branch\n";
+}
+
+sub run_generation {
+    my ($ver) = @_;
+    
+    print_info("Running OpenAPI generation for v$ver");
+    
+    # Run the generation pipeline
+    system("./bin/gen generate --version=$ver") == 0
+        or die "Failed to generate OpenAPI specification\n";
+}
+
+sub commit_changes {
+    my ($ver) = @_;
+    
+    print_info("Committing changes");
+    
+    # Stage all changes in capi directory
+    system("git add capi/$ver/") == 0
+        or die "Failed to stage changes\n";
+    
+    # Stage documentation updates
+    system("git add docs/") == 0
+        or warn "No documentation changes to stage\n";
+    
+    # Create commit message
+    my $commit_msg = <<EOF;
+feat: Update CAPI OpenAPI specification to v$ver
+
+- Generated OpenAPI specification from CAPI HTML documentation
+- Applied enhancements and best practices
+- Validated specification with Spectral
+- Updated examples and descriptions
+
+Generated with automated update process.
+EOF
+    
+    # Commit changes
+    open my $fh, '|-', 'git', 'commit', '-F', '-'
+        or die "Failed to run git commit\n";
+    print $fh $commit_msg;
+    close $fh;
+    
+    die "Failed to commit changes\n" if $? != 0;
+}
+
+sub push_branch {
+    my ($branch) = @_;
+    
+    print_info("Pushing branch to origin");
+    
+    system("git push -u origin $branch") == 0
+        or die "Failed to push branch\n";
+}
+
+sub create_pull_request {
+    my ($branch, $title, $body) = @_;
+    
+    print_info("Creating pull request");
+    
+    # Build PR command
+    my @cmd = ('gh', 'pr', 'create',
+        '--base', $base_branch,
+        '--head', $branch,
+        '--title', $title,
+        '--body', $body
+    );
+    
+    push @cmd, '--draft' if $draft;
+    
+    # Create PR
+    my $pr_url = `@cmd`;
+    chomp $pr_url;
+    
+    if ($? == 0) {
+        print_success("Pull request created: $pr_url");
+        
+        if ($auto_merge && !$draft) {
+            print_info("Enabling auto-merge");
+            system("gh pr merge --auto --merge $pr_url") == 0
+                or warn "Failed to enable auto-merge\n";
+        }
+    } else {
+        die "Failed to create pull request\n";
+    }
+}
+
+sub generate_pr_body {
+    my ($ver, $changes) = @_;
+    
+    my $body = <<EOF;
+## Summary
+
+This PR updates the CAPI OpenAPI specification to version **$ver**.
+
+## Changes
+
+EOF
+
+    # Include changes report if available
+    if ($changes && -f $changes) {
+        my $changes_content = read_file($changes);
+        
+        # Extract summary section
+        if ($changes_content =~ /## Summary\n\n(.*?)\n\n/s) {
+            $body .= $1 . "\n\n";
+        }
+        
+        # Extract breaking changes
+        if ($changes_content =~ /## ⚠️ Breaking Changes\n\n(.*?)\n\n## /s) {
+            $body .= "### ⚠️ Breaking Changes\n\n$1\n\n";
+        }
+        
+        # Extract new features
+        if ($changes_content =~ /## ✨ New Features\n\n(.*?)\n\n## /s) {
+            $body .= "### ✨ New Features\n\n$1\n\n";
+        }
+    } else {
+        $body .= "See generated reports for detailed changes.\n\n";
+    }
+    
+    $body .= <<EOF;
+## Validation
+
+- [x] OpenAPI specification generated from official CAPI HTML documentation
+- [x] All endpoints and parameters extracted successfully
+- [x] Spectral validation passed
+- [x] Example validation completed
+- [x] Edge cases handled appropriately
+
+## Testing
+
+- [ ] SDK generation tested for major languages
+- [ ] Contract tests against live API (if applicable)
+- [ ] No regression in existing functionality
+
+## Files Changed
+
+- `capi/$ver/generated/` - Generated OpenAPI specification
+- `capi/$ver/enhanced/` - Enhanced specification with best practices
+- Various reports and validation results
+
+## Next Steps
+
+1. Review the generated specification
+2. Run additional integration tests if needed
+3. Merge and tag release
+
+---
+
+*This PR was automatically generated by the CAPI OpenAPI update process.*
+EOF
+
+    return $body;
+}
+
+sub print_dry_run_summary {
+    print colored("\n=== DRY RUN MODE ===\n", 'yellow');
+    print "Would perform the following actions:\n\n";
+    
+    print "1. Create branch: $branch_name\n";
+    print "2. Generate OpenAPI spec for version: $version\n";
+    print "3. Commit changes with automated message\n";
+    print "4. Push branch to origin\n";
+    print "5. Create pull request:\n";
+    print "   Title: $pr_title\n";
+    print "   Base: $base_branch\n";
+    print "   Draft: " . ($draft ? "Yes" : "No") . "\n";
+    print "   Auto-merge: " . ($auto_merge ? "Yes" : "No") . "\n";
+    print "\n";
+    
+    print colored("No changes were made. Remove --dry-run to execute.\n", 'yellow');
+}
+
+# Helper functions
+sub print_info {
+    my ($msg) = @_;
+    say colored("ℹ️  $msg", 'blue');
+}
+
+sub print_success {
+    my ($msg) = @_;
+    say colored("✅ $msg", 'green');
+}
+
+__END__
+
+=head1 NAME
+
+create-update-pr - Create a pull request for CAPI OpenAPI updates
+
+=head1 SYNOPSIS
+
+create-update-pr --version=VERSION [options]
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--version>
+
+CAPI version to update to (required)
+
+=item B<--changes-file>
+
+Path to changes report file
+
+=item B<--base>
+
+Base branch for PR (default: main)
+
+=item B<--draft>
+
+Create PR as draft
+
+=item B<--dry-run>
+
+Show what would be done without making changes
+
+=item B<--auto-merge>
+
+Enable auto-merge for the PR
+
+=back
+
+=head1 EXAMPLES
+
+    # Create PR for version update
+    ./bin/create-update-pr --version=3.196.0
+    
+    # Create draft PR with changes report
+    ./bin/create-update-pr --version=3.196.0 --draft \
+        --changes-file=change-reports/changes-3.195.0-to-3.196.0.md
+    
+    # Dry run to preview actions
+    ./bin/create-update-pr --version=3.196.0 --dry-run
+    
+    # Create PR with auto-merge enabled
+    ./bin/create-update-pr --version=3.196.0 --auto-merge
+
+=cut

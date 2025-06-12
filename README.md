@@ -41,36 +41,93 @@ This repository contains a comprehensive OpenAPI specification that fully descri
 
 ## Quick Start
 
+New to CAPI OpenAPI? Check out our **[Quick Start Guide](docs/quickstart.md)** for a complete working example.
+
 ### Prerequisites
 - Make
-- OpenAPI tools (optional, for validation)
+- Perl 5.20+
+- Go (for oapi-codegen)
+- Node.js (for API documentation)
 - Your preferred programming language for client generation
+
+### Complete Working Example
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/cloudfoundry-community/capi-openapi-spec.git
+cd capi-openapi-spec
+
+# 2. Install dependencies
+make install-deps
+
+# 3. Generate OpenAPI specification (JSON is default to avoid Unicode issues)
+./bin/gen spec --version=3.195.0
+
+# 4. Generate Go SDK using oapi-codegen (default for Go)
+./bin/gen sdk --version=3.195.0 --language=go
+
+# SDK will be created in: sdk/3.195.0/go/capiclient/
+```
 
 ### Basic Usage
 
-1. **Clone the repository**
+1. **Generate the OpenAPI specification**
    ```bash
-   git clone https://github.com/cloudfoundry-community/capi-openapi-spec.git
-   cd capi-openapi-spec
+   make spec
+   ```
+   This creates `capi/3.195.0/openapi.json` with automatic type fixes and enhancements
+
+2. **Generate a client SDK**
+   ```bash
+   # Generate Go SDK (uses oapi-codegen by default)
+   make sdk
+   
+   # Generate SDKs for other languages
+   make sdk-python
+   make sdk-java
+   make sdk-typescript
+   
+   # Generate all major SDKs
+   make sdk-all
    ```
 
-2. **Install dependencies**
+3. **Generate API documentation**
    ```bash
-   make deps
+   # Generate Redocly documentation
+   make docs
+   
+   # Serve documentation locally
+   make docs-serve
    ```
 
-3. **Generate the unified OpenAPI specification**
-   ```bash
-   make gen-openapi-spec
-   ```
-   This creates `capi/3.195.0.openapi.yaml` and `capi/3.195.0.openapi.json`
+### Common Commands
 
-4. **Generate a client SDK** (example for Go)
-   ```bash
-   make gen-go-client
-   # Or for any language:
-   make gen-sdk LANGUAGE=python VERSION=3.195.0
-   ```
+```bash
+# Show all available commands with descriptions
+make
+
+# Generate everything (spec, SDK, docs) and run tests
+make all
+
+# Generate spec for a specific version
+make spec VERSION=3.196.0
+
+# Run all validation tests
+make test
+
+# View generated reports
+make reports
+make view-report REPORT=enhancement
+
+# Compare two API versions
+make diff FROM=3.194.0 TO=3.195.0
+
+# Clean all generated files
+make clean
+
+# Clean only test-generated SDK files
+make clean-test
+```
 
 ## SDK Generation
 
@@ -206,6 +263,7 @@ import "github.com/cloudfoundry-community/capi-openapi-go-client/capiclient/v3"
 
 Comprehensive documentation is available in the `docs/` directory:
 
+- **[Quick Start Guide](docs/quickstart.md)** - Complete working example with solutions to common issues
 - [Getting Started Guide](docs/getting-started.md) - Introduction and quick examples
 - [API Overview](docs/api-overview.md) - REST principles, pagination, errors
 - [Core Resources Guide](docs/core-resources.md) - Apps, processes, builds, packages

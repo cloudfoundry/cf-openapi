@@ -1,0 +1,16 @@
+# This workflow has been replaced by test-comprehensive.yml
+# Keeping this file for backwards compatibility
+
+name: Validate PR (Deprecated)
+
+on:
+  pull_request:
+    paths:
+      - 'capi/**/*.yml'
+      - 'capi/**/*.yaml'
+      - 'capi/**/*.json'
+
+jobs:
+  redirect:
+    name: Redirect to comprehensive testing
+    uses: ./.github/workflows/test-comprehensive.yml

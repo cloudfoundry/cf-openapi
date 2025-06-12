@@ -1,0 +1,875 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use Term::ANSIColor qw(colored);
+use Getopt::Long;
+use Time::HiRes qw(time sleep);
+use POSIX qw(strftime);
+
+# Command line options
+my $cf_config = '~/cf/config.json';
+my $cleanup = 1;
+my $verbose = 0;
+my $wait_time = 5;  # seconds to wait between operations
+my $test_prefix = "capi-test-" . strftime("%Y%m%d-%H%M%S", localtime);
+
+GetOptions(
+    'cf-config=s' => \$cf_config,
+    'cleanup!' => \$cleanup,
+    'verbose' => \$verbose,
+    'wait=i' => \$wait_time,
+    'prefix=s' => \$test_prefix,
+) or die usage();
+
+sub usage {
+    return <<EOF;
+Usage: $0 [options]
+
+Options:
+  --cf-config=FILE   CF config file (default: ~/cf/config.json)
+  --no-cleanup       Don't cleanup resources after test
+  --verbose          Show detailed output
+  --wait=SECONDS     Time to wait between operations (default: 5)
+  --prefix=STRING    Prefix for test resources (default: capi-test-TIMESTAMP)
+
+This script tests the full application lifecycle:
+1. Creates a new organization
+2. Creates a new space
+3. Creates an application
+4. Uploads application code
+5. Starts the application
+6. Scales the application up and down
+7. Gets application environment (cf env equivalent)
+8. Stops the application
+9. Deletes all created resources (unless --no-cleanup)
+
+Examples:
+  $0                                          # Run full lifecycle test
+  $0 --no-cleanup --verbose                   # Keep resources for inspection
+  $0 --prefix=mytest --wait=10               # Custom prefix and timing
+EOF
+}
+
+# Load CF config
+print "Loading CF config from $cf_config...\n";
+my $cf_config_data = decode_json(read_file($cf_config));
+my $api_url = $cf_config_data->{Target};
+my $access_token = $cf_config_data->{AccessToken};
+
+# Test state
+my %created_resources = (
+    organization => undef,
+    space => undef,
+    app => undef,
+    route => undef,
+    package => undef,
+    build => undef,
+    droplet => undef,
+);
+
+# Test results
+my %results = (
+    steps => [],
+    passed => 0,
+    failed => 0,
+);
+
+print colored("\nCloud Foundry Application Lifecycle Test\n", 'bold');
+print "=" x 60 . "\n";
+print "API URL: $api_url\n";
+print "Test Prefix: $test_prefix\n";
+print "Cleanup: " . ($cleanup ? "Yes" : "No") . "\n";
+print "=" x 60 . "\n\n";
+
+# Run lifecycle tests
+eval {
+    # Test authentication first
+    test_authentication();
+    
+    # Create organization
+    create_organization();
+    
+    # Create space
+    create_space();
+    
+    # Create application
+    create_application();
+    
+    # Create and upload package
+    create_package();
+    upload_package();
+    
+    # Build the package
+    create_build();
+    wait_for_build();
+    
+    # Set current droplet
+    set_current_droplet();
+    
+    # Create route and map to app
+    create_and_map_route();
+    
+    # Start application
+    start_application();
+    wait_for_app_started();
+    
+    # Get application environment (cf env equivalent)
+    get_app_environment();
+    
+    # Scale application
+    scale_app_instances(3);
+    scale_app_memory(256);
+    scale_app_instances(1);
+    
+    # Get app stats and instances
+    get_app_stats();
+    get_app_instances();
+    
+    # Stop application
+    stop_application();
+};
+
+my $error = $@;
+
+# Cleanup if requested
+if ($cleanup && !$error) {
+    print colored("\nCleaning up resources...\n", 'cyan');
+    cleanup_resources();
+} elsif ($error) {
+    print colored("\nError occurred, attempting cleanup...\n", 'red');
+    cleanup_resources();
+    die $error;
+}
+
+# Print summary
+print_summary();
+
+# Test functions
+sub test_authentication {
+    my $step = "Test Authentication";
+    print "Testing authentication... ";
+    
+    my $response = api_request('GET', '/v3/apps?per_page=1');
+    
+    if ($response->{status} == 200) {
+        record_success($step, "Authentication successful");
+    } else {
+        record_failure($step, "Authentication failed: $response->{status}");
+        die "Cannot proceed without valid authentication\n";
+    }
+}
+
+sub create_organization {
+    my $step = "Create Organization";
+    my $org_name = "$test_prefix-org";
+    
+    print "Creating organization '$org_name'... ";
+    
+    my $response = api_request('POST', '/v3/organizations', {
+        name => $org_name,
+        metadata => {
+            labels => {
+                'test-type' => 'lifecycle',
+                'created-by' => 'capi-openapi-test'
+            }
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{organization} = $response->{body};
+        record_success($step, "Organization created: $response->{body}{guid}");
+    } else {
+        record_failure($step, "Failed to create organization: $response->{status}");
+        die "Cannot proceed without organization\n";
+    }
+}
+
+sub create_space {
+    my $step = "Create Space";
+    my $space_name = "$test_prefix-space";
+    
+    print "Creating space '$space_name'... ";
+    
+    my $response = api_request('POST', '/v3/spaces', {
+        name => $space_name,
+        relationships => {
+            organization => {
+                data => {
+                    guid => $created_resources{organization}{guid}
+                }
+            }
+        },
+        metadata => {
+            labels => {
+                'test-type' => 'lifecycle'
+            }
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{space} = $response->{body};
+        record_success($step, "Space created: $response->{body}{guid}");
+    } else {
+        record_failure($step, "Failed to create space: $response->{status}");
+        die "Cannot proceed without space\n";
+    }
+}
+
+sub create_application {
+    my $step = "Create Application";
+    my $app_name = "$test_prefix-app";
+    
+    print "Creating application '$app_name'... ";
+    
+    my $response = api_request('POST', '/v3/apps', {
+        name => $app_name,
+        relationships => {
+            space => {
+                data => {
+                    guid => $created_resources{space}{guid}
+                }
+            }
+        },
+        lifecycle => {
+            type => 'buildpack',
+            data => {
+                buildpacks => ['staticfile_buildpack'],
+                stack => 'cflinuxfs4'
+            }
+        },
+        metadata => {
+            labels => {
+                'test-type' => 'lifecycle'
+            }
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{app} = $response->{body};
+        record_success($step, "Application created: $response->{body}{guid}");
+    } else {
+        record_failure($step, "Failed to create application: $response->{status}");
+        die "Cannot proceed without application\n";
+    }
+}
+
+sub create_package {
+    my $step = "Create Package";
+    
+    print "Creating package... ";
+    
+    my $response = api_request('POST', '/v3/packages', {
+        type => 'bits',
+        relationships => {
+            app => {
+                data => {
+                    guid => $created_resources{app}{guid}
+                }
+            }
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{package} = $response->{body};
+        record_success($step, "Package created: $response->{body}{guid}");
+    } else {
+        record_failure($step, "Failed to create package: $response->{status}");
+    }
+}
+
+sub upload_package {
+    my $step = "Upload Package";
+    
+    print "Uploading package content... ";
+    
+    # Create a simple index.html file
+    my $html_content = <<'HTML';
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CAPI Test App</title>
+</head>
+<body>
+    <h1>Cloud Foundry CAPI Test Application</h1>
+    <p>This is a test application created by the CAPI OpenAPI lifecycle test.</p>
+    <p>Environment variables:</p>
+    <pre id="env">Loading...</pre>
+    <script>
+        // In a real CF app, we'd fetch this from the backend
+        document.getElementById('env').textContent = 'VCAP_APPLICATION and VCAP_SERVICES would be displayed here';
+    </script>
+</body>
+</html>
+HTML
+    
+    # Create a temporary zip file with the content
+    my $temp_dir = "/tmp/$test_prefix-upload";
+    mkdir $temp_dir;
+    write_file("$temp_dir/index.html", $html_content);
+    write_file("$temp_dir/Staticfile", "");  # Empty Staticfile for buildpack
+    
+    my $zip_file = "/tmp/$test_prefix.zip";
+    system("cd $temp_dir && zip -q $zip_file index.html Staticfile");
+    
+    # Upload using curl with multipart form
+    my $package_guid = $created_resources{package}{guid};
+    my $upload_url = "$api_url/v3/packages/$package_guid/upload";
+    
+    my @curl_cmd = (
+        'curl', '-s', '-k', '-w', '%{http_code}',
+        '-X', 'POST',
+        '-H', "Authorization: $access_token",
+        '-F', "bits=\@$zip_file",
+        $upload_url
+    );
+    
+    my $output = `@curl_cmd 2>&1`;
+    my $status = $output =~ /(\d{3})$/ ? $1 : 0;
+    
+    # Cleanup temp files
+    unlink $zip_file;
+    system("rm -rf $temp_dir");
+    
+    if ($status == 200) {
+        record_success($step, "Package uploaded successfully");
+        wait_for_package_ready();
+    } else {
+        record_failure($step, "Failed to upload package: $status");
+    }
+}
+
+sub wait_for_package_ready {
+    print "Waiting for package to be ready... ";
+    
+    my $package_guid = $created_resources{package}{guid};
+    my $max_attempts = 30;
+    
+    for (my $i = 0; $i < $max_attempts; $i++) {
+        my $response = api_request('GET', "/v3/packages/$package_guid");
+        
+        if ($response->{body}{state} eq 'READY') {
+            print colored("✓\n", 'green');
+            return;
+        }
+        
+        print ".";
+        sleep 2;
+    }
+    
+    die "Package failed to become ready\n";
+}
+
+sub create_build {
+    my $step = "Create Build";
+    
+    print "Creating build... ";
+    
+    my $response = api_request('POST', '/v3/builds', {
+        package => {
+            guid => $created_resources{package}{guid}
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{build} = $response->{body};
+        record_success($step, "Build created: $response->{body}{guid}");
+    } else {
+        record_failure($step, "Failed to create build: $response->{status}");
+    }
+}
+
+sub wait_for_build {
+    print "Waiting for build to complete... ";
+    
+    my $build_guid = $created_resources{build}{guid};
+    my $max_attempts = 60;
+    
+    for (my $i = 0; $i < $max_attempts; $i++) {
+        my $response = api_request('GET', "/v3/builds/$build_guid");
+        
+        if ($response->{body}{state} eq 'STAGED') {
+            $created_resources{droplet} = $response->{body}{droplet};
+            print colored("✓\n", 'green');
+            return;
+        } elsif ($response->{body}{state} eq 'FAILED') {
+            die "Build failed: " . ($response->{body}{error} || 'Unknown error') . "\n";
+        }
+        
+        print ".";
+        sleep 2;
+    }
+    
+    die "Build timed out\n";
+}
+
+sub set_current_droplet {
+    my $step = "Set Current Droplet";
+    
+    print "Setting current droplet... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    my $droplet_guid = $created_resources{droplet}{guid};
+    
+    my $response = api_request('PATCH', "/v3/apps/$app_guid/relationships/current_droplet", {
+        data => {
+            guid => $droplet_guid
+        }
+    });
+    
+    if ($response->{status} == 200) {
+        record_success($step, "Current droplet set");
+    } else {
+        record_failure($step, "Failed to set current droplet: $response->{status}");
+    }
+}
+
+sub create_and_map_route {
+    my $step = "Create and Map Route";
+    
+    # First, get the shared domain
+    print "Getting shared domain... ";
+    my $domains_response = api_request('GET', '/v3/domains?per_page=1');
+    
+    if (!$domains_response->{body}{resources}[0]) {
+        record_failure($step, "No domains found");
+        return;
+    }
+    
+    my $domain = $domains_response->{body}{resources}[0];
+    print colored("✓\n", 'green');
+    
+    # Create route
+    print "Creating route... ";
+    my $route_host = "$test_prefix-app";
+    
+    my $response = api_request('POST', '/v3/routes', {
+        host => $route_host,
+        relationships => {
+            space => {
+                data => {
+                    guid => $created_resources{space}{guid}
+                }
+            },
+            domain => {
+                data => {
+                    guid => $domain->{guid}
+                }
+            }
+        }
+    });
+    
+    if ($response->{status} == 201) {
+        $created_resources{route} = $response->{body};
+        print colored("✓\n", 'green');
+        
+        # Map route to app
+        print "Mapping route to application... ";
+        my $app_guid = $created_resources{app}{guid};
+        my $route_guid = $response->{body}{guid};
+        
+        my $map_response = api_request('POST', "/v3/routes/$route_guid/destinations", {
+            destinations => [{
+                app => {
+                    guid => $app_guid
+                }
+            }]
+        });
+        
+        if ($map_response->{status} == 200) {
+            my $full_url = "http://$route_host.$domain->{name}";
+            record_success($step, "Route created and mapped: $full_url");
+        } else {
+            record_failure($step, "Failed to map route: $map_response->{status}");
+        }
+    } else {
+        record_failure($step, "Failed to create route: $response->{status}");
+    }
+}
+
+sub start_application {
+    my $step = "Start Application";
+    
+    print "Starting application... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    
+    my $response = api_request('POST', "/v3/apps/$app_guid/actions/start");
+    
+    if ($response->{status} == 200) {
+        record_success($step, "Application start initiated");
+    } else {
+        record_failure($step, "Failed to start application: $response->{status}");
+    }
+}
+
+sub wait_for_app_started {
+    print "Waiting for application to start... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    my $max_attempts = 60;
+    
+    for (my $i = 0; $i < $max_attempts; $i++) {
+        my $response = api_request('GET', "/v3/apps/$app_guid");
+        
+        if ($response->{body}{state} eq 'STARTED') {
+            # Check if instances are running
+            my $stats_response = api_request('GET', "/v3/processes/$app_guid/stats");
+            
+            if ($stats_response->{body}{resources} && 
+                $stats_response->{body}{resources}[0] &&
+                $stats_response->{body}{resources}[0]{state} eq 'RUNNING') {
+                print colored("✓\n", 'green');
+                return;
+            }
+        }
+        
+        print ".";
+        sleep 2;
+    }
+    
+    print colored("⚠\n", 'yellow');
+    print "  Application may not have started completely\n";
+}
+
+sub get_app_environment {
+    my $step = "Get Application Environment";
+    
+    print "\n" . colored("Application Environment (cf env equivalent):\n", 'cyan');
+    print "-" x 60 . "\n";
+    
+    my $app_guid = $created_resources{app}{guid};
+    
+    # Get app details
+    my $app_response = api_request('GET', "/v3/apps/$app_guid");
+    
+    # Get environment variables
+    my $env_response = api_request('GET', "/v3/apps/$app_guid/environment_variables");
+    
+    # Get app environment (includes VCAP_APPLICATION and VCAP_SERVICES)
+    my $app_env_response = api_request('GET', "/v3/apps/$app_guid/env");
+    
+    if ($app_response->{status} == 200 && $env_response->{status} == 200 && $app_env_response->{status} == 200) {
+        # Display application info
+        print colored("Application: ", 'bold') . $app_response->{body}{name} . "\n";
+        print colored("GUID: ", 'bold') . $app_guid . "\n";
+        print colored("State: ", 'bold') . $app_response->{body}{state} . "\n";
+        
+        # Display environment variables
+        print colored("\nUser-Provided Environment Variables:\n", 'bold');
+        my $env_vars = $env_response->{body}{var} || {};
+        for my $key (sort keys %$env_vars) {
+            print "  $key: $env_vars->{$key}\n";
+        }
+        
+        # Display system environment
+        print colored("\nSystem-Provided Environment:\n", 'bold');
+        
+        if ($app_env_response->{body}{system_env_json}) {
+            my $vcap_app = $app_env_response->{body}{system_env_json}{VCAP_APPLICATION} || {};
+            print colored("  VCAP_APPLICATION:\n", 'bold');
+            print "    application_id: $vcap_app->{application_id}\n" if $vcap_app->{application_id};
+            print "    application_name: $vcap_app->{application_name}\n" if $vcap_app->{application_name};
+            print "    space_id: $vcap_app->{space_id}\n" if $vcap_app->{space_id};
+            print "    space_name: $vcap_app->{space_name}\n" if $vcap_app->{space_name};
+            print "    organization_id: $vcap_app->{organization_id}\n" if $vcap_app->{organization_id};
+            print "    organization_name: $vcap_app->{organization_name}\n" if $vcap_app->{organization_name};
+            
+            if ($vcap_app->{application_uris} && @{$vcap_app->{application_uris}}) {
+                print "    uris: [" . join(", ", @{$vcap_app->{application_uris}}) . "]\n";
+            }
+        }
+        
+        if ($app_env_response->{body}{environment_json}) {
+            print colored("\n  Additional Environment:\n", 'bold');
+            my $env = $app_env_response->{body}{environment_json};
+            for my $key (grep { $_ !~ /^VCAP_/ } sort keys %$env) {
+                print "    $key: $env->{$key}\n" if defined $env->{$key};
+            }
+        }
+        
+        record_success($step, "Environment retrieved successfully");
+    } else {
+        record_failure($step, "Failed to get environment");
+    }
+    
+    print "-" x 60 . "\n\n";
+}
+
+sub scale_app_instances {
+    my ($instances) = @_;
+    my $step = "Scale Instances to $instances";
+    
+    print "Scaling application to $instances instance(s)... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    
+    # Scale the web process
+    my $response = api_request('POST', "/v3/apps/$app_guid/processes/web/actions/scale", {
+        instances => $instances
+    });
+    
+    if ($response->{status} == 202 || $response->{status} == 200) {
+        record_success($step, "Scaled to $instances instance(s)");
+        sleep $wait_time;  # Wait for scaling to take effect
+    } else {
+        record_failure($step, "Failed to scale: $response->{status}");
+    }
+}
+
+sub scale_app_memory {
+    my ($memory_mb) = @_;
+    my $step = "Scale Memory to ${memory_mb}MB";
+    
+    print "Scaling application memory to ${memory_mb}MB... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    
+    my $response = api_request('POST', "/v3/apps/$app_guid/processes/web/actions/scale", {
+        memory_in_mb => $memory_mb
+    });
+    
+    if ($response->{status} == 202 || $response->{status} == 200) {
+        record_success($step, "Scaled to ${memory_mb}MB memory");
+        sleep $wait_time;  # Wait for scaling to take effect
+    } else {
+        record_failure($step, "Failed to scale memory: $response->{status}");
+    }
+}
+
+sub get_app_stats {
+    my $step = "Get Application Stats";
+    
+    print "\n" . colored("Application Statistics:\n", 'cyan');
+    print "-" x 60 . "\n";
+    
+    my $app_guid = $created_resources{app}{guid};
+    my $response = api_request('GET', "/v3/processes/$app_guid/stats");
+    
+    if ($response->{status} == 200 && $response->{body}{resources}) {
+        for my $instance (@{$response->{body}{resources}}) {
+            print "Instance #$instance->{index}:\n";
+            print "  State: $instance->{state}\n";
+            print "  CPU: " . sprintf("%.1f%%", ($instance->{usage}{cpu} || 0) * 100) . "\n";
+            print "  Memory: " . format_bytes($instance->{usage}{mem} || 0) . " / " . 
+                  format_bytes($instance->{mem_quota} || 0) . "\n";
+            print "  Disk: " . format_bytes($instance->{usage}{disk} || 0) . " / " . 
+                  format_bytes($instance->{disk_quota} || 0) . "\n";
+            print "  Uptime: " . format_duration($instance->{uptime} || 0) . "\n\n";
+        }
+        record_success($step, "Stats retrieved");
+    } else {
+        record_failure($step, "Failed to get stats");
+    }
+    
+    print "-" x 60 . "\n\n";
+}
+
+sub get_app_instances {
+    my $step = "Get Application Instances";
+    
+    print "Getting application instances... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    my $response = api_request('GET', "/v3/apps/$app_guid/processes");
+    
+    if ($response->{status} == 200 && $response->{body}{resources}) {
+        my $web_process = $response->{body}{resources}[0];
+        if ($web_process) {
+            record_success($step, "Instances: $web_process->{instances}, Memory: $web_process->{memory_in_mb}MB");
+        } else {
+            record_failure($step, "No web process found");
+        }
+    } else {
+        record_failure($step, "Failed to get instances");
+    }
+}
+
+sub stop_application {
+    my $step = "Stop Application";
+    
+    print "Stopping application... ";
+    
+    my $app_guid = $created_resources{app}{guid};
+    
+    my $response = api_request('POST', "/v3/apps/$app_guid/actions/stop");
+    
+    if ($response->{status} == 200) {
+        record_success($step, "Application stopped");
+    } else {
+        record_failure($step, "Failed to stop application: $response->{status}");
+    }
+}
+
+sub cleanup_resources {
+    # Delete in reverse order of creation
+    
+    # Delete route
+    if ($created_resources{route}) {
+        print "Deleting route... ";
+        my $response = api_request('DELETE', "/v3/routes/$created_resources{route}{guid}");
+        print $response->{status} == 202 ? colored("✓\n", 'green') : colored("✗\n", 'red');
+    }
+    
+    # Delete app
+    if ($created_resources{app}) {
+        print "Deleting application... ";
+        my $response = api_request('DELETE', "/v3/apps/$created_resources{app}{guid}");
+        print $response->{status} == 202 ? colored("✓\n", 'green') : colored("✗\n", 'red');
+    }
+    
+    # Delete space
+    if ($created_resources{space}) {
+        print "Deleting space... ";
+        my $response = api_request('DELETE', "/v3/spaces/$created_resources{space}{guid}");
+        print $response->{status} == 202 ? colored("✓\n", 'green') : colored("✗\n", 'red');
+        
+        # Wait for space deletion
+        sleep 3;
+    }
+    
+    # Delete organization
+    if ($created_resources{organization}) {
+        print "Deleting organization... ";
+        my $response = api_request('DELETE', "/v3/organizations/$created_resources{organization}{guid}");
+        print $response->{status} == 202 ? colored("✓\n", 'green') : colored("✗\n", 'red');
+    }
+}
+
+# Helper functions
+sub api_request {
+    my ($method, $path, $body) = @_;
+    
+    my $url = "$api_url$path";
+    my @curl_cmd = (
+        'curl', '-s', '-k', '-w', '\n%{http_code}',
+        '-X', $method,
+        '-H', "Authorization: $access_token",
+        '-H', 'Accept: application/json'
+    );
+    
+    if ($body) {
+        push @curl_cmd, '-H', 'Content-Type: application/json';
+        push @curl_cmd, '-d', encode_json($body);
+    }
+    
+    push @curl_cmd, $url;
+    
+    my $start_time = time();
+    my $output = `@curl_cmd 2>&1`;
+    my $duration = time() - $start_time;
+    
+    # Parse response
+    if ($output =~ /^(.*)\n(\d{3})$/s) {
+        my $body_text = $1;
+        my $status = $2;
+        
+        my $body = {};
+        if ($body_text) {
+            $body = eval { decode_json($body_text) } || { raw => $body_text };
+        }
+        
+        if ($verbose && ($status < 200 || $status >= 300)) {
+            print "\n  Response ($status): " . substr($body_text, 0, 200) . "\n";
+        }
+        
+        return {
+            status => $status,
+            body => $body,
+            duration => $duration
+        };
+    }
+    
+    return {
+        status => 0,
+        body => { error => $output },
+        duration => $duration
+    };
+}
+
+sub record_success {
+    my ($step, $details) = @_;
+    
+    push @{$results{steps}}, {
+        step => $step,
+        status => 'success',
+        details => $details
+    };
+    
+    $results{passed}++;
+    print colored("✓", 'green') . " $details\n";
+}
+
+sub record_failure {
+    my ($step, $details) = @_;
+    
+    push @{$results{steps}}, {
+        step => $step,
+        status => 'failure',
+        details => $details
+    };
+    
+    $results{failed}++;
+    print colored("✗", 'red') . " $details\n";
+}
+
+sub format_bytes {
+    my $bytes = shift;
+    
+    my @units = ('B', 'KB', 'MB', 'GB');
+    my $unit_index = 0;
+    
+    while ($bytes >= 1024 && $unit_index < $#units) {
+        $bytes /= 1024;
+        $unit_index++;
+    }
+    
+    return sprintf("%.1f%s", $bytes, $units[$unit_index]);
+}
+
+sub format_duration {
+    my $seconds = shift;
+    
+    if ($seconds < 60) {
+        return "${seconds}s";
+    } elsif ($seconds < 3600) {
+        return sprintf("%.1fm", $seconds / 60);
+    } else {
+        return sprintf("%.1fh", $seconds / 3600);
+    }
+}
+
+sub print_summary {
+    print "\n" . "=" x 60 . "\n";
+    print colored("Application Lifecycle Test Summary\n", 'bold');
+    print "=" x 60 . "\n\n";
+    
+    print "Total Steps: " . ($results{passed} + $results{failed}) . "\n";
+    print colored("Passed: $results{passed}\n", 'green') if $results{passed};
+    print colored("Failed: $results{failed}\n", 'red') if $results{failed};
+    
+    if ($results{failed} == 0) {
+        print colored("\n✓ Full application lifecycle test completed successfully!\n", 'green');
+        
+        if (!$cleanup) {
+            print "\nCreated resources (not cleaned up):\n";
+            print "  Organization: " . ($created_resources{organization}{name} || 'N/A') . "\n";
+            print "  Space: " . ($created_resources{space}{name} || 'N/A') . "\n";
+            print "  Application: " . ($created_resources{app}{name} || 'N/A') . "\n";
+        }
+    } else {
+        print colored("\n✗ Some lifecycle steps failed\n", 'red');
+        
+        print "\nFailed steps:\n";
+        for my $step (@{$results{steps}}) {
+            if ($step->{status} eq 'failure') {
+                print "  - $step->{step}: $step->{details}\n";
+            }
+        }
+    }
+    
+    exit($results{failed} > 0 ? 1 : 0);
+}

@@ -1,0 +1,17 @@
+{
+  "name": "capi-openapi-spec",
+  "version": "1.0.0",
+  "description": "Cloud Foundry CAPI OpenAPI specification generation and validation",
+  "scripts": {
+    "lint": "spectral lint capi/3.195.0/enhanced/openapi.yaml --ruleset .spectral.yml",
+    "lint:generated": "spectral lint capi/3.195.0/generated/openapi.yaml --ruleset .spectral.yml",
+    "validate": "spectral lint"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.11.1",
+    "@stoplight/spectral-core": "^1.18.3",
+    "@stoplight/spectral-ruleset-bundler": "^1.5.2"
+  },
+  "author": "Cloud Foundry Community",
+  "license": "Apache-2.0"
+}

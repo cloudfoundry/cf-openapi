@@ -1,0 +1,366 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use JSON::Schema::Modern;
+use File::Slurp;
+use Term::ANSIColor qw(colored);
+use Data::Dumper;
+use Getopt::Long;
+
+# Command line options
+my $spec_file;
+my $verbose = 0;
+my $extract_only = 0;
+
+GetOptions(
+    'spec=s' => \$spec_file,
+    'verbose' => \$verbose,
+    'extract-only' => \$extract_only,
+) or die "Usage: $0 spec_file [--verbose] [--extract-only]\n";
+
+# Get spec file from command line if not provided via option
+$spec_file = shift @ARGV unless $spec_file;
+
+unless ($spec_file) {
+    die "Usage: $0 spec_file [--verbose] [--extract-only]\n";
+}
+
+# Load OpenAPI spec
+print "Loading spec from $spec_file...\n";
+unless (-f $spec_file) {
+    die "Spec file not found: $spec_file\n";
+}
+my $spec_content = read_file($spec_file);
+my $spec = decode_json($spec_content);
+
+# Create schema validator
+my $validator = JSON::Schema::Modern->new;
+
+# Test results
+my %results = (
+    total => 0,
+    passed => 0,
+    failed => 0,
+    warnings => 0,
+    errors => [],
+    examples => [],
+);
+
+print colored("\nCAPI OpenAPI Example Validation\n", 'bold');
+print "=" x 50 . "\n\n";
+
+# Extract all examples from the spec
+extract_all_examples();
+
+if ($extract_only) {
+    print_extracted_examples();
+    exit 0;
+}
+
+# Validate all examples
+validate_all_examples();
+
+# Print summary
+print_summary();
+
+sub extract_all_examples {
+    print colored("Extracting Examples from OpenAPI Spec\n", 'cyan');
+    print "-" x 40 . "\n";
+    
+    # Extract from paths
+    my $paths = $spec->{paths} || {};
+    
+    for my $path (sort keys %$paths) {
+        my $path_item = $paths->{$path};
+        
+        for my $method (qw(get post put patch delete)) {
+            next unless $path_item->{$method};
+            
+            my $operation = $path_item->{$method};
+            my $op_id = $operation->{operationId} || "$method $path";
+            
+            # Extract parameter examples
+            if ($operation->{parameters}) {
+                for my $param (@{$operation->{parameters}}) {
+                    if (exists $param->{example}) {
+                        push @{$results{examples}}, {
+                            type => 'parameter',
+                            location => "$op_id - $param->{name}",
+                            example => $param->{example},
+                            schema => $param->{schema},
+                            context => "Parameter: $param->{name} ($param->{in})"
+                        };
+                    }
+                }
+            }
+            
+            # Extract request body examples
+            if ($operation->{requestBody}) {
+                extract_media_type_examples(
+                    $op_id, 
+                    'request',
+                    $operation->{requestBody}{content}
+                );
+            }
+            
+            # Extract response examples
+            if ($operation->{responses}) {
+                for my $status (keys %{$operation->{responses}}) {
+                    my $response = $operation->{responses}{$status};
+                    if ($response->{content}) {
+                        extract_media_type_examples(
+                            $op_id,
+                            "response $status",
+                            $response->{content}
+                        );
+                    }
+                }
+            }
+        }
+    }
+    
+    # Extract component examples
+    if ($spec->{components}) {
+        # Schema examples
+        if ($spec->{components}{schemas}) {
+            for my $schema_name (keys %{$spec->{components}{schemas}}) {
+                my $schema = $spec->{components}{schemas}{$schema_name};
+                if (exists $schema->{example}) {
+                    push @{$results{examples}}, {
+                        type => 'schema',
+                        location => "components.schemas.$schema_name",
+                        example => $schema->{example},
+                        schema => $schema,
+                        context => "Schema: $schema_name"
+                    };
+                }
+            }
+        }
+        
+        # Parameter examples
+        if ($spec->{components}{parameters}) {
+            for my $param_name (keys %{$spec->{components}{parameters}}) {
+                my $param = $spec->{components}{parameters}{$param_name};
+                if (exists $param->{example}) {
+                    push @{$results{examples}}, {
+                        type => 'component_parameter',
+                        location => "components.parameters.$param_name",
+                        example => $param->{example},
+                        schema => $param->{schema},
+                        context => "Component Parameter: $param_name"
+                    };
+                }
+            }
+        }
+    }
+    
+    print "Found " . scalar(@{$results{examples}}) . " examples\n\n";
+}
+
+sub extract_media_type_examples {
+    my ($op_id, $type, $content) = @_;
+    
+    return unless $content;
+    
+    for my $content_type (keys %$content) {
+        my $media_type = $content->{$content_type};
+        
+        # Single example
+        if (exists $media_type->{example}) {
+            push @{$results{examples}}, {
+                type => $type,
+                location => "$op_id - $type ($content_type)",
+                example => $media_type->{example},
+                schema => $media_type->{schema},
+                context => "$op_id $type"
+            };
+        }
+        
+        # Multiple examples
+        if ($media_type->{examples}) {
+            for my $example_name (keys %{$media_type->{examples}}) {
+                my $example_obj = $media_type->{examples}{$example_name};
+                push @{$results{examples}}, {
+                    type => $type,
+                    location => "$op_id - $type.$example_name ($content_type)",
+                    example => $example_obj->{value},
+                    schema => $media_type->{schema},
+                    context => "$op_id $type ($example_name)"
+                };
+            }
+        }
+    }
+}
+
+sub validate_all_examples {
+    print colored("Validating Examples Against Schemas\n", 'cyan');
+    print "-" x 40 . "\n";
+    
+    for my $example_info (@{$results{examples}}) {
+        validate_example($example_info);
+    }
+    
+    print "\n";
+}
+
+sub validate_example {
+    my ($example_info) = @_;
+    
+    $results{total}++;
+    
+    my $schema = $example_info->{schema};
+    my $example = $example_info->{example};
+    my $location = $example_info->{location};
+    
+    # Skip if no schema
+    unless ($schema) {
+        print colored("W", 'yellow') if $verbose;
+        $results{warnings}++;
+        push @{$results{errors}}, {
+            type => 'warning',
+            location => $location,
+            error => 'No schema to validate against'
+        };
+        return;
+    }
+    
+    # Resolve schema references
+    $schema = resolve_schema_ref($schema) if $schema->{'$ref'};
+    
+    unless ($schema) {
+        print colored("W", 'yellow') if $verbose;
+        $results{warnings}++;
+        push @{$results{errors}}, {
+            type => 'warning',
+            location => $location,
+            error => 'Could not resolve schema reference'
+        };
+        return;
+    }
+    
+    # Validate example against schema
+    eval {
+        my $result = $validator->evaluate($example, $schema);
+        if ($result->valid) {
+            print colored(".", 'green') if $verbose;
+            $results{passed}++;
+        } else {
+            print colored("F", 'red') if $verbose;
+            $results{failed}++;
+            
+            my @errors = $result->errors;
+            my $error_msg = join("; ", map { $_->stringify } @errors);
+            push @{$results{errors}}, {
+                type => 'validation',
+                location => $location,
+                error => $error_msg,
+                context => $example_info->{context}
+            };
+        }
+    };
+    if ($@) {
+        print colored("E", 'red') if $verbose;
+        $results{failed}++;
+        push @{$results{errors}}, {
+            type => 'error',
+            location => $location,
+            error => $@,
+            context => $example_info->{context}
+        };
+    }
+}
+
+sub resolve_schema_ref {
+    my $ref = shift;
+    
+    if ($ref->{'$ref'}) {
+        my $ref_path = $ref->{'$ref'};
+        if ($ref_path =~ m{^#/components/schemas/(.+)$}) {
+            return $spec->{components}{schemas}{$1};
+        }
+        if ($ref_path =~ m{^#/components/parameters/(.+)$}) {
+            my $param = $spec->{components}{parameters}{$1};
+            return $param->{schema} if $param;
+        }
+        if ($ref_path =~ m{^#/components/responses/(.+)$}) {
+            my $response = $spec->{components}{responses}{$1};
+            # Try to get schema from response content
+            if ($response->{content}) {
+                my ($content_type) = keys %{$response->{content}};
+                return $response->{content}{$content_type}{schema};
+            }
+        }
+    }
+    
+    return $ref;
+}
+
+sub print_extracted_examples {
+    print colored("\nExtracted Examples Summary\n", 'bold');
+    print "=" x 50 . "\n";
+    
+    my %types;
+    for my $example (@{$results{examples}}) {
+        $types{$example->{type}}++;
+    }
+    
+    print "Total examples found: " . scalar(@{$results{examples}}) . "\n\n";
+    
+    print "By type:\n";
+    for my $type (sort keys %types) {
+        print "  $type: $types{$type}\n";
+    }
+    
+    if ($verbose) {
+        print "\nExample locations:\n";
+        for my $example (@{$results{examples}}) {
+            print "  - [$example->{type}] $example->{location}\n";
+        }
+    }
+}
+
+sub print_summary {
+    print "\n" . "=" x 50 . "\n";
+    print colored("Validation Summary\n", 'bold');
+    print "=" x 50 . "\n";
+    
+    print "Total Examples: $results{total}\n";
+    print colored("Passed: $results{passed}\n", 'green') if $results{passed};
+    print colored("Failed: $results{failed}\n", 'red') if $results{failed};
+    print colored("Warnings: $results{warnings}\n", 'yellow') if $results{warnings};
+    
+    if ($results{failed} > 0 || $results{warnings} > 0) {
+        print "\n" . colored("Issues Found:\n", 'red');
+        my $count = 0;
+        for my $error (@{$results{errors}}) {
+            last if ++$count > 20 && !$verbose; # Show only first 20 unless verbose
+            
+            my $color = $error->{type} eq 'warning' ? 'yellow' : 'red';
+            print colored("  [$error->{type}] ", $color);
+            print "$error->{location}\n";
+            print "    Context: $error->{context}\n" if $error->{context};
+            print "    Error: $error->{error}\n";
+        }
+        
+        if (@{$results{errors}} > 20 && !$verbose) {
+            print "  ... and " . (@{$results{errors}} - 20) . " more issues\n";
+            print "  (use --verbose to see all)\n";
+        }
+    }
+    
+    # Calculate pass rate
+    if ($results{total} > 0) {
+        my $valid = $results{passed} + $results{warnings};
+        my $pass_rate = int(($results{passed} / ($results{total} - $results{warnings})) * 100);
+        print "\nValidation Pass Rate: $pass_rate% (excluding warnings)\n";
+        
+        if ($results{failed} == 0) {
+            print colored("\n✓ All examples with schemas are valid!\n", 'green');
+        }
+    }
+    
+    exit($results{failed} > 0 ? 1 : 0);
+}

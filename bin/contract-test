@@ -1,0 +1,389 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use LWP::UserAgent;
+use URI;
+use Getopt::Long;
+use Term::ANSIColor qw(colored);
+use Data::Dumper;
+use File::Spec;
+use File::Slurp;
+
+# Configuration
+my $version = $ENV{CAPI_VERSION} || '3.195.0';
+my $spec_type = 'enhanced';
+my $base_url = '';
+my $token = '';
+my $test_space_guid = '';
+my $test_org_guid = '';
+my $verbose = 0;
+my $dry_run = 0;
+my $help = 0;
+
+GetOptions(
+    'version=s' => \$version,
+    'type=s' => \$spec_type,
+    'base-url=s' => \$base_url,
+    'token=s' => \$token,
+    'space-guid=s' => \$test_space_guid,
+    'org-guid=s' => \$test_org_guid,
+    'verbose' => \$verbose,
+    'dry-run' => \$dry_run,
+    'help' => \$help,
+) or die "Error in command line arguments\n";
+
+if ($help) {
+    print_usage();
+    exit 0;
+}
+
+# Load OpenAPI spec
+my $spec_file = File::Spec->catfile('capi', $version, $spec_type, 'openapi.json');
+unless (-f $spec_file) {
+    die "Specification file not found: $spec_file\n";
+}
+
+my $spec_content = read_file($spec_file);
+my $spec = decode_json($spec_content);
+
+# Test results
+my %results = (
+    total => 0,
+    passed => 0,
+    failed => 0,
+    skipped => 0,
+    errors => []
+);
+
+# Create user agent
+my $ua = LWP::UserAgent->new(
+    timeout => 30,
+    ssl_opts => { verify_hostname => 0 }
+);
+
+# Add authorization header
+if ($token) {
+    $ua->default_header('Authorization' => "bearer $token");
+}
+$ua->default_header('Content-Type' => 'application/json');
+
+print colored("Cloud Foundry CAPI Contract Testing\n", 'bold');
+print "Version: $version\n";
+print "Base URL: " . ($base_url || "(not configured)") . "\n";
+print "Mode: " . ($dry_run ? "Dry Run" : "Live") . "\n\n";
+
+# Check configuration
+unless ($base_url || $dry_run) {
+    print colored("Error: --base-url required for live testing\n", 'red');
+    print "Use --dry-run to validate the test framework without making API calls\n";
+    exit 1;
+}
+
+unless ($token || $dry_run) {
+    print colored("Warning: No --token provided. Most endpoints will fail authentication.\n", 'yellow');
+}
+
+# Test endpoints by category
+test_info_endpoints();
+test_read_endpoints();
+test_list_endpoints();
+test_create_update_delete() if $test_space_guid && $test_org_guid;
+
+# Print summary
+print_summary();
+
+sub test_info_endpoints {
+    print colored("\nTesting Info Endpoints\n", 'cyan');
+    print "=" x 50 . "\n";
+    
+    my @info_paths = ('/', '/v3', '/v3/info');
+    
+    for my $path (@info_paths) {
+        test_endpoint('GET', $path, {
+            expected_status => 200,
+            skip_auth => 1,
+            validate_response => sub {
+                my $response = shift;
+                return exists $response->{links} || exists $response->{build};
+            }
+        });
+    }
+}
+
+sub test_read_endpoints {
+    print colored("\nTesting Read Endpoints\n", 'cyan');
+    print "=" x 50 . "\n";
+    
+    # Test organization list (usually accessible)
+    test_endpoint('GET', '/v3/organizations', {
+        expected_status => 200,
+        validate_response => sub {
+            my $response = shift;
+            return exists $response->{pagination} && 
+                   exists $response->{resources};
+        }
+    });
+    
+    # Test buildpacks (often public)
+    test_endpoint('GET', '/v3/buildpacks', {
+        expected_status => 200,
+        validate_response => sub {
+            my $response = shift;
+            return exists $response->{pagination} && 
+                   exists $response->{resources};
+        }
+    });
+    
+    # Test stacks
+    test_endpoint('GET', '/v3/stacks', {
+        expected_status => 200,
+        validate_response => sub {
+            my $response = shift;
+            return exists $response->{pagination} && 
+                   exists $response->{resources};
+        }
+    });
+}
+
+sub test_list_endpoints {
+    print colored("\nTesting List Endpoints with Pagination\n", 'cyan');
+    print "=" x 50 . "\n";
+    
+    # Test pagination parameters
+    test_endpoint('GET', '/v3/apps', {
+        query_params => {
+            page => 1,
+            per_page => 5
+        },
+        expected_status => 200,
+        validate_response => sub {
+            my $response = shift;
+            return exists $response->{pagination} &&
+                   $response->{pagination}{per_page} == 5;
+        }
+    });
+    
+    # Test filtering
+    test_endpoint('GET', '/v3/apps', {
+        query_params => {
+            names => 'non-existent-app-name-12345'
+        },
+        expected_status => 200,
+        validate_response => sub {
+            my $response = shift;
+            return exists $response->{resources} &&
+                   ref($response->{resources}) eq 'ARRAY';
+        }
+    });
+}
+
+sub test_create_update_delete {
+    print colored("\nTesting Create/Update/Delete Operations\n", 'cyan');
+    print "=" x 50 . "\n";
+    
+    unless ($test_space_guid && $test_org_guid) {
+        print colored("Skipping: Requires --space-guid and --org-guid\n", 'yellow');
+        return;
+    }
+    
+    # Create a test app
+    my $app_name = "contract-test-app-" . time();
+    my $app_guid;
+    
+    test_endpoint('POST', '/v3/apps', {
+        body => {
+            name => $app_name,
+            relationships => {
+                space => {
+                    data => {
+                        guid => $test_space_guid
+                    }
+                }
+            }
+        },
+        expected_status => 201,
+        validate_response => sub {
+            my $response = shift;
+            $app_guid = $response->{guid} if $response->{guid};
+            return exists $response->{guid} &&
+                   $response->{name} eq $app_name;
+        }
+    });
+    
+    # Update the app if created
+    if ($app_guid) {
+        test_endpoint('PATCH', "/v3/apps/$app_guid", {
+            body => {
+                metadata => {
+                    labels => {
+                        'test-label' => 'contract-test'
+                    }
+                }
+            },
+            expected_status => 200,
+            validate_response => sub {
+                my $response = shift;
+                return exists $response->{metadata} &&
+                       exists $response->{metadata}{labels};
+            }
+        });
+        
+        # Delete the app
+        test_endpoint('DELETE', "/v3/apps/$app_guid", {
+            expected_status => 202,
+            validate_response => sub {
+                my $response = shift;
+                # DELETE returns a job
+                return exists $response->{guid} || 
+                       # Or sometimes just 202 with no body
+                       !%$response;
+            }
+        });
+    }
+}
+
+sub test_endpoint {
+    my ($method, $path, $options) = @_;
+    $options ||= {};
+    
+    $results{total}++;
+    
+    print "\n$method $path";
+    
+    if ($dry_run) {
+        print colored(" [DRY RUN]", 'yellow');
+        $results{skipped}++;
+        return;
+    }
+    
+    # Build URL
+    my $url = URI->new($base_url . $path);
+    if ($options->{query_params}) {
+        $url->query_form(%{$options->{query_params}});
+    }
+    
+    # Prepare request
+    my $request;
+    if ($method eq 'GET' || $method eq 'DELETE') {
+        $request = HTTP::Request->new($method => $url);
+    } else {
+        my $body = $options->{body} ? encode_json($options->{body}) : '{}';
+        $request = HTTP::Request->new($method => $url, undef, $body);
+    }
+    
+    # Skip auth for certain endpoints
+    if ($options->{skip_auth}) {
+        $request->header('Authorization' => undef);
+    }
+    
+    # Make request
+    my $response = $ua->request($request);
+    
+    # Check status
+    my $expected_status = $options->{expected_status} || 200;
+    if ($response->code == $expected_status) {
+        print colored(" ✓", 'green');
+        
+        # Validate response body if provided
+        if ($response->content && $options->{validate_response}) {
+            my $body = eval { decode_json($response->content) };
+            if ($@) {
+                print colored(" [JSON Parse Error]", 'red');
+                $results{failed}++;
+                push @{$results{errors}}, {
+                    endpoint => "$method $path",
+                    error => "Invalid JSON response: $@"
+                };
+            } elsif (!$options->{validate_response}->($body)) {
+                print colored(" [Validation Failed]", 'red');
+                $results{failed}++;
+                push @{$results{errors}}, {
+                    endpoint => "$method $path",
+                    error => "Response validation failed"
+                };
+            } else {
+                $results{passed}++;
+            }
+        } else {
+            $results{passed}++;
+        }
+    } else {
+        print colored(" ✗", 'red');
+        print " (expected $expected_status, got " . $response->code . ")";
+        $results{failed}++;
+        
+        push @{$results{errors}}, {
+            endpoint => "$method $path",
+            error => "Status " . $response->code . ": " . $response->message,
+            body => $response->content
+        };
+    }
+    
+    if ($verbose && $response->content) {
+        print "\nResponse: " . substr($response->content, 0, 200) . "...\n";
+    }
+}
+
+sub print_summary {
+    print "\n\n" . "=" x 50 . "\n";
+    print colored("Test Summary\n", 'bold');
+    print "=" x 50 . "\n";
+    
+    print "Total Tests: $results{total}\n";
+    print colored("Passed: $results{passed}\n", 'green');
+    print colored("Failed: $results{failed}\n", 'red') if $results{failed};
+    print colored("Skipped: $results{skipped}\n", 'yellow') if $results{skipped};
+    
+    if ($results{failed} > 0) {
+        print "\n" . colored("Failed Tests:\n", 'red');
+        for my $error (@{$results{errors}}) {
+            print "  - $error->{endpoint}: $error->{error}\n";
+            if ($verbose && $error->{body}) {
+                print "    Body: " . substr($error->{body}, 0, 100) . "...\n";
+            }
+        }
+    }
+    
+    # Calculate pass rate
+    my $tested = $results{total} - $results{skipped};
+    if ($tested > 0) {
+        my $pass_rate = int(($results{passed} / $tested) * 100);
+        print "\nPass Rate: $pass_rate%\n";
+    }
+}
+
+sub print_usage {
+    print <<'USAGE';
+Usage: contract-test [OPTIONS]
+
+Test the CAPI OpenAPI specification against a live Cloud Foundry instance.
+
+Options:
+  --version=VERSION      CAPI version to test (default: 3.195.0)
+  --type=TYPE           Specification type: generated or enhanced (default: enhanced)
+  --base-url=URL        Base URL of the Cloud Foundry API (e.g., https://api.cf.example.com)
+  --token=TOKEN         OAuth bearer token for authentication
+  --space-guid=GUID     Test space GUID for create/update/delete tests
+  --org-guid=GUID       Test organization GUID
+  --dry-run             Validate test framework without making API calls
+  --verbose             Show detailed output
+  --help                Show this help message
+
+Examples:
+  # Dry run to validate test framework
+  contract-test --dry-run
+
+  # Test against local PCF Dev
+  contract-test --base-url=https://api.local.pcfdev.io --token=$CF_TOKEN
+
+  # Full test with create/update/delete
+  contract-test --base-url=https://api.cf.example.com --token=$CF_TOKEN \
+                --space-guid=abc123 --org-guid=def456
+
+Note: Obtain a token using: cf oauth-token | sed 's/^bearer //'
+
+USAGE
+}

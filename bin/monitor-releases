@@ -1,0 +1,509 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use v5.30;
+use Getopt::Long;
+use JSON::XS;
+use LWP::UserAgent;
+use XML::Simple;
+use File::Slurp;
+use File::Path qw(make_path);
+use Term::ANSIColor;
+use Time::Local;
+use POSIX qw(strftime);
+
+# Configuration
+my $config_file = '.monitoring/config.json';
+my $state_file = '.monitoring/state.json';
+my $webhook_url;
+my $slack_webhook;
+my $email_to;
+my $check_only = 0;
+my $verbose = 0;
+my $json_output = 0;
+
+GetOptions(
+    'config=s'       => \$config_file,
+    'state=s'        => \$state_file,
+    'webhook=s'      => \$webhook_url,
+    'slack=s'        => \$slack_webhook,
+    'email=s'        => \$email_to,
+    'check-only'     => \$check_only,
+    'verbose'        => \$verbose,
+    'json'           => \$json_output,
+) or die "Error in command line arguments\n";
+
+# Load configuration
+my $config = load_config();
+my $state = load_state();
+
+# Monitor sources
+my @sources = (
+    {
+        name => 'CAPI GitHub Releases',
+        type => 'github',
+        url => 'https://api.github.com/repos/cloudfoundry/cloud_controller_ng/releases',
+        check => \&check_github_releases,
+    },
+    {
+        name => 'CAPI RSS Feed',
+        type => 'rss',
+        url => 'https://github.com/cloudfoundry/cloud_controller_ng/releases.atom',
+        check => \&check_rss_feed,
+    },
+    {
+        name => 'CAPI Documentation',
+        type => 'html',
+        url => 'https://v3-apidocs.cloudfoundry.org/',
+        check => \&check_documentation_page,
+    },
+);
+
+# Main monitoring loop
+my $updates_found = 0;
+my @notifications = ();
+
+for my $source (@sources) {
+    print_info("Checking $source->{name}...") unless $json_output;
+    
+    my $result = $source->{check}->($source->{url});
+    
+    if ($result->{updated}) {
+        $updates_found++;
+        push @notifications, {
+            source => $source->{name},
+            version => $result->{version},
+            url => $result->{url},
+            changes => $result->{changes},
+        };
+        
+        # Update state
+        $state->{$source->{name}} = {
+            last_version => $result->{version},
+            last_check => time(),
+            last_update => time(),
+        };
+    } else {
+        # Update last check time
+        $state->{$source->{name}}{last_check} = time();
+    }
+}
+
+# Save state
+save_state($state) unless $check_only;
+
+# Send notifications if updates found
+if ($updates_found > 0 && !$check_only) {
+    send_notifications(\@notifications);
+}
+
+# Output results
+if ($json_output) {
+    print encode_json({
+        updates_found => $updates_found,
+        notifications => \@notifications,
+        timestamp => time(),
+    });
+} else {
+    if ($updates_found > 0) {
+        print_warning("Found $updates_found updates!");
+    } else {
+        print_success("No updates found");
+    }
+}
+
+exit($updates_found > 0 ? 1 : 0);
+
+# Monitoring functions
+sub check_github_releases {
+    my ($url) = @_;
+    
+    my $ua = LWP::UserAgent->new();
+    $ua->default_header('Accept' => 'application/vnd.github.v3+json');
+    $ua->default_header('User-Agent' => 'CAPI-OpenAPI-Monitor/1.0');
+    
+    # Add auth token if available
+    if ($config->{github_token}) {
+        $ua->default_header('Authorization' => "token $config->{github_token}");
+    }
+    
+    my $response = $ua->get($url);
+    
+    unless ($response->is_success) {
+        warn "Failed to fetch GitHub releases: " . $response->status_line . "\n";
+        return { updated => 0 };
+    }
+    
+    my $releases = decode_json($response->content);
+    
+    # Get latest release
+    my $latest = $releases->[0];
+    return { updated => 0 } unless $latest;
+    
+    # Extract version from tag
+    my $version = $latest->{tag_name};
+    $version =~ s/^v//; # Remove 'v' prefix if present
+    
+    # Check if this is a new version
+    my $last_version = $state->{'CAPI GitHub Releases'}{last_version} // '';
+    
+    if ($version ne $last_version) {
+        return {
+            updated => 1,
+            version => $version,
+            url => $latest->{html_url},
+            changes => $latest->{body} // 'No release notes provided',
+        };
+    }
+    
+    return { updated => 0 };
+}
+
+sub check_rss_feed {
+    my ($url) = @_;
+    
+    my $ua = LWP::UserAgent->new();
+    my $response = $ua->get($url);
+    
+    unless ($response->is_success) {
+        warn "Failed to fetch RSS feed: " . $response->status_line . "\n";
+        return { updated => 0 };
+    }
+    
+    # Parse RSS/Atom feed
+    my $xml = XML::Simple->new();
+    my $feed = eval { $xml->XMLin($response->content) };
+    
+    if ($@) {
+        warn "Failed to parse RSS feed: $@\n";
+        return { updated => 0 };
+    }
+    
+    # Get latest entry
+    my $entries = $feed->{entry};
+    $entries = [$entries] unless ref($entries) eq 'ARRAY';
+    
+    my $latest = $entries->[0];
+    return { updated => 0 } unless $latest;
+    
+    # Extract version from title
+    my $title = $latest->{title};
+    my $version = '';
+    
+    if ($title =~ /v?(\d+\.\d+\.\d+)/) {
+        $version = $1;
+    }
+    
+    # Check if this is a new version
+    my $last_version = $state->{'CAPI RSS Feed'}{last_version} // '';
+    
+    if ($version && $version ne $last_version) {
+        return {
+            updated => 1,
+            version => $version,
+            url => $latest->{link}{href} || $latest->{id},
+            changes => $latest->{content} // 'See release page for details',
+        };
+    }
+    
+    return { updated => 0 };
+}
+
+sub check_documentation_page {
+    my ($url) = @_;
+    
+    my $ua = LWP::UserAgent->new();
+    my $response = $ua->get($url);
+    
+    unless ($response->is_success) {
+        warn "Failed to fetch documentation page: " . $response->status_line . "\n";
+        return { updated => 0 };
+    }
+    
+    my $content = $response->content;
+    
+    # Look for version in the page
+    my $version = '';
+    
+    if ($content =~ /version[\/:](\d+\.\d+\.\d+)/i) {
+        $version = $1;
+    } elsif ($content =~ /<title>.*?v(\d+\.\d+\.\d+).*?<\/title>/i) {
+        $version = $1;
+    }
+    
+    # Check if this is a new version
+    my $last_version = $state->{'CAPI Documentation'}{last_version} // '';
+    
+    if ($version && $version ne $last_version) {
+        return {
+            updated => 1,
+            version => $version,
+            url => "$url/version/$version/",
+            changes => 'New documentation version available',
+        };
+    }
+    
+    return { updated => 0 };
+}
+
+# Notification functions
+sub send_notifications {
+    my ($notifications) = @_;
+    
+    # GitHub webhook
+    if ($webhook_url) {
+        send_webhook_notification($webhook_url, $notifications);
+    }
+    
+    # Slack notification
+    if ($slack_webhook) {
+        send_slack_notification($slack_webhook, $notifications);
+    }
+    
+    # Email notification
+    if ($email_to) {
+        send_email_notification($email_to, $notifications);
+    }
+    
+    # GitHub issue creation
+    if ($config->{create_issues}) {
+        create_github_issue($notifications);
+    }
+}
+
+sub send_webhook_notification {
+    my ($url, $notifications) = @_;
+    
+    my $payload = {
+        event => 'capi_update',
+        notifications => $notifications,
+        timestamp => time(),
+    };
+    
+    my $ua = LWP::UserAgent->new();
+    my $response = $ua->post(
+        $url,
+        Content_Type => 'application/json',
+        Content => encode_json($payload)
+    );
+    
+    if ($response->is_success) {
+        print_success("Webhook notification sent");
+    } else {
+        warn "Failed to send webhook: " . $response->status_line . "\n";
+    }
+}
+
+sub send_slack_notification {
+    my ($url, $notifications) = @_;
+    
+    my $text = "🚀 CAPI Updates Detected!\n\n";
+    
+    for my $notif (@$notifications) {
+        $text .= "*$notif->{source}*: Version $notif->{version}\n";
+        $text .= "URL: $notif->{url}\n\n";
+    }
+    
+    my $payload = {
+        text => $text,
+        username => 'CAPI Monitor',
+        icon_emoji => ':rocket:',
+    };
+    
+    my $ua = LWP::UserAgent->new();
+    my $response = $ua->post(
+        $url,
+        Content_Type => 'application/json',
+        Content => encode_json($payload)
+    );
+    
+    if ($response->is_success) {
+        print_success("Slack notification sent");
+    } else {
+        warn "Failed to send Slack notification: " . $response->status_line . "\n";
+    }
+}
+
+sub send_email_notification {
+    my ($to, $notifications) = @_;
+    
+    print_info("Email notification would be sent to: $to");
+    # Email implementation would go here
+    # This is a placeholder as it requires SMTP configuration
+}
+
+sub create_github_issue {
+    my ($notifications) = @_;
+    
+    return unless $config->{github_token} && $config->{github_repo};
+    
+    my $title = "CAPI Update Detected: ";
+    my @versions = map { $_->{version} } @$notifications;
+    $title .= join(', ', @versions);
+    
+    my $body = "## CAPI Updates Detected\n\n";
+    
+    for my $notif (@$notifications) {
+        $body .= "### $notif->{source}\n";
+        $body .= "- **Version**: $notif->{version}\n";
+        $body .= "- **URL**: $notif->{url}\n";
+        $body .= "- **Changes**: $notif->{changes}\n\n";
+    }
+    
+    $body .= "## Action Required\n\n";
+    $body .= "1. Review the changes in the new CAPI version\n";
+    $body .= "2. Run the OpenAPI generation pipeline\n";
+    $body .= "3. Validate the generated specification\n";
+    $body .= "4. Create a PR with the updates\n\n";
+    $body .= "*This issue was automatically created by the CAPI monitoring system.*\n";
+    
+    my $issue_data = {
+        title => $title,
+        body => $body,
+        labels => ['capi-update', 'automated'],
+    };
+    
+    my $ua = LWP::UserAgent->new();
+    $ua->default_header('Accept' => 'application/vnd.github.v3+json');
+    $ua->default_header('Authorization' => "token $config->{github_token}");
+    
+    my $url = "https://api.github.com/repos/$config->{github_repo}/issues";
+    my $response = $ua->post(
+        $url,
+        Content_Type => 'application/json',
+        Content => encode_json($issue_data)
+    );
+    
+    if ($response->is_success) {
+        my $issue = decode_json($response->content);
+        print_success("GitHub issue created: $issue->{html_url}");
+    } else {
+        warn "Failed to create GitHub issue: " . $response->status_line . "\n";
+    }
+}
+
+# Configuration management
+sub load_config {
+    my $default_config = {
+        github_token => $ENV{GITHUB_TOKEN} // '',
+        github_repo => 'cloudfoundry-community/capi-openapi-spec',
+        create_issues => 1,
+        monitoring_interval => 3600, # 1 hour
+    };
+    
+    if (-f $config_file) {
+        my $loaded = decode_json(read_file($config_file));
+        return { %$default_config, %$loaded };
+    }
+    
+    return $default_config;
+}
+
+sub load_state {
+    if (-f $state_file) {
+        return decode_json(read_file($state_file));
+    }
+    
+    return {};
+}
+
+sub save_state {
+    my ($state) = @_;
+    
+    make_path(dirname($state_file));
+    write_file($state_file, encode_json($state));
+}
+
+# Helper functions
+sub print_info {
+    my ($msg) = @_;
+    say colored("ℹ️  $msg", 'blue');
+}
+
+sub print_success {
+    my ($msg) = @_;
+    say colored("✅ $msg", 'green');
+}
+
+sub print_warning {
+    my ($msg) = @_;
+    say colored("⚠️  $msg", 'yellow');
+}
+
+__END__
+
+=head1 NAME
+
+monitor-releases - Monitor CAPI releases and send notifications
+
+=head1 SYNOPSIS
+
+monitor-releases [options]
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--config>
+
+Configuration file path (default: .monitoring/config.json)
+
+=item B<--state>
+
+State file path (default: .monitoring/state.json)
+
+=item B<--webhook>
+
+Webhook URL for notifications
+
+=item B<--slack>
+
+Slack webhook URL
+
+=item B<--email>
+
+Email address for notifications
+
+=item B<--check-only>
+
+Check for updates without saving state or sending notifications
+
+=item B<--verbose>
+
+Enable verbose output
+
+=item B<--json>
+
+Output results as JSON
+
+=back
+
+=head1 EXAMPLES
+
+    # Basic monitoring check
+    ./bin/monitor-releases
+    
+    # Check without updating state
+    ./bin/monitor-releases --check-only
+    
+    # With Slack notifications
+    ./bin/monitor-releases --slack=https://hooks.slack.com/services/xxx
+    
+    # JSON output for CI/CD
+    ./bin/monitor-releases --json
+    
+    # Custom webhook notification
+    ./bin/monitor-releases --webhook=https://example.com/webhook
+
+=head1 CONFIGURATION
+
+Create .monitoring/config.json:
+
+    {
+        "github_token": "ghp_xxxx",
+        "github_repo": "cloudfoundry-community/capi-openapi-spec",
+        "create_issues": true,
+        "monitoring_interval": 3600
+    }
+
+=cut

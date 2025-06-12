@@ -1,0 +1,1173 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+use FindBin;
+use File::Basename;
+use File::Spec;
+use File::Path qw(make_path);
+use Getopt::Long;
+use Mojo::File;
+use Mojo::JSON;
+use JSON::XS;
+use YAML::XS qw(Dump);
+use Data::Dumper;
+
+# Parse command line options
+my $input_file;
+my $output_dir;
+my $verbose;
+my $help;
+my $inplace;
+
+GetOptions(
+    'input=s' => \$input_file,
+    'output-dir=s' => \$output_dir,
+    'verbose' => \$verbose,
+    'help' => \$help,
+    'inplace' => \$inplace,
+) or die usage();
+
+if ($help) {
+    print usage();
+    exit(0);
+}
+
+# Validate input
+unless ($input_file) {
+    # Try to auto-detect from command line
+    $input_file = shift @ARGV;
+    unless ($input_file) {
+        die "Error: No input file specified\n" . usage();
+    }
+}
+
+unless (-f $input_file) {
+    die "Error: Input file not found: $input_file\n";
+}
+
+sub usage {
+    return <<'EOF';
+Usage: enhance-spec [OPTIONS] [INPUT_FILE]
+
+Enhance an OpenAPI specification with improved descriptions, examples, and structure
+
+Options:
+  --input=FILE       Input OpenAPI spec file (JSON or YAML)
+  --output-dir=DIR   Output directory (default: auto-detected from input path)
+  --inplace          Enhance the file in-place (overwrite input)
+  --verbose          Show detailed progress
+  --help             Show this help message
+
+Examples:
+  enhance-spec capi/3.195.0/generated/openapi.json
+  enhance-spec --input=spec.yaml --output-dir=output/
+  
+The script will:
+  - Auto-detect version from input path if possible
+  - Create enhanced/ subdirectory in the appropriate location
+  - Generate both JSON and YAML output files
+  - Create an enhancement report
+EOF
+}
+
+# Auto-detect version and output directory if not specified
+if ($inplace) {
+    # For in-place, output directory is the same as input directory
+    $output_dir = dirname($input_file);
+    say "In-place enhancement mode, output directory: $output_dir" if $verbose;
+} elsif (!$output_dir) {
+    # Check if input path contains version pattern
+    if ($input_file =~ m{capi/(\d+\.\d+\.\d+)/}) {
+        my $version = $1;
+        my $base_dir = File::Spec->catdir('capi', $version, 'enhanced');
+        $output_dir = $base_dir;
+        say "Auto-detected version $version, output directory: $output_dir" if $verbose;
+    } else {
+        # Default to same directory as input with 'enhanced' subdirectory
+        my $input_dir = dirname($input_file);
+        $output_dir = File::Spec->catdir($input_dir, 'enhanced');
+        say "Using default output directory: $output_dir" if $verbose;
+    }
+}
+
+# Create output directory if it doesn't exist (unless in-place)
+make_path($output_dir) unless (-d $output_dir || $inplace);
+
+# Load the OpenAPI spec
+say "Loading OpenAPI spec from: $input_file" if $verbose;
+my $spec_content = Mojo::File->new($input_file)->slurp;
+my $spec;
+
+# Auto-detect format and parse
+if ($input_file =~ /\.ya?ml$/i || $spec_content =~ /^openapi:/m) {
+    # YAML format
+    require YAML::XS;
+    $spec = YAML::XS::Load($spec_content);
+} else {
+    # JSON format - use JSON::XS for proper boolean handling
+    $spec = JSON::XS->new->utf8->decode($spec_content);
+}
+
+# Enhancement counters
+my $stats = {
+    operation_ids_improved => 0,
+    descriptions_added => 0,
+    examples_added => 0,
+    schemas_refined => 0,
+    tags_organized => 0,
+    parameters_enhanced => 0,
+    responses_enhanced => 0
+};
+
+# Fix required fields in components.parameters before other enhancements
+if ($spec->{components} && $spec->{components}{parameters}) {
+    for my $param_name (keys %{$spec->{components}{parameters}}) {
+        my $param = $spec->{components}{parameters}{$param_name};
+        if (exists $param->{required} && $param->{required} eq 'true') {
+            $param->{required} = JSON::XS::true;
+        } elsif (exists $param->{required} && $param->{required} eq 'false') {
+            $param->{required} = JSON::XS::false;
+        }
+    }
+}
+
+# Apply enhancements
+enhance_info($spec);
+enhance_tags($spec);
+fix_duplicate_parameters($spec);  # Fix duplicates before other enhancements
+fix_path_issues($spec);  # Fix path-specific validation issues
+enhance_paths($spec);
+enhance_components($spec);
+add_common_responses($spec);
+add_common_parameters($spec);
+
+# Write enhanced spec
+my $enhanced_json_file = File::Spec->catfile($output_dir, 'openapi.json');
+my $enhanced_yaml_file = File::Spec->catfile($output_dir, 'openapi.yaml');
+
+# In-place mode - no backup needed since we're in a git repo
+
+say "Writing enhanced JSON spec..." if $verbose;
+# Use JSON::XS for proper boolean handling
+my $json_encoder = JSON::XS->new->utf8->pretty->canonical;
+Mojo::File->new($enhanced_json_file)->spew($json_encoder->encode($spec));
+
+say "Writing enhanced YAML spec..." if $verbose;
+write_yaml($spec, $enhanced_yaml_file);
+
+# Generate enhancement report
+say "Generating enhancement report..." if $verbose;
+generate_report($output_dir);
+
+say "\nEnhancement completed. Enhanced spec saved to:";
+say "  - $enhanced_json_file";
+say "  - $enhanced_yaml_file";
+say "  - " . File::Spec->catfile($output_dir, 'enhancement-report.md');
+
+sub enhance_info {
+    my $spec = shift;
+    
+    # Enhance API info section
+    $spec->{info}{description} = <<'EOF';
+The Cloud Foundry V3 API is the next generation Cloud Foundry API. It provides a RESTful interface for managing apps, services, organizations, spaces, and all other Cloud Foundry resources.
+
+## Key Features
+- RESTful design with consistent patterns
+- OAuth 2.0 authentication via UAA
+- Pagination, filtering, and sorting support
+- Asynchronous operations via jobs
+- Rich metadata support with labels and annotations
+
+## Authentication
+All endpoints require a valid OAuth 2.0 bearer token obtained from the UAA server. Include the token in the Authorization header:
+```
+Authorization: bearer <token>
+```
+
+## Rate Limiting
+API requests may be rate limited. Check the `X-RateLimit-*` response headers for current limits and usage.
+
+## Versioning
+This specification documents version 3.195.0 of the Cloud Foundry API.
+EOF
+
+    $spec->{info}{contact} = {
+        name => "Cloud Foundry Community",
+        url => "https://github.com/cloudfoundry",
+        email => 'cf-dev@lists.cloudfoundry.org'
+    };
+    
+    $spec->{info}{license} = {
+        name => "Apache 2.0",
+        url => "https://www.apache.org/licenses/LICENSE-2.0.html"
+    };
+    
+    # Add external docs
+    $spec->{externalDocs} = {
+        description => "Cloud Foundry Documentation",
+        url => "https://docs.cloudfoundry.org"
+    };
+    
+    $stats->{descriptions_added}++;
+}
+
+sub enhance_tags {
+    my $spec = shift;
+    
+    # Define comprehensive tags with descriptions
+    my @tags = (
+        { name => "Admin", description => "Administrative operations for platform management." },
+        { name => "Apps", description => "Applications are the primary entities in Cloud Foundry. They contain source code and are deployed, scaled, and managed." },
+        { name => "App Features", description => "Feature flags and capabilities that can be enabled or disabled for individual applications." },
+        { name => "App Usage Events", description => "Usage tracking and billing information for applications." },
+        { name => "Audit Events", description => "Audit trail of actions performed in Cloud Foundry for compliance and security." },
+        { name => "Builds", description => "Build records track the transformation of source code into executable droplets." },
+        { name => "Buildpacks", description => "Buildpacks provide framework and runtime support for applications." },
+        { name => "Core", description => "Core API functionality and utilities." },
+        { name => "Deployments", description => "Zero-downtime deployments using rolling update strategies." },
+        { name => "Domains", description => "DNS domains that can be used for routing to applications." },
+        { name => "Droplets", description => "Compiled, executable versions of applications ready to run." },
+        { name => "Environment Variable Groups", description => "System-wide environment variables applied to all applications." },
+        { name => "Feature Flags", description => "Platform-wide feature toggles for enabling/disabling functionality." },
+        { name => "Info", description => "Platform information and configuration endpoints." },
+        { name => "Isolation Segments", description => "Logical isolation of application workloads for security or compliance." },
+        { name => "Jobs", description => "Asynchronous operations and their status." },
+        { name => "Manifests", description => "Application deployment manifests in YAML format." },
+        { name => "Organizations", description => "Top-level organizational units for grouping resources and users." },
+        { name => "Organization Quotas", description => "Resource limits applied at the organization level." },
+        { name => "Packages", description => "Application source code packages uploaded for staging." },
+        { name => "Processes", description => "Running instances of applications with specific configurations." },
+        { name => "Resource Matches", description => "Resource fingerprinting for efficient uploads." },
+        { name => "Revisions", description => "Immutable snapshots of application configuration for rollback." },
+        { name => "Roles", description => "User permissions and access control within organizations and spaces." },
+        { name => "Root", description => "API discovery and version information endpoints." },
+        { name => "Routes", description => "HTTP routing configuration for applications." },
+        { name => "Security Groups", description => "Egress network security rules for applications." },
+        { name => "Service Brokers", description => "Integrations with external service providers." },
+        { name => "Service Credential Bindings", description => "Credentials and connections between apps and service instances." },
+        { name => "Service Instances", description => "Provisioned instances of services from the marketplace." },
+        { name => "Service Offerings", description => "Available services in the marketplace catalog." },
+        { name => "Service Plans", description => "Pricing tiers and configurations for service offerings." },
+        { name => "Service Plan Visibility", description => "Access control for service plans across organizations." },
+        { name => "Service Route Bindings", description => "Route-level service integrations." },
+        { name => "Service Usage Events", description => "Usage tracking and billing for service instances." },
+        { name => "Sidecars", description => "Additional processes that run alongside application instances." },
+        { name => "Spaces", description => "Development environments within organizations for deploying applications." },
+        { name => "Space Features", description => "Feature flags at the space level." },
+        { name => "Space Quotas", description => "Resource limits applied at the space level." },
+        { name => "Stacks", description => "Base operating system images for running applications." },
+        { name => "Tasks", description => "One-off processes that run independently of the main application." },
+        { name => "Users", description => "User accounts and identity management." }
+    );
+    
+    $spec->{tags} = \@tags;
+    $stats->{tags_organized} = scalar(@tags);
+}
+
+sub enhance_paths {
+    my $spec = shift;
+    
+    # Track operation IDs to ensure uniqueness
+    my %used_operation_ids;
+    
+    for my $path (sort keys %{$spec->{paths}}) {
+        for my $method (sort keys %{$spec->{paths}{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $spec->{paths}{$path}{$method};
+            
+            # Improve operation IDs
+            if ($operation->{operationId}) {
+                my $old_id = $operation->{operationId};
+                my $new_id = improve_operation_id($method, $path);
+                
+                # Ensure uniqueness
+                if ($used_operation_ids{$new_id}) {
+                    # Add suffix to make unique
+                    my $suffix = 2;
+                    while ($used_operation_ids{"${new_id}_$suffix"}) {
+                        $suffix++;
+                    }
+                    $new_id = "${new_id}_$suffix";
+                }
+                
+                $used_operation_ids{$new_id} = 1;
+                
+                if ($old_id ne $new_id) {
+                    $operation->{operationId} = $new_id;
+                    $stats->{operation_ids_improved}++;
+                }
+            }
+            
+            # Enhance parameter descriptions
+            if ($operation->{parameters}) {
+                for my $param (@{$operation->{parameters}}) {
+                    enhance_parameter($param);
+                }
+            }
+            
+            # Fix request body required field
+            if ($operation->{requestBody}) {
+                if (exists $operation->{requestBody}{required}) {
+                    if ($operation->{requestBody}{required} eq 'true') {
+                        $operation->{requestBody}{required} = 1;
+                    } elsif ($operation->{requestBody}{required} eq 'false') {
+                        $operation->{requestBody}{required} = 0;
+                    }
+                }
+                
+                # Fix empty required arrays in request body schemas
+                if ($operation->{requestBody}{content}) {
+                    for my $content_type (keys %{$operation->{requestBody}{content}}) {
+                        my $content = $operation->{requestBody}{content}{$content_type};
+                        if ($content->{schema} && $content->{schema}{required} && 
+                            ref($content->{schema}{required}) eq 'ARRAY') {
+                            if (@{$content->{schema}{required}} == 0) {
+                                delete $content->{schema}{required};
+                            } else {
+                                # Remove duplicates from required array
+                                my %seen;
+                                my @unique = grep { !$seen{$_}++ } @{$content->{schema}{required}};
+                                $content->{schema}{required} = \@unique;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            # Enhance response descriptions
+            if ($operation->{responses}) {
+                enhance_responses($operation->{responses});
+            }
+            
+            # Fix tags - map Overview to appropriate tags
+            if ($operation->{tags} && @{$operation->{tags}} > 0 && $operation->{tags}[0] eq 'Overview') {
+                $operation->{tags}[0] = map_path_to_tag($path);
+                $stats->{tags_fixed}++;
+            }
+            
+            # Add operation description if missing
+            if (!$operation->{description} || length($operation->{description}) < 10) {
+                $operation->{description} = generate_operation_description($method, $path, $operation);
+                $stats->{descriptions_added}++;
+            }
+            
+            # Add deprecation notices where applicable
+            if ($path =~ /restage/) {
+                $operation->{deprecated} = 1;
+                $operation->{description} .= "\n\n**Deprecated**: Use deployments for zero-downtime updates instead.";
+            }
+        }
+    }
+}
+
+sub improve_operation_id {
+    my ($method, $path) = @_;
+    
+    # Handle special cases
+    if ($path eq '/v3') {
+        return 'getRoot';
+    }
+    
+    # Remove query parameters from path if present
+    my $clean_path = $path;
+    my $query_param = '';
+    if ($path =~ /^([^?]+)\?(.+)$/) {
+        $clean_path = $1;
+        $query_param = $2;
+    }
+    
+    # Extract resource and action from path
+    my @parts = split '/', $clean_path;
+    shift @parts; # Remove empty first element
+    shift @parts; # Remove 'v3'
+    
+    my $resource = '';
+    my $action = '';
+    my $sub_resource = '';
+    
+    # Determine resource and action
+    if (@parts == 0) {
+        # Root endpoint
+        return 'getRoot';
+    } elsif (@parts == 1) {
+        # Simple resource listing
+        $resource = $parts[0];
+        $action = $method eq 'get' ? 'list' : $method;
+    } elsif (@parts == 2 && $parts[1] =~ /^\{[^}]+\}$/) {
+        # Single resource operation
+        $resource = $parts[0];
+        $action = $method eq 'get' ? 'get' : 
+                  $method eq 'patch' ? 'update' :
+                  $method eq 'delete' ? 'delete' : $method;
+    } elsif (@parts >= 3) {
+        # Sub-resource or action
+        $resource = $parts[0];
+        if ($parts[2] eq 'actions') {
+            $action = join('_', @parts[3..$#parts]);
+        } elsif ($parts[2] eq 'relationships') {
+            $sub_resource = $parts[3];
+            $action = $method eq 'get' ? 'get_relationship' :
+                      $method eq 'post' ? 'add_relationship' :
+                      $method eq 'delete' ? 'remove_relationship' : $method;
+        } else {
+            $sub_resource = join('_', @parts[2..$#parts]);
+            $sub_resource =~ s/\{[^}]+\}//g;
+            $sub_resource =~ s/_+/_/g;
+            $sub_resource =~ s/^_|_$//g;
+            $action = $method eq 'get' ? 'list' : $method;
+        }
+    }
+    
+    # Handle query parameter in path
+    if ($query_param) {
+        # Extract parameter name from query
+        if ($query_param =~ /^(\w+)=/) {
+            my $param_name = $1;
+            $action = "${method}_by_${param_name}";
+        }
+    }
+    
+    # Clean up resource names
+    $resource =~ s/_/-/g;
+    $sub_resource =~ s/_/-/g if $sub_resource;
+    
+    # Build operation ID
+    my $op_id = $action;
+    $op_id .= '_' . $sub_resource if $sub_resource;
+    $op_id .= '_for' if $sub_resource && $resource;
+    $op_id .= '_' . $resource if $resource;
+    
+    # Convert to camelCase
+    $op_id =~ s/-(.)/uc($1)/ge;
+    $op_id =~ s/_(.)/uc($1)/ge;
+    
+    # Ensure it starts with a letter
+    $op_id = 'op' . $op_id unless $op_id =~ /^[a-zA-Z]/;
+    
+    return $op_id;
+}
+
+sub enhance_parameter {
+    my $param = shift;
+    
+    # Fix required field to be boolean
+    if (exists $param->{required} && $param->{required} eq 'true') {
+        $param->{required} = 1;
+    } elsif (exists $param->{required} && $param->{required} eq 'false') {
+        $param->{required} = 0;
+    }
+    
+    # Fix allowEmptyValue field to be boolean
+    if (exists $param->{allowEmptyValue} && $param->{allowEmptyValue} eq 'true') {
+        $param->{allowEmptyValue} = 1;
+    } elsif (exists $param->{allowEmptyValue} && $param->{allowEmptyValue} eq 'false') {
+        $param->{allowEmptyValue} = 0;
+    }
+    
+    # Add better descriptions for common parameters
+    my %param_descriptions = (
+        page => "Page number to retrieve (1-based)",
+        per_page => "Number of results per page (max 5000)",
+        order_by => "Field to sort results by. Prefix with '-' for descending order",
+        label_selector => "Kubernetes-style label selector. Multiple selectors are combined with AND logic",
+        include => "Related resources to include in the response (comma-separated)",
+        fields => "Specific fields to include in the response. Use dot notation for nested fields",
+        guids => "Comma-separated list of resource GUIDs to filter by",
+        names => "Comma-separated list of names to filter by (case insensitive)",
+        organization_guids => "Filter by organization GUIDs (comma-separated)",
+        space_guids => "Filter by space GUIDs (comma-separated)",
+        states => "Filter by resource states (comma-separated)",
+        lifecycle_type => "Filter by lifecycle type (buildpack or docker)",
+    );
+    
+    if ($param->{name} && $param_descriptions{$param->{name}}) {
+        $param->{description} = $param_descriptions{$param->{name}};
+        $stats->{parameters_enhanced}++;
+    }
+    
+    # Add examples for common parameters
+    my %param_examples = (
+        page => 2,
+        per_page => 50,
+        order_by => "-created_at",
+        label_selector => "environment=production,tier!=backend",
+        include => "space.organization",
+        fields => "guid,name,relationships.space",
+        guids => "guid1,guid2,guid3",
+        names => "my-app,another-app",
+    );
+    
+    if ($param->{name} && $param_examples{$param->{name}} && $param->{schema}) {
+        $param->{example} = $param_examples{$param->{name}};
+        $stats->{examples_added}++;
+    }
+    
+    $stats->{parameters_enhanced}++;
+}
+
+sub enhance_responses {
+    my $responses = shift;
+    
+    # Standard response descriptions
+    my %response_descriptions = (
+        200 => "Request succeeded",
+        201 => "Resource created successfully", 
+        202 => "Request accepted for asynchronous processing",
+        204 => "Request succeeded with no response body",
+        400 => "Request invalid due to client error",
+        401 => "Authentication required or invalid credentials",
+        403 => "Authenticated but not authorized for this operation",
+        404 => "Resource not found",
+        422 => "Request valid but semantically incorrect",
+        500 => "Internal server error",
+        502 => "Bad gateway - upstream service error",
+        503 => "Service unavailable - try again later"
+    );
+    
+    for my $status (keys %$responses) {
+        my $response = $responses->{$status};
+        
+        # Enhance description if generic
+        if (!$response->{description} || length($response->{description}) < 10) {
+            $response->{description} = $response_descriptions{$status} || "HTTP $status response";
+            $stats->{responses_enhanced}++;
+        }
+        
+        # Add headers for async operations
+        if ($status eq '202') {
+            $response->{headers} = {
+                'Location' => {
+                    description => 'URL to poll for job status',
+                    schema => { type => 'string', format => 'uri' }
+                }
+            };
+        }
+        
+        # Add rate limit headers for success responses
+        if ($status =~ /^2\d\d$/) {
+            $response->{headers} ||= {};
+            $response->{headers}{'X-RateLimit-Limit'} = {
+                description => 'Request limit per hour',
+                schema => { type => 'integer' }
+            };
+            $response->{headers}{'X-RateLimit-Remaining'} = {
+                description => 'Remaining requests in current window',
+                schema => { type => 'integer' }
+            };
+            $response->{headers}{'X-RateLimit-Reset'} = {
+                description => 'UTC epoch seconds when limit resets',
+                schema => { type => 'integer' }
+            };
+        }
+    }
+}
+
+sub enhance_components {
+    my $spec = shift;
+    
+    # Enhance schema descriptions
+    if ($spec->{components}{schemas}) {
+        for my $name (keys %{$spec->{components}{schemas}}) {
+            my $schema = $spec->{components}{schemas}{$name};
+            
+            # Add descriptions for common schemas
+            my %schema_descriptions = (
+                Error => "Standard error response for all API errors",
+                Metadata => "User-defined metadata with labels and annotations",
+                ToOneRelationship => "Reference to a single related resource",
+                AppCredentialBinding => "Service binding specifically for applications",
+                KeyCredentialBinding => "Service binding for arbitrary consumers",
+                BitsPackage => "Package containing application source code or compiled bits",
+                DockerPackage => "Package referencing a Docker image"
+            );
+            
+            if ($schema_descriptions{$name} && !$schema->{description}) {
+                $schema->{description} = $schema_descriptions{$name};
+                $stats->{schemas_refined}++;
+            }
+            
+            # Fix $ref siblings issue
+            fix_ref_siblings($schema);
+            
+            # Add examples for schemas
+            if ($name eq 'Metadata') {
+                $schema->{example} = {
+                    labels => {
+                        environment => "production",
+                        team => "payments"
+                    },
+                    annotations => {
+                        "company.com/cost-center" => "1234",
+                        "company.com/owner" => 'alice@example.com'
+                    }
+                };
+                $stats->{examples_added}++;
+            }
+        }
+    }
+}
+
+sub fix_ref_siblings {
+    my ($obj) = @_;
+    
+    return unless ref($obj) eq 'HASH';
+    
+    # If this object has a $ref, check for siblings
+    if ($obj->{'$ref'}) {
+        my @keys = keys %$obj;
+        if (@keys > 1) {
+            # Has siblings, need to wrap in allOf
+            my $ref = delete $obj->{'$ref'};
+            my %siblings = %$obj;
+            %$obj = ();
+            
+            # Create allOf structure
+            $obj->{allOf} = [
+                { '$ref' => $ref },
+                \%siblings
+            ];
+        }
+    }
+    
+    # Recursively fix nested objects
+    for my $key (keys %$obj) {
+        my $value = $obj->{$key};
+        if (ref($value) eq 'HASH') {
+            fix_ref_siblings($value);
+        } elsif (ref($value) eq 'ARRAY') {
+            for my $item (@$value) {
+                fix_ref_siblings($item) if ref($item) eq 'HASH';
+            }
+        }
+    }
+}
+
+sub add_common_responses {
+    my $spec = shift;
+    
+    # Define common error responses
+    $spec->{components}{responses} = {
+        BadRequest => {
+            description => "Bad Request - The request is invalid",
+            content => {
+                'application/json' => {
+                    schema => { '$ref' => '#/components/schemas/Error' },
+                    example => {
+                        errors => [{
+                            code => 10008,
+                            title => "CF-UnprocessableEntity", 
+                            detail => "The request body is invalid"
+                        }]
+                    }
+                }
+            }
+        },
+        Unauthorized => {
+            description => "Unauthorized - Authentication credentials are missing or invalid",
+            content => {
+                'application/json' => {
+                    schema => { '$ref' => '#/components/schemas/Error' },
+                    example => {
+                        errors => [{
+                            code => 10002,
+                            title => "CF-NotAuthenticated",
+                            detail => "Authentication required"
+                        }]
+                    }
+                }
+            }
+        },
+        Forbidden => {
+            description => "Forbidden - User is authenticated but not authorized for this operation",
+            content => {
+                'application/json' => {
+                    schema => { '$ref' => '#/components/schemas/Error' },
+                    example => {
+                        errors => [{
+                            code => 10003,
+                            title => "CF-NotAuthorized",
+                            detail => "You are not authorized to perform the requested action"
+                        }]
+                    }
+                }
+            }
+        },
+        NotFound => {
+            description => "Not Found - The requested resource does not exist",
+            content => {
+                'application/json' => {
+                    schema => { '$ref' => '#/components/schemas/Error' },
+                    example => {
+                        errors => [{
+                            code => 10010,
+                            title => "CF-ResourceNotFound",
+                            detail => "The resource could not be found"
+                        }]
+                    }
+                }
+            }
+        }
+    };
+}
+
+sub add_common_parameters {
+    my $spec = shift;
+    
+    # Already have some common parameters, enhance them
+    if ($spec->{components}{parameters}{Page}) {
+        $spec->{components}{parameters}{Page}{example} = 1;
+        # Also create alias for validation
+        $spec->{components}{parameters}{PageParameter} = $spec->{components}{parameters}{Page};
+    }
+    
+    if ($spec->{components}{parameters}{PerPage}) {
+        $spec->{components}{parameters}{PerPage}{example} = 50;
+        # Also create alias for validation
+        $spec->{components}{parameters}{PerPageParameter} = $spec->{components}{parameters}{PerPage};
+    }
+    
+    # Add more common parameters
+    $spec->{components}{parameters}{GUID} = {
+        name => 'guid',
+        in => 'path',
+        required => JSON::XS::true,
+        description => 'Unique identifier for the resource',
+        schema => {
+            type => 'string',
+            format => 'uuid',
+            example => '6f59dac8-4e47-4c3a-8b57-1f8d9f805f28'
+        }
+    };
+    
+    $spec->{components}{parameters}{Include} = {
+        name => 'include', 
+        in => 'query',
+        description => 'Related resources to include in the response',
+        schema => {
+            type => 'string',
+            example => 'space.organization'
+        }
+    };
+}
+
+sub write_yaml {
+    my ($spec, $file) = @_;
+    
+    # First convert all boolean fields to proper JSON booleans
+    my $yaml_spec = prepare_for_yaml($spec);
+    
+    # Write to JSON with proper booleans
+    my $json_encoder = JSON::XS->new->utf8->canonical->convert_blessed;
+    my $json = $json_encoder->encode($yaml_spec);
+    
+    # Write YAML using command-line tool for better compatibility
+    my $temp_json = "/tmp/openapi_temp_$$.json";
+    Mojo::File->new($temp_json)->spew($json);
+    
+    # Use yq to convert JSON to YAML with proper boolean handling
+    system("yq -p json -o yaml '$temp_json' > '$file' 2>/dev/null");
+    
+    # If yq is not available, fall back to YAML::XS
+    if ($? != 0) {
+        require YAML::XS;
+        local $YAML::XS::Boolean = "JSON::PP";
+        
+        my $yaml = YAML::XS::Dump($yaml_spec);
+        
+        # Post-process to ensure proper boolean representation
+        $yaml =~ s/: 1\b/: true/g;
+        $yaml =~ s/: 0\b/: false/g;
+        
+        Mojo::File->new($file)->spew($yaml);
+    }
+    
+    unlink $temp_json;
+}
+
+sub prepare_for_yaml {
+    my ($data) = @_;
+    
+    if (ref $data eq 'HASH') {
+        my %prepared;
+        for my $key (keys %$data) {
+            my $value = $data->{$key};
+            
+            # Special handling for known boolean fields
+            if ($key =~ /^(required|deprecated|allowEmptyValue|nullable|readOnly|writeOnly|exclusiveMinimum|exclusiveMaximum)$/) {
+                if (defined $value && !ref($value)) {
+                    $prepared{$key} = $value ? JSON::PP::true : JSON::PP::false;
+                } else {
+                    $prepared{$key} = prepare_for_yaml($value);
+                }
+            } else {
+                $prepared{$key} = prepare_for_yaml($value);
+            }
+        }
+        return \%prepared;
+    } elsif (ref $data eq 'ARRAY') {
+        return [ map { prepare_for_yaml($_) } @$data ];
+    } else {
+        return $data;
+    }
+}
+
+sub fix_path_issues {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    my $paths_fixed = 0;
+    
+    # Fix incorrect path parameters in endpoints that don't have them in the path
+    my @paths_to_check = ('/v3/droplets', '/v3/packages');
+    for my $path (@paths_to_check) {
+        if ($spec->{paths}{$path} && $spec->{paths}{$path}{post} && $spec->{paths}{$path}{post}{parameters}) {
+            my @filtered_params;
+            for my $param (@{$spec->{paths}{$path}{post}{parameters}}) {
+                # Remove path parameters that don't exist in the actual path
+                unless ($param->{in} && $param->{in} eq 'path' && $path !~ /\Q{$param->{name}}\E/) {
+                    push @filtered_params, $param;
+                }
+            }
+            if (@filtered_params != @{$spec->{paths}{$path}{post}{parameters}}) {
+                $spec->{paths}{$path}{post}{parameters} = \@filtered_params;
+                $paths_fixed++;
+            }
+        }
+    }
+    
+    # Fix paths with query strings
+    my @query_paths = (
+        '/v3/droplets?source_guid={guid}',
+        '/v3/packages?source_guid={guid}'
+    );
+    
+    for my $query_path (@query_paths) {
+        if (exists $spec->{paths}{$query_path}) {
+            # Extract base path and query param
+            my ($base_path) = $query_path =~ /^([^?]+)/;
+            
+            # Move this to a proper path parameter
+            my $path_obj = delete $spec->{paths}{$query_path};
+            
+            # The correct path should be base path with source_guid as query parameter
+            if ($path_obj->{post}) {
+                # Add source_guid as a query parameter
+                $path_obj->{post}{parameters} ||= [];
+                push @{$path_obj->{post}{parameters}}, {
+                    name => 'source_guid',
+                    in => 'query',
+                    required => JSON::XS::true,
+                    description => 'Source GUID for creating resource from existing source',
+                    schema => {
+                        type => 'string',
+                        format => 'uuid'
+                    }
+                };
+                
+                # Remove any path parameters that don't belong to the base path
+                my @filtered_params;
+                for my $param (@{$path_obj->{post}{parameters}}) {
+                    unless ($param->{in} && $param->{in} eq 'path' && $param->{name} && $param->{name} eq 'guid') {
+                        push @filtered_params, $param;
+                    }
+                }
+                $path_obj->{post}{parameters} = \@filtered_params;
+                
+                # Merge with existing base path if it exists
+                if ($spec->{paths}{$base_path}) {
+                    $spec->{paths}{$base_path}{post} = $path_obj->{post};
+                } else {
+                    $spec->{paths}{$base_path} = $path_obj;
+                }
+            }
+            $paths_fixed++;
+        }
+    }
+    
+    # Remove duplicate path with {guid} parameters if it exists
+    if (exists $spec->{paths}{'/v3/routes/{guid}/destinations/{guid}'}) {
+        # Just delete it as it's a duplicate/invalid path
+        delete $spec->{paths}{'/v3/routes/{guid}/destinations/{guid}'};
+        $paths_fixed++;
+    }
+    
+    # Fix invalid schema references
+    for my $path (keys %{$spec->{paths}}) {
+        for my $method (keys %{$spec->{paths}{$path}}) {
+            next if $method =~ /^(parameters|servers|summary|description)$/;
+            
+            my $operation = $spec->{paths}{$path}{$method};
+            if ($operation->{responses}) {
+                for my $status (keys %{$operation->{responses}}) {
+                    my $response = $operation->{responses}{$status};
+                    if ($response->{content} && $response->{content}{'application/json'} && 
+                        $response->{content}{'application/json'}{schema} &&
+                        $response->{content}{'application/json'}{schema}{'$ref'}) {
+                        
+                        my $ref = $response->{content}{'application/json'}{schema}{'$ref'};
+                        # Fix lowercase schema references
+                        if ($ref eq '#/components/schemas/app') {
+                            # Remove the invalid schema reference
+                            delete $response->{content}{'application/json'}{schema};
+                            $paths_fixed++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    $stats->{path_issues_fixed} = $paths_fixed;
+}
+
+sub fix_duplicate_parameters {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    my $duplicates_fixed = 0;
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        # Process path-level parameters
+        if ($path_obj->{parameters}) {
+            my $fixed = deduplicate_param_array($path_obj->{parameters});
+            $duplicates_fixed += $fixed;
+        }
+        
+        # Process each operation
+        for my $method (qw(get post put patch delete head options)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            next unless $operation->{parameters};
+            
+            # Deduplicate operation parameters
+            my $fixed = deduplicate_param_array($operation->{parameters});
+            $duplicates_fixed += $fixed;
+            
+            # Merge path parameters with operation parameters if both exist
+            if ($path_obj->{parameters} && $operation->{parameters}) {
+                my %op_params_map;
+                
+                # Build map of operation parameters
+                for my $param (@{$operation->{parameters}}) {
+                    if ($param->{'$ref'}) {
+                        my $ref = $param->{'$ref'};
+                        $ref =~ s|^#/components/parameters/||;
+                        $op_params_map{"ref:$ref"} = 1;
+                    } else {
+                        my $key = ($param->{in} || 'query') . ':' . ($param->{name} || '');
+                        $op_params_map{$key} = 1;
+                    }
+                }
+                
+                # Add non-conflicting path parameters
+                for my $path_param (@{$path_obj->{parameters}}) {
+                    my $should_add = 1;
+                    
+                    if ($path_param->{'$ref'}) {
+                        my $ref = $path_param->{'$ref'};
+                        $ref =~ s|^#/components/parameters/||;
+                        $should_add = 0 if $op_params_map{"ref:$ref"};
+                    } else {
+                        my $key = ($path_param->{in} || 'query') . ':' . ($path_param->{name} || '');
+                        $should_add = 0 if $op_params_map{$key};
+                    }
+                    
+                    if ($should_add) {
+                        push @{$operation->{parameters}}, $path_param;
+                    }
+                }
+            } elsif ($path_obj->{parameters} && !$operation->{parameters}) {
+                # Copy path parameters to operation
+                $operation->{parameters} = [@{$path_obj->{parameters}}];
+            }
+        }
+        
+        # Remove path-level parameters after merging
+        delete $path_obj->{parameters};
+    }
+    
+    $stats->{duplicate_params_fixed} = $duplicates_fixed;
+}
+
+sub deduplicate_param_array {
+    my ($params) = @_;
+    
+    my %seen;
+    my @unique_params;
+    my $duplicates = 0;
+    
+    for my $param (@$params) {
+        my $key;
+        
+        if ($param->{'$ref'}) {
+            # For references, use the reference path as key
+            $key = $param->{'$ref'};
+        } else {
+            # For inline parameters, use in:name as key
+            $key = ($param->{in} || 'query') . ':' . ($param->{name} || '');
+        }
+        
+        if ($seen{$key}) {
+            $duplicates++;
+            # Merge properties from duplicate into the first occurrence
+            if (!$param->{'$ref'}) {
+                my $existing = $seen{$key};
+                for my $prop (qw(description example schema required allowEmptyValue)) {
+                    if ($param->{$prop} && !$existing->{$prop}) {
+                        $existing->{$prop} = $param->{$prop};
+                    }
+                }
+            }
+        } else {
+            $seen{$key} = $param unless $param->{'$ref'};
+            push @unique_params, $param;
+        }
+    }
+    
+    @$params = @unique_params;
+    return $duplicates;
+}
+
+sub map_path_to_tag {
+    my ($path) = @_;
+    
+    # Map paths to appropriate tags based on resource
+    return 'Root' if $path eq '/v3';
+    return 'Info' if $path =~ m{/v3/info};
+    return 'Admin' if $path =~ m{/admin/};
+    return 'App Usage Events' if $path =~ m{/app_usage_events};
+    return 'Apps' if $path =~ m{/apps} && $path !~ m{usage_events};
+    return 'Audit Events' if $path =~ m{/audit_events};
+    return 'Builds' if $path =~ m{/builds};
+    return 'Buildpacks' if $path =~ m{/buildpacks};
+    return 'Deployments' if $path =~ m{/deployments};
+    return 'Domains' if $path =~ m{/domains};
+    return 'Droplets' if $path =~ m{/droplets};
+    return 'Environment Variable Groups' if $path =~ m{/environment_variable_groups};
+    return 'Feature Flags' if $path =~ m{/feature_flags};
+    return 'Isolation Segments' if $path =~ m{/isolation_segments};
+    return 'Jobs' if $path =~ m{/jobs};
+    return 'Manifests' if $path =~ m{/manifest};
+    return 'Organizations' if $path =~ m{/organizations};
+    return 'Organization Quotas' if $path =~ m{/organization_quotas};
+    return 'Packages' if $path =~ m{/packages};
+    return 'Processes' if $path =~ m{/processes};
+    return 'Resource Matches' if $path =~ m{/resource_matches};
+    return 'Revisions' if $path =~ m{/revisions};
+    return 'Roles' if $path =~ m{/roles};
+    return 'Routes' if $path =~ m{/routes};
+    return 'Security Groups' if $path =~ m{/security_groups};
+    return 'Service Brokers' if $path =~ m{/service_brokers};
+    return 'Service Credential Bindings' if $path =~ m{/service_credential_bindings|/service_bindings};
+    return 'Service Instances' if $path =~ m{/service_instances};
+    return 'Service Offerings' if $path =~ m{/service_offerings};
+    return 'Service Plans' if $path =~ m{/service_plans};
+    return 'Service Plan Visibility' if $path =~ m{/service_plan_visibility};
+    return 'Service Route Bindings' if $path =~ m{/service_route_bindings};
+    return 'Service Usage Events' if $path =~ m{/service_usage_events};
+    return 'Sidecars' if $path =~ m{/sidecars};
+    return 'Spaces' if $path =~ m{/spaces} && $path !~ m{quotas};
+    return 'Space Quotas' if $path =~ m{/space_quotas};
+    return 'Stacks' if $path =~ m{/stacks};
+    return 'Tasks' if $path =~ m{/tasks};
+    return 'Users' if $path =~ m{/users};
+    
+    # Default fallback
+    return 'Core';
+}
+
+sub generate_operation_description {
+    my ($method, $path, $operation) = @_;
+    
+    # Use summary as base if available
+    my $desc = $operation->{summary} || '';
+    
+    # Generate description based on method and path
+    if (!$desc) {
+        my $resource = extract_resource_from_path($path);
+        $resource =~ s/_/ /g;
+        
+        if ($method eq 'get') {
+            if ($path =~ /\{[^}]+\}$/) {
+                $desc = "Retrieve a single $resource by GUID";
+            } else {
+                $desc = "List all $resource";
+            }
+        } elsif ($method eq 'post') {
+            if ($path =~ /actions/) {
+                my $action = extract_action_from_path($path);
+                $desc = "Perform $action action";
+            } else {
+                $desc = "Create a new $resource";
+            }
+        } elsif ($method eq 'patch') {
+            $desc = "Update a $resource";
+        } elsif ($method eq 'delete') {
+            $desc = "Delete a $resource";
+        } elsif ($method eq 'put') {
+            $desc = "Replace a $resource";
+        }
+    }
+    
+    return $desc;
+}
+
+sub extract_resource_from_path {
+    my ($path) = @_;
+    
+    # Remove /v3 prefix and parameters
+    $path =~ s{^/v3/}{}; 
+    $path =~ s!/\{[^}]+\}!!g;
+    $path =~ s{/[^/]+$}{};
+    
+    # Get the main resource
+    my @parts = split '/', $path;
+    return $parts[0] || 'resource';
+}
+
+sub extract_action_from_path {
+    my ($path) = @_;
+    
+    # Extract action name from path like /v3/apps/{guid}/actions/start
+    if ($path =~ m{/actions/([^/]+)}) {
+        my $action = $1;
+        $action =~ s/_/ /g;
+        return $action;
+    }
+    return 'action';
+}
+
+sub generate_report {
+    my ($output_dir) = @_;
+    
+    my $report = "# OpenAPI Enhancement Report\n\n";
+    $report .= "## Statistics\n\n";
+    
+    for my $key (sort keys %$stats) {
+        my $label = $key;
+        $label =~ s/_/ /g;
+        $label =~ s/\b(\w)/uc($1)/ge;
+        $report .= "- $label: $stats->{$key}\n";
+    }
+    
+    $report .= "\n## Enhancements Applied\n\n";
+    $report .= "1. **API Information**: Added comprehensive description, contact, and license info\n";
+    $report .= "2. **Tags**: Organized endpoints with " . $stats->{tags_organized} . " descriptive tags\n";
+    $report .= "3. **Operation IDs**: Improved naming convention for better SDK generation\n";
+    $report .= "4. **Parameters**: Enhanced descriptions and added examples for common parameters\n";
+    $report .= "5. **Responses**: Standardized response descriptions and added rate limit headers\n";
+    $report .= "6. **Components**: Added reusable error responses and enhanced schemas\n";
+    $report .= "7. **Deprecations**: Marked deprecated endpoints with migration guidance\n";
+    $report .= "8. **Duplicate Parameters**: Fixed duplicate parameter definitions\n" if $stats->{duplicate_params_fixed};
+    
+    my $report_file = File::Spec->catfile($output_dir, 'enhancement-report.md');
+    Mojo::File->new($report_file)->spew($report);
+}

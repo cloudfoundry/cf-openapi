@@ -1,0 +1,299 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use Term::ANSIColor qw(colored);
+use Getopt::Long;
+
+# Command line options
+my $cf_config = '~/cf/config.json';
+my $app_name;
+my $app_guid;
+my $verbose = 0;
+my $show_all = 0;
+
+GetOptions(
+    'cf-config=s' => \$cf_config,
+    'app=s' => \$app_name,
+    'guid=s' => \$app_guid,
+    'verbose' => \$verbose,
+    'all' => \$show_all,
+) or die usage();
+
+sub usage {
+    return <<EOF;
+Usage: $0 [options]
+
+Options:
+  --cf-config=FILE   CF config file (default: ~/cf/config.json)
+  --app=NAME         Application name
+  --guid=GUID        Application GUID (if known)
+  --verbose          Show detailed output
+  --all              Show all environment details
+
+This script displays the application environment similar to 'cf env' command.
+It shows:
+- Application details
+- User-provided environment variables
+- System environment (VCAP_APPLICATION, VCAP_SERVICES)
+- Running environment variables
+- Staging environment variables
+
+Examples:
+  $0 --app=myapp                    # Get environment for app by name
+  $0 --guid=abc-123-def             # Get environment for app by GUID
+  $0 --app=myapp --all              # Show all environment details
+EOF
+}
+
+# Load CF config
+my $cf_config_data = decode_json(read_file($cf_config));
+my $api_url = $cf_config_data->{Target};
+my $access_token = $cf_config_data->{AccessToken};
+my $current_space = $cf_config_data->{SpaceFields}{GUID};
+
+die "Either --app or --guid must be specified\n" unless $app_name || $app_guid;
+
+print colored("\nCloud Foundry Application Environment\n", 'bold');
+print "=" x 60 . "\n";
+
+# Get app GUID if only name provided
+if ($app_name && !$app_guid) {
+    $app_guid = get_app_guid_by_name($app_name);
+    die "Application '$app_name' not found\n" unless $app_guid;
+}
+
+# Get and display environment
+display_app_environment($app_guid);
+
+# Functions
+sub get_app_guid_by_name {
+    my ($name) = @_;
+    
+    print "Looking up application '$name'... " if $verbose;
+    
+    my $response = api_request('GET', "/v3/apps?names=$name&space_guids=$current_space");
+    
+    if ($response->{status} == 200 && $response->{body}{resources}[0]) {
+        print colored("✓\n", 'green') if $verbose;
+        return $response->{body}{resources}[0]{guid};
+    }
+    
+    print colored("✗\n", 'red') if $verbose;
+    return undef;
+}
+
+sub display_app_environment {
+    my ($guid) = @_;
+    
+    # Get app details
+    my $app_response = api_request('GET', "/v3/apps/$guid");
+    die "Failed to get application details\n" unless $app_response->{status} == 200;
+    
+    my $app = $app_response->{body};
+    
+    # Get various environment endpoints
+    my $env_vars_response = api_request('GET', "/v3/apps/$guid/environment_variables");
+    my $app_env_response = api_request('GET', "/v3/apps/$guid/env");
+    
+    # Display header
+    print colored("\nShowing environment for app ", 'bold');
+    print colored($app->{name}, 'green');
+    print colored(" in org ", 'bold');
+    print colored($cf_config_data->{OrganizationFields}{Name}, 'green');
+    print colored(" / space ", 'bold');
+    print colored($cf_config_data->{SpaceFields}{Name}, 'green');
+    print colored(" as ", 'bold');
+    print colored($cf_config_data->{UAAOAuthClient} || 'cf', 'green');
+    print "\n\n";
+    
+    # User-Provided Environment Variables
+    if ($env_vars_response->{status} == 200) {
+        my $user_env = $env_vars_response->{body}{var} || {};
+        
+        if (keys %$user_env) {
+            print colored("User-Provided:\n", 'cyan');
+            for my $key (sort keys %$user_env) {
+                print_env_var($key, $user_env->{$key});
+            }
+            print "\n";
+        }
+    }
+    
+    # System-Provided Environment
+    if ($app_env_response->{status} == 200) {
+        my $env = $app_env_response->{body};
+        
+        # VCAP_APPLICATION
+        if ($env->{system_env_json}{VCAP_APPLICATION}) {
+            print colored("System-Provided:\n", 'cyan');
+            print colored("VCAP_APPLICATION", 'yellow') . ": ";
+            
+            if ($show_all || $verbose) {
+                print "\n";
+                print_json($env->{system_env_json}{VCAP_APPLICATION}, "  ");
+            } else {
+                # Show summary
+                my $vcap = $env->{system_env_json}{VCAP_APPLICATION};
+                print "{\n";
+                print "  application_id: " . colored("\"$vcap->{application_id}\"", 'green') . "\n";
+                print "  application_name: " . colored("\"$vcap->{application_name}\"", 'green') . "\n";
+                print "  application_uris: [";
+                if ($vcap->{application_uris} && @{$vcap->{application_uris}}) {
+                    print join(", ", map { colored("\"$_\"", 'green') } @{$vcap->{application_uris}});
+                }
+                print "]\n";
+                print "  limits: { memory: $vcap->{limits}{mem}, disk: $vcap->{limits}{disk} }\n" if $vcap->{limits};
+                print "  space_name: " . colored("\"$vcap->{space_name}\"", 'green') . "\n" if $vcap->{space_name};
+                print "  ... (use --all to see complete output)\n" if keys(%$vcap) > 5;
+                print "}\n";
+            }
+            print "\n";
+        }
+        
+        # VCAP_SERVICES
+        if ($env->{system_env_json}{VCAP_SERVICES} && keys %{$env->{system_env_json}{VCAP_SERVICES}}) {
+            print colored("VCAP_SERVICES", 'yellow') . ": ";
+            
+            if ($show_all || $verbose) {
+                print "\n";
+                print_json($env->{system_env_json}{VCAP_SERVICES}, "  ");
+            } else {
+                # Show summary
+                my $services = $env->{system_env_json}{VCAP_SERVICES};
+                print "{\n";
+                for my $service_type (sort keys %$services) {
+                    print "  " . colored($service_type, 'magenta') . ": [";
+                    my @service_names = map { $_->{name} } @{$services->{$service_type}};
+                    print join(", ", map { colored("\"$_\"", 'green') } @service_names);
+                    print "]\n";
+                }
+                print "}\n";
+            }
+            print "\n";
+        }
+        
+        # Running Environment Variables
+        if ($show_all && $env->{environment_json}) {
+            print colored("Running Environment Variables:\n", 'cyan');
+            
+            for my $key (sort grep { $_ !~ /^VCAP_/ } keys %{$env->{environment_json}}) {
+                print_env_var($key, $env->{environment_json}{$key});
+            }
+            print "\n";
+        }
+        
+        # Staging Environment Variables
+        if ($show_all && $env->{staging_env_json}) {
+            print colored("Staging Environment Variables:\n", 'cyan');
+            
+            for my $key (sort keys %{$env->{staging_env_json}}) {
+                print_env_var($key, $env->{staging_env_json}{$key});
+            }
+            print "\n";
+        }
+    }
+    
+    # Application details
+    print colored("Application Details:\n", 'cyan');
+    print "  State: " . colored($app->{state}, $app->{state} eq 'STARTED' ? 'green' : 'yellow') . "\n";
+    print "  Created: $app->{created_at}\n";
+    print "  Updated: $app->{updated_at}\n";
+    
+    # Get process info
+    my $process_response = api_request('GET', "/v3/apps/$guid/processes");
+    if ($process_response->{status} == 200 && $process_response->{body}{resources}[0]) {
+        my $web = $process_response->{body}{resources}[0];
+        print "  Instances: $web->{instances}\n";
+        print "  Memory: ${$web->{memory_in_mb}}M\n";
+        print "  Disk: ${$web->{disk_in_mb}}M\n";
+    }
+    
+    # Routes
+    my $routes_response = api_request('GET', "/v3/apps/$guid/routes");
+    if ($routes_response->{status} == 200 && $routes_response->{body}{resources}) {
+        print "  Routes:\n";
+        for my $route (@{$routes_response->{body}{resources}}) {
+            print "    - $route->{url}\n";
+        }
+    }
+    
+    print "\n";
+}
+
+sub print_env_var {
+    my ($key, $value) = @_;
+    
+    print colored($key, 'yellow') . ": ";
+    
+    if (ref($value)) {
+        print "\n";
+        print_json($value, "  ");
+    } else {
+        print colored("$value", 'green') . "\n";
+    }
+}
+
+sub print_json {
+    my ($obj, $indent) = @_;
+    $indent ||= "";
+    
+    my $json = JSON::XS->new->pretty->canonical;
+    my $output = $json->encode($obj);
+    
+    # Add indentation
+    $output =~ s/^/$indent/gm;
+    
+    # Colorize
+    $output =~ s/"([^"]+)":/colored("\"$1\"", 'yellow') . ":"/ge;
+    $output =~ s/: "([^"]+)"/: colored("\"$1\"", 'green')/ge;
+    $output =~ s/: (\d+)/: colored($1, 'cyan')/ge;
+    $output =~ s/: (true|false)/: colored($1, 'magenta')/ge;
+    $output =~ s/: null/: colored('null', 'red')/ge;
+    
+    print $output;
+}
+
+sub api_request {
+    my ($method, $path, $body) = @_;
+    
+    my $url = "$api_url$path";
+    my @curl_cmd = (
+        'curl', '-s', '-k', '-w', '\n%{http_code}',
+        '-X', $method,
+        '-H', "Authorization: $access_token",
+        '-H', 'Accept: application/json'
+    );
+    
+    if ($body) {
+        push @curl_cmd, '-H', 'Content-Type: application/json';
+        push @curl_cmd, '-d', encode_json($body);
+    }
+    
+    push @curl_cmd, $url;
+    
+    my $output = `@curl_cmd 2>&1`;
+    
+    if ($output =~ /^(.*)\n(\d{3})$/s) {
+        my $body_text = $1;
+        my $status = $2;
+        
+        my $body = {};
+        if ($body_text) {
+            $body = eval { decode_json($body_text) } || { raw => $body_text };
+        }
+        
+        return {
+            status => $status,
+            body => $body
+        };
+    }
+    
+    return {
+        status => 0,
+        body => { error => $output }
+    };
+}

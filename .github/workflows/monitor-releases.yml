@@ -1,0 +1,202 @@
+name: Monitor CAPI Releases
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: 'Check only without notifications'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: '5.30'
+    
+    - name: Install dependencies
+      run: |
+        cpanm --notest LWP::UserAgent JSON::XS XML::Simple File::Slurp Term::ANSIColor
+    
+    - name: Configure monitoring
+      run: |
+        mkdir -p .monitoring
+        echo '{
+          "github_token": "${{ secrets.GITHUB_TOKEN }}",
+          "github_repo": "${{ github.repository }}",
+          "create_issues": true
+        }' > .monitoring/config.json
+    
+    - name: Restore monitoring state
+      uses: actions/cache@v3
+      with:
+        path: .monitoring/state.json
+        key: monitoring-state-${{ github.run_id }}
+        restore-keys: |
+          monitoring-state-
+    
+    - name: Check for CAPI updates
+      id: monitor
+      run: |
+        if [[ "${{ inputs.check_only }}" == "true" ]]; then
+          ./bin/monitor-releases --check-only --json > monitor-output.json || true
+        else
+          ./bin/monitor-releases --json > monitor-output.json || true
+        fi
+        
+        # Extract results
+        UPDATES=$(jq -r '.updates_found' monitor-output.json)
+        echo "updates_found=$UPDATES" >> $GITHUB_OUTPUT
+        
+        # If updates found, set outputs for next steps
+        if [[ "$UPDATES" -gt 0 ]]; then
+          VERSION=$(jq -r '.notifications[0].version' monitor-output.json)
+          echo "new_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "has_updates=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_updates=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Save monitoring state
+      if: inputs.check_only != true
+      uses: actions/cache@v3
+      with:
+        path: .monitoring/state.json
+        key: monitoring-state-${{ github.run_id }}
+    
+    - name: Create issue for updates
+      if: steps.monitor.outputs.has_updates == 'true' && inputs.check_only != true
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const output = JSON.parse(fs.readFileSync('monitor-output.json', 'utf8'));
+          
+          // Check if issue already exists
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: 'capi-update',
+            state: 'open'
+          });
+          
+          const version = output.notifications[0].version;
+          const existingIssue = issues.data.find(i => 
+            i.title.includes(version)
+          );
+          
+          if (!existingIssue) {
+            // Create issue body
+            let body = '## CAPI Updates Detected\n\n';
+            
+            for (const notif of output.notifications) {
+              body += `### ${notif.source}\n`;
+              body += `- **Version**: ${notif.version}\n`;
+              body += `- **URL**: ${notif.url}\n`;
+              body += `- **Changes**: ${notif.changes || 'See release page'}\n\n`;
+            }
+            
+            body += '## Action Required\n\n';
+            body += '1. Review the changes in the new CAPI version\n';
+            body += '2. Run the OpenAPI generation pipeline\n';
+            body += '3. Validate the generated specification\n';
+            body += '4. Create a PR with the updates\n\n';
+            body += '*This issue was automatically created by the CAPI monitoring system.*\n';
+            
+            // Create the issue
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `CAPI Update Detected: v${version}`,
+              body: body,
+              labels: ['capi-update', 'automated']
+            });
+            
+            console.log(`Created issue: ${issue.data.html_url}`);
+          } else {
+            console.log(`Issue already exists for version ${version}`);
+          }
+    
+    - name: Trigger generation workflow
+      if: steps.monitor.outputs.has_updates == 'true' && inputs.check_only != true
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const version = '${{ steps.monitor.outputs.new_version }}';
+          
+          // Trigger the complete generation workflow
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'generate.yml',
+            ref: 'main',
+            inputs: {
+              version: version
+            }
+          });
+          
+          console.log(`Triggered complete generation workflow for version ${version}`);
+    
+    - name: Send Slack notification
+      if: steps.monitor.outputs.has_updates == 'true' && inputs.check_only != true && env.SLACK_WEBHOOK != ''
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      run: |
+        VERSION="${{ steps.monitor.outputs.new_version }}"
+        
+        curl -X POST $SLACK_WEBHOOK \
+          -H 'Content-Type: application/json' \
+          -d "{
+            \"text\": \"🚀 CAPI Update Detected: v${VERSION}\",
+            \"blocks\": [
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*CAPI Update Detected*\\nA new version of Cloud Foundry CAPI has been released.\"
+                }
+              },
+              {
+                \"type\": \"section\",
+                \"fields\": [
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Version:*\\nv${VERSION}\"
+                  },
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Repository:*\\n<https://github.com/${{ github.repository }}|${{ github.repository }}>\"
+                  }
+                ]
+              },
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"An automated workflow has been triggered to update the OpenAPI specification.\"
+                }
+              }
+            ]
+          }"
+    
+    - name: Upload monitoring results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: monitoring-results
+        path: |
+          monitor-output.json
+          .monitoring/state.json

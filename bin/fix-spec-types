@@ -1,0 +1,141 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use Getopt::Long;
+
+# Parse command line options
+my $input_file;
+my $output_file;
+my $verbose;
+my $help;
+
+GetOptions(
+    'input=s' => \$input_file,
+    'output=s' => \$output_file,
+    'verbose' => \$verbose,
+    'help' => \$help,
+) or die "Error in command line arguments\n";
+
+if ($help || !$input_file) {
+    print <<EOF;
+Usage: fix-spec-types --input=FILE [--output=FILE] [--verbose]
+
+Fix data type issues in OpenAPI specification:
+- Convert string "true"/"false" to boolean values
+- Fix other type mismatches
+
+Options:
+  --input=FILE    Input OpenAPI spec file (required)
+  --output=FILE   Output file (default: overwrites input)
+  --verbose       Show progress
+  --help          Show this help
+
+Example:
+  fix-spec-types --input=capi/3.195.0/openapi.json
+EOF
+    exit($help ? 0 : 1);
+}
+
+# Default output to input if not specified
+$output_file //= $input_file;
+
+# Read the spec
+say "Reading spec from: $input_file" if $verbose;
+my $content = read_file($input_file);
+my $spec = decode_json($content);
+
+# Statistics
+my $fixes = {
+    required_fields => 0,
+    allowEmptyValue_fields => 0,
+    nullable_fields => 0,
+    deprecated_fields => 0,
+};
+
+# Fix boolean fields recursively
+fix_booleans($spec);
+
+# Write the fixed spec
+say "Writing fixed spec to: $output_file" if $verbose;
+write_file($output_file, encode_json($spec));
+
+# Report statistics
+if ($verbose) {
+    say "\nFixes applied:";
+    for my $type (sort keys %$fixes) {
+        say "  $type: $fixes->{$type}" if $fixes->{$type} > 0;
+    }
+}
+
+say "Successfully fixed type issues in OpenAPI spec" if $verbose;
+
+sub fix_booleans {
+    my ($node) = @_;
+    
+    return unless ref $node;
+    
+    if (ref $node eq 'HASH') {
+        # Fix specific boolean fields
+        for my $field (qw(required allowEmptyValue nullable deprecated exclusiveMinimum exclusiveMaximum uniqueItems additionalProperties)) {
+            if (exists $node->{$field}) {
+                my $value = $node->{$field};
+                if (!ref($value) && defined($value)) {
+                    # Handle numeric values
+                    if ($value =~ /^\d+$/) {
+                        if ($value == 1) {
+                            $node->{$field} = JSON::XS::true;
+                            $fixes->{"${field}_fields"}++;
+                        } elsif ($value == 0) {
+                            $node->{$field} = JSON::XS::false;
+                            $fixes->{"${field}_fields"}++;
+                        }
+                    }
+                    # Handle string values
+                    elsif ($value eq 'true' || $value eq '1') {
+                        $node->{$field} = JSON::XS::true;
+                        $fixes->{"${field}_fields"}++;
+                    } elsif ($value eq 'false' || $value eq '0' || $value eq '') {
+                        $node->{$field} = JSON::XS::false;
+                        $fixes->{"${field}_fields"}++;
+                    }
+                }
+            }
+        }
+        
+        # Fix readOnly and writeOnly
+        for my $field (qw(readOnly writeOnly)) {
+            if (exists $node->{$field} && !ref($node->{$field})) {
+                my $value = $node->{$field};
+                if ($value =~ /^\d+$/) {
+                    if ($value == 1) {
+                        $node->{$field} = JSON::XS::true;
+                        $fixes->{"${field}_fields"}++;
+                    } elsif ($value == 0) {
+                        $node->{$field} = JSON::XS::false;
+                        $fixes->{"${field}_fields"}++;
+                    }
+                } elsif ($value eq 'true' || $value eq '1') {
+                    $node->{$field} = JSON::XS::true;
+                    $fixes->{"${field}_fields"}++;
+                } elsif ($value eq 'false' || $value eq '0' || $value eq '') {
+                    $node->{$field} = JSON::XS::false;
+                    $fixes->{"${field}_fields"}++;
+                }
+            }
+        }
+        
+        # Recurse into all hash values
+        for my $key (keys %$node) {
+            fix_booleans($node->{$key});
+        }
+    } elsif (ref $node eq 'ARRAY') {
+        # Recurse into all array elements
+        for my $elem (@$node) {
+            fix_booleans($elem);
+        }
+    }
+}

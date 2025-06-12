@@ -1,0 +1,524 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use Getopt::Long;
+use Data::Dumper;
+
+# Parse command line options
+my $input_file;
+my $output_file;
+my $verbose;
+my $help;
+
+GetOptions(
+    'input=s' => \$input_file,
+    'output=s' => \$output_file,
+    'verbose' => \$verbose,
+    'help' => \$help,
+) or die "Error in command line arguments\n";
+
+if ($help || !$input_file) {
+    print <<EOF;
+Usage: fix-spec-errors --input=FILE [--output=FILE] [--verbose]
+
+Fix all validation errors in OpenAPI specification:
+- Remove non-v3 paths (like /)
+- Fix boolean type issues
+- Add missing security requirements
+- Add missing pagination parameters
+- Fix operation IDs
+- Fix parameter examples
+- Fix component references
+
+Options:
+  --input=FILE    Input OpenAPI spec file (required)
+  --output=FILE   Output file (default: overwrites input)
+  --verbose       Show detailed progress
+  --help          Show this help
+
+Example:
+  fix-spec-errors --input=capi/3.195.0/openapi.json
+EOF
+    exit($help ? 0 : 1);
+}
+
+# Default output to input if not specified
+$output_file //= $input_file;
+
+# Read the spec
+say "Reading spec from: $input_file" if $verbose;
+my $content = read_file($input_file);
+my $spec = decode_json($content);
+
+# Statistics
+my $fixes = {
+    removed_paths => 0,
+    fixed_operation_ids => 0,
+    added_security => 0,
+    added_pagination => 0,
+    fixed_parameters => 0,
+    fixed_components => 0,
+    added_examples => 0,
+    fixed_tags => 0,
+    missing_responses => 0,
+};
+
+# Fix the spec
+say "Fixing OpenAPI specification errors..." if $verbose;
+
+# 1. Remove paths that don't start with /v3
+fix_paths($spec);
+
+# 2. Fix operation IDs
+fix_operation_ids($spec);
+
+# 3. Add missing security requirements
+add_security_requirements($spec);
+
+# 4. Add missing pagination parameters
+add_pagination_parameters($spec);
+
+# 5. Fix parameter examples and descriptions
+fix_parameters($spec);
+
+# 6. Fix component issues
+fix_components($spec);
+
+# 7. Fix missing success responses
+fix_missing_responses($spec);
+
+# 7. Fix tags
+fix_tags($spec);
+
+# 8. Add global security scheme if missing
+ensure_security_scheme($spec);
+
+# Write the fixed spec
+say "Writing fixed spec to: $output_file" if $verbose;
+write_file($output_file, encode_json($spec));
+
+# Report statistics
+if ($verbose) {
+    say "\nFixes applied:";
+    for my $type (sort keys %$fixes) {
+        say "  $type: $fixes->{$type}" if $fixes->{$type} > 0;
+    }
+}
+
+say "Successfully fixed OpenAPI specification errors" if $verbose;
+
+sub fix_paths {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    my @paths_to_remove;
+    
+    for my $path (keys %{$spec->{paths}}) {
+        # Remove paths that don't start with /v3
+        if ($path !~ m{^/v3}) {
+            push @paths_to_remove, $path;
+            $fixes->{removed_paths}++;
+            say "  Removing non-v3 path: $path" if $verbose;
+        }
+    }
+    
+    # Remove the paths
+    for my $path (@paths_to_remove) {
+        delete $spec->{paths}{$path};
+    }
+}
+
+sub fix_operation_ids {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    my %used_ids;
+    
+    for my $path (sort keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        for my $method (qw(get post put patch delete head options)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            
+            # Fix empty or underscore operation IDs
+            if (!$operation->{operationId} || $operation->{operationId} eq '_') {
+                my $new_id = generate_operation_id($method, $path);
+                
+                # Ensure uniqueness
+                my $base_id = $new_id;
+                my $counter = 1;
+                while ($used_ids{$new_id}) {
+                    $new_id = "${base_id}_${counter}";
+                    $counter++;
+                }
+                
+                $operation->{operationId} = $new_id;
+                $used_ids{$new_id} = 1;
+                $fixes->{fixed_operation_ids}++;
+                say "  Fixed operation ID: $method $path -> $new_id" if $verbose;
+            } else {
+                $used_ids{$operation->{operationId}} = 1;
+            }
+        }
+    }
+}
+
+sub generate_operation_id {
+    my ($method, $path) = @_;
+    
+    # Remove /v3 prefix
+    $path =~ s{^/v3/?}{};
+    
+    # Handle empty path (v3 root)
+    return "getV3Root" if !$path && $method eq 'get';
+    
+    # Split path into parts
+    my @parts = split '/', $path;
+    
+    # Determine resource and action
+    my $resource = '';
+    my $action = $method;
+    
+    if (@parts == 1) {
+        # Simple resource listing
+        $resource = $parts[0];
+        $action = $method eq 'get' ? 'list' : $method;
+    } elsif (@parts >= 2 && $parts[1] eq '{guid}') {
+        # Single resource operation
+        $resource = $parts[0];
+        $action = $method eq 'get' ? 'get' : 
+                  $method eq 'patch' ? 'update' :
+                  $method eq 'delete' ? 'delete' : $method;
+                  
+        # Handle sub-resources
+        if (@parts > 2) {
+            my @sub_parts = @parts[2..$#parts];
+            # Remove {guid} placeholders
+            @sub_parts = grep { $_ !~ /^{.*}$/ } @sub_parts;
+            
+            if (@sub_parts) {
+                my $sub = join('_', @sub_parts);
+                $resource = "${resource}_${sub}";
+            }
+        }
+    } else {
+        # Complex path
+        $resource = join('_', grep { $_ !~ /^{.*}$/ } @parts);
+    }
+    
+    # Clean up resource name
+    $resource =~ s/_+/_/g;
+    $resource =~ s/^_|_$//g;
+    
+    # Build operation ID
+    my $op_id;
+    if ($resource) {
+        # Convert to camelCase
+        $op_id = "${action}_${resource}";
+        $op_id =~ s/_(.)/uc($1)/ge;
+    } else {
+        $op_id = $action;
+    }
+    
+    # Ensure it starts with lowercase letter
+    $op_id = lcfirst($op_id);
+    
+    return $op_id;
+}
+
+sub add_security_requirements {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    # Default security requirement
+    my $default_security = [{ bearerAuth => [] }];
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        for my $method (qw(get post put patch delete head options)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            
+            # Add security if missing
+            if (!$operation->{security}) {
+                $operation->{security} = $default_security;
+                $fixes->{added_security}++;
+                say "  Added security to: $method $path" if $verbose;
+            }
+        }
+    }
+}
+
+sub add_pagination_parameters {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        # Only process GET endpoints that look like list operations
+        next unless $path_obj->{get};
+        next if $path =~ /{[^}]+}$/;  # Skip single resource endpoints
+        
+        my $operation = $path_obj->{get};
+        
+        # Check if it's a list endpoint based on response or description
+        my $is_list = 0;
+        if ($operation->{summary} && $operation->{summary} =~ /^List\s/i) {
+            $is_list = 1;
+        } elsif ($operation->{description} && $operation->{description} =~ /retrieve all/i) {
+            $is_list = 1;
+        }
+        
+        if ($is_list) {
+            # Check if pagination parameters are missing
+            my $has_page = 0;
+            my $has_per_page = 0;
+            
+            if ($operation->{parameters}) {
+                for my $param (@{$operation->{parameters}}) {
+                    if ($param->{name} && $param->{name} eq 'page') {
+                        $has_page = 1;
+                    } elsif ($param->{name} && $param->{name} eq 'per_page') {
+                        $has_per_page = 1;
+                    }
+                }
+            } else {
+                $operation->{parameters} = [];
+            }
+            
+            # Add missing pagination parameters
+            if (!$has_page) {
+                unshift @{$operation->{parameters}}, {
+                    '$ref' => '#/components/parameters/Page'
+                };
+                $fixes->{added_pagination}++;
+            }
+            
+            if (!$has_per_page) {
+                unshift @{$operation->{parameters}}, {
+                    '$ref' => '#/components/parameters/PerPage'
+                };
+                $fixes->{added_pagination}++;
+            }
+            
+            say "  Added pagination to: GET $path" if $verbose && (!$has_page || !$has_per_page);
+        }
+    }
+}
+
+sub fix_parameters {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        for my $method (qw(get post put patch delete head options)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            next unless $operation->{parameters};
+            
+            for my $param (@{$operation->{parameters}}) {
+                # Skip references
+                next if $param->{'$ref'};
+                
+                # Add examples for common parameters
+                if ($param->{name} && !$param->{example} && $param->{schema}) {
+                    my $example = get_parameter_example($param->{name});
+                    if ($example) {
+                        $param->{example} = $example;
+                        $fixes->{added_examples}++;
+                    }
+                }
+                
+                # Ensure path parameters are required
+                if ($param->{in} && $param->{in} eq 'path' && !exists $param->{required}) {
+                    $param->{required} = JSON::XS::true;
+                    $fixes->{fixed_parameters}++;
+                }
+            }
+        }
+    }
+}
+
+sub get_parameter_example {
+    my ($name) = @_;
+    
+    my %examples = (
+        guid => '6f59dac8-4e47-4c3a-8b57-1f8d9f805f28',
+        page => 1,
+        per_page => 50,
+        order_by => '-created_at',
+        label_selector => 'environment=production,tier!=backend',
+        include => 'space.organization',
+        guids => 'guid1,guid2,guid3',
+        names => 'my-app,another-app',
+        organization_guids => 'org-guid-1,org-guid-2',
+        space_guids => 'space-guid-1,space-guid-2',
+    );
+    
+    return $examples{$name};
+}
+
+sub fix_components {
+    my ($spec) = @_;
+    
+    return unless $spec->{components};
+    
+    # Ensure pagination parameters exist
+    if ($spec->{components}{parameters}) {
+        if (!$spec->{components}{parameters}{Page}) {
+            $spec->{components}{parameters}{Page} = {
+                name => 'page',
+                in => 'query',
+                description => 'Page number (1-based)',
+                schema => {
+                    type => 'integer',
+                    minimum => 1,
+                    default => 1
+                },
+                example => 1
+            };
+            $fixes->{fixed_components}++;
+        }
+        
+        if (!$spec->{components}{parameters}{PerPage}) {
+            $spec->{components}{parameters}{PerPage} = {
+                name => 'per_page',
+                in => 'query',
+                description => 'Number of items per page',
+                schema => {
+                    type => 'integer',
+                    minimum => 1,
+                    maximum => 5000,
+                    default => 50
+                },
+                example => 50
+            };
+            $fixes->{fixed_components}++;
+        }
+    }
+}
+
+sub fix_tags {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    # Collect all used tags
+    my %used_tags;
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        for my $method (qw(get post put patch delete head options)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            next unless $operation->{tags};
+            
+            for my $tag (@{$operation->{tags}}) {
+                $used_tags{$tag} = 1;
+            }
+        }
+    }
+    
+    # Ensure all used tags are defined
+    if (%used_tags) {
+        $spec->{tags} ||= [];
+        
+        my %defined_tags = map { $_->{name} => 1 } @{$spec->{tags}};
+        
+        for my $tag (sort keys %used_tags) {
+            if (!$defined_tags{$tag}) {
+                push @{$spec->{tags}}, {
+                    name => $tag,
+                    description => "Operations related to $tag"
+                };
+                $fixes->{fixed_tags}++;
+                say "  Added tag definition: $tag" if $verbose;
+            }
+        }
+    }
+}
+
+sub ensure_security_scheme {
+    my ($spec) = @_;
+    
+    # Ensure components section exists
+    $spec->{components} ||= {};
+    
+    # Ensure security schemes exist
+    if (!$spec->{components}{securitySchemes}) {
+        $spec->{components}{securitySchemes} = {
+            bearerAuth => {
+                type => 'http',
+                scheme => 'bearer',
+                description => 'OAuth 2.0 bearer token from UAA'
+            }
+        };
+        $fixes->{fixed_components}++;
+        say "  Added security scheme definition" if $verbose;
+    }
+}
+
+sub fix_missing_responses {
+    my ($spec) = @_;
+    
+    return unless $spec->{paths};
+    
+    for my $path (keys %{$spec->{paths}}) {
+        my $path_obj = $spec->{paths}{$path};
+        
+        for my $method (qw(get post put patch delete)) {
+            next unless $path_obj->{$method};
+            
+            my $operation = $path_obj->{$method};
+            next unless $operation->{responses};
+            
+            # Check if there's any 2xx response
+            my $has_success = 0;
+            for my $status (keys %{$operation->{responses}}) {
+                if ($status =~ /^2\d\d$/) {
+                    $has_success = 1;
+                    last;
+                }
+            }
+            
+            # Add appropriate success response if missing
+            unless ($has_success) {
+                my $success_code = $method eq 'post' ? '201' : '200';
+                my $description = $method eq 'post' ? 'Created' : 'OK';
+                
+                $operation->{responses}{$success_code} = {
+                    description => $description,
+                    content => {
+                        'application/json' => {
+                            schema => {
+                                type => 'object'
+                            }
+                        }
+                    }
+                };
+                
+                $fixes->{missing_responses}++;
+                say "  Added $success_code response to $method $path" if $verbose;
+            }
+        }
+    }
+}

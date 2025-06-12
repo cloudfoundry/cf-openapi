@@ -1,0 +1,119 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+use JSON::XS;
+use File::Slurp;
+use Term::ANSIColor qw(colored);
+
+# Parse command line arguments
+use Getopt::Long;
+my $version;
+GetOptions('version=s' => \$version) or die "Error in command line arguments\n";
+$version ||= $ENV{CAPI_VERSION} || '3.195.0';
+
+# Load OpenAPI spec
+my $spec_file = "capi/$version/openapi.json";
+unless (-f $spec_file) {
+    die "Error: OpenAPI spec not found: $spec_file\n";
+}
+my $spec_content = read_file($spec_file);
+my $spec = decode_json($spec_content);
+
+# Test results
+my %results = (
+    total => 0,
+    passed => 0,
+    failed => 0,
+    errors => []
+);
+
+print colored("CAPI OpenAPI Schema Validation\n", 'bold');
+print "=" x 50 . "\n\n";
+
+# Basic schema structure tests
+print colored("Testing Basic Schema Structure\n", 'cyan');
+print "-" x 40 . "\n";
+
+# Check components exist
+if ($spec->{components}) {
+    $results{total}++;
+    $results{passed}++;
+    print colored("✓", 'green') . " Components section exists\n";
+} else {
+    $results{total}++;
+    $results{failed}++;
+    print colored("✗", 'red') . " Components section missing\n";
+}
+
+# Check schemas exist
+if ($spec->{components}{schemas}) {
+    $results{total}++;
+    $results{passed}++;
+    my $count = keys %{$spec->{components}{schemas}};
+    print colored("✓", 'green') . " Schemas defined: $count\n";
+} else {
+    $results{total}++;
+    $results{failed}++;
+    print colored("✗", 'red') . " No schemas defined\n";
+}
+
+# Check parameters exist
+if ($spec->{components}{parameters}) {
+    $results{total}++;
+    $results{passed}++;
+    my $count = keys %{$spec->{components}{parameters}};
+    print colored("✓", 'green') . " Parameters defined: $count\n";
+} else {
+    $results{total}++;
+    $results{failed}++;
+    print colored("✗", 'red') . " No parameters defined\n";
+}
+
+# Check security schemes
+if ($spec->{components}{securitySchemes}) {
+    $results{total}++;
+    $results{passed}++;
+    print colored("✓", 'green') . " Security schemes defined\n";
+} else {
+    $results{total}++;
+    $results{failed}++;
+    print colored("✗", 'red') . " No security schemes defined\n";
+}
+
+# Basic path validation
+print "\n" . colored("Testing Path Structure\n", 'cyan');
+print "-" x 40 . "\n";
+
+my $path_count = 0;
+my $operations_count = 0;
+
+for my $path (keys %{$spec->{paths}}) {
+    $path_count++;
+    for my $method (qw(get post put patch delete)) {
+        if ($spec->{paths}{$path}{$method}) {
+            $operations_count++;
+        }
+    }
+}
+
+$results{total}++;
+$results{passed}++;
+print colored("✓", 'green') . " Paths defined: $path_count\n";
+print colored("✓", 'green') . " Operations defined: $operations_count\n";
+
+# Print summary
+print "\n" . colored("Summary\n", 'bold');
+print "=" x 50 . "\n";
+print "Total Tests: $results{total}\n";
+print colored("Passed: $results{passed}\n", 'green');
+print colored("Failed: $results{failed}\n", $results{failed} > 0 ? 'red' : 'green');
+
+if ($results{failed} > 0) {
+    print "\n" . colored("Schema validation completed with failures\n", 'red');
+    exit 1;
+} else {
+    print "\n" . colored("✓ All schema tests passed!\n", 'green');
+    exit 0;
+}

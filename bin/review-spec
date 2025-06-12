@@ -1,0 +1,180 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+use Mojo::File;
+use Mojo::JSON qw(decode_json);
+use Mojo::DOM;
+use Data::Dumper;
+
+# Load the generated OpenAPI spec
+my $spec_file = 'capi/3.195.0/generated/openapi.json';
+my $spec = decode_json(Mojo::File->new($spec_file)->slurp);
+
+# Load the source HTML
+my $html_file = 'specs/capi/3.195.0.html';
+my $html = Mojo::File->new($html_file)->slurp;
+my $dom = Mojo::DOM->new($html);
+
+my $review_report = '';
+my $issues = [];
+my $stats = {
+    total_endpoints => 0,
+    verified_endpoints => 0,
+    issues_found => 0,
+    missing_endpoints => 0,
+    incorrect_parameters => 0,
+    missing_responses => 0,
+    security_mismatches => 0
+};
+
+# Extract endpoints from HTML
+my %html_endpoints;
+
+for my $def_h4 ($dom->find('h4')->each) {
+    next unless $def_h4->attr('id') && $def_h4->attr('id') eq 'definition';
+    
+    my $def_p = $def_h4->next;
+    next unless $def_p && $def_p->tag eq 'p';
+    
+    my $code = $def_p->at('code.prettyprint');
+    next unless $code;
+    
+    my $def_text = $code->text;
+    my ($method, $path) = split /\s+/, $def_text, 2;
+    next unless $method && $path;
+    
+    # Convert :param to {param} format for comparison
+    $path =~ s/:([a-z_]+)/{$1}/g;
+    
+    my $key = lc($method) . ' ' . $path;
+    $html_endpoints{$key} = {
+        method => lc($method),
+        path => $path,
+        definition => $def_h4
+    };
+    $stats->{total_endpoints}++;
+}
+
+# Check each endpoint in OpenAPI spec against HTML
+for my $path (sort keys %{$spec->{paths}}) {
+    for my $method (sort keys %{$spec->{paths}{$path}}) {
+        next if $method =~ /^(parameters|servers|summary|description)$/;
+        
+        my $key = "$method $path";
+        my $operation = $spec->{paths}{$path}{$method};
+        
+        if ($html_endpoints{$key}) {
+            $stats->{verified_endpoints}++;
+            verify_endpoint($html_endpoints{$key}, $operation, $path, $method);
+            delete $html_endpoints{$key};
+        } else {
+            push @$issues, {
+                type => 'extra_endpoint',
+                path => $path,
+                method => $method,
+                message => "Endpoint $method $path exists in OpenAPI but not in HTML"
+            };
+            $stats->{issues_found}++;
+        }
+    }
+}
+
+# Check for missing endpoints
+for my $key (keys %html_endpoints) {
+    push @$issues, {
+        type => 'missing_endpoint',
+        key => $key,
+        message => "Endpoint $key exists in HTML but not in OpenAPI"
+    };
+    $stats->{missing_endpoints}++;
+    $stats->{issues_found}++;
+}
+
+# Generate review report
+$review_report .= "# OpenAPI Spec Review Report\n\n";
+$review_report .= "## Summary\n\n";
+$review_report .= "- Total endpoints in HTML: $stats->{total_endpoints}\n";
+$review_report .= "- Verified endpoints: $stats->{verified_endpoints}\n";
+$review_report .= "- Missing endpoints: $stats->{missing_endpoints}\n";
+$review_report .= "- Total issues found: $stats->{issues_found}\n\n";
+
+if (@$issues) {
+    $review_report .= "## Issues Found\n\n";
+    
+    my %issues_by_type;
+    for my $issue (@$issues) {
+        push @{$issues_by_type{$issue->{type}}}, $issue;
+    }
+    
+    for my $type (sort keys %issues_by_type) {
+        $review_report .= "### " . ucfirst($type =~ s/_/ /gr) . "\n\n";
+        for my $issue (@{$issues_by_type{$type}}) {
+            $review_report .= "- $issue->{message}\n";
+        }
+        $review_report .= "\n";
+    }
+} else {
+    $review_report .= "## No Issues Found\n\n";
+    $review_report .= "All endpoints match between HTML documentation and OpenAPI spec.\n";
+}
+
+# Write review report
+Mojo::File->new('capi/3.195.0/generated/review-report.md')->spurt($review_report);
+
+say "Review completed. Report saved to capi/3.195.0/generated/review-report.md";
+say "Total issues found: $stats->{issues_found}";
+
+sub verify_endpoint {
+    my ($html_endpoint, $operation, $path, $method) = @_;
+    
+    # Find and verify query parameters
+    my $current = $html_endpoint->{definition};
+    my %html_params;
+    
+    while ($current = $current->next) {
+        last if $current->tag && $current->tag eq 'h4' && 
+                $current->attr('id') && $current->attr('id') eq 'definition';
+        last if $current->tag && $current->tag =~ /^h[123]$/;
+        
+        if ($current->tag && $current->tag eq 'h4') {
+            my $text = $current->text || '';
+            if ($text =~ /query parameters/i) {
+                my $table = $current->next;
+                while ($table && $table->tag ne 'table') {
+                    $table = $table->next;
+                }
+                if ($table && $table->tag eq 'table') {
+                    for my $tr ($table->find('tr')->each) {
+                        my @cells = $tr->find('td')->each;
+                        next unless @cells >= 2;
+                        
+                        my $name_elem = $cells[0]->at('strong');
+                        next unless $name_elem;
+                        
+                        my $name = $name_elem->text;
+                        $html_params{$name} = 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    # Check parameters match
+    if ($operation->{parameters}) {
+        for my $param (@{$operation->{parameters}}) {
+            next if $param->{in} ne 'query';
+            unless ($html_params{$param->{name}}) {
+                push @$issues, {
+                    type => 'parameter_mismatch',
+                    path => $path,
+                    method => $method,
+                    message => "Query parameter '$param->{name}' in OpenAPI not found in HTML for $method $path"
+                };
+                $stats->{incorrect_parameters}++;
+                $stats->{issues_found}++;
+            }
+        }
+    }
+}

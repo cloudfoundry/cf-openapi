@@ -1,3 +1,4 @@
+# From capi-openapi-spec
 capi/*.json
 capi/*.yml
 .DS_Store
@@ -35,3 +36,10 @@ test/sdk-integration/python/.travis.yml
 test/sdk-integration/go/vendor/
 test/sdk-integration/go/pkg/
 test/sdk-integration/go/bin/
+
+# From cf-api-openapi-poc
+.idea
+*.iml
+dist
+node_modules
+bin

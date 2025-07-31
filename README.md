@@ -1,11 +1,24 @@
-# Cloud Foundry CAPI OpenAPI Specification
+# Cloud Foundry CAPI and V3 API OpenAPI Specification
 
-A complete OpenAPI 3.0.0 specification for the Cloud Foundry Cloud Controller API (CAPI) v3.195.0, providing 100% coverage of all API endpoints, resources, and operations.
+This repository contains a complete OpenAPI 3.0.0 specification for the Cloud Foundry Cloud Controller API (CAPI) v3.195.0, providing 100% coverage of all API endpoints, resources, and operations. It is a combination of the `capi-openapi-spec` and `cf-api-openapi-poc` repositories, including the history of both.
+
+The rendered version can be accessed here: <https://flothinkspi.github.io/cf-api-openapi-poc/>
+
+## Introduction
+
+In this project, we are developing an OpenAPI Specification for the Cloud Foundry V3 API.
+This is done outside the Cloud Foundry Foundation for now, but we aim to contribute the specification back to the foundation once in a usable/mature state.
+
+The base specification is based on the [Cloud Foundry V3 API documentation](https://v3-apidocs.cloudfoundry.org/).
+
+## Conventions
+
+1. We use lowerCamelCase for field names and operationIds as well as other yaml tokens.
 
 ## Status
 
 This treats the upstream Cloud Foundry API v3 as the source of truth:
-https://v3-apidocs.cloudfoundry.org/version/3.195.0/index.html#deprecated-endpoints
+<https://v3-apidocs.cloudfoundry.org/version/3.195.0/index.html#deprecated-endpoints>
 
 The api docs are fetched from the versioned url into the ./data directory and
 then processed into the OpenAPI YAML files in ./capi/3.195.0.
@@ -17,7 +30,6 @@ Once this has been parsed into the OpenAPI .yml files in ./capi/3.195.0 they are
 merged into ./capi/3.195.0.openapi.yaml and .capi/3.195.0.openapi.json files.
 
 From there the OpenAPI specification can be used to generate client SDKs, documentation, etc...
-
 
 ## Overview
 
@@ -44,6 +56,7 @@ This repository contains a comprehensive OpenAPI specification that fully descri
 New to CAPI OpenAPI? Check out our **[Quick Start Guide](docs/quickstart.md)** for a complete working example.
 
 ### Prerequisites
+
 - Make
 - Perl 5.20+
 - Go (for oapi-codegen)
@@ -72,12 +85,15 @@ make install-deps
 ### Basic Usage
 
 1. **Generate the OpenAPI specification**
+
    ```bash
    make spec
    ```
+
    This creates `capi/3.195.0/openapi.json` with automatic type fixes and enhancements
 
 2. **Generate a client SDK**
+
    ```bash
    # Generate Go SDK (uses oapi-codegen by default)
    make sdk
@@ -92,6 +108,7 @@ make install-deps
    ```
 
 3. **Generate API documentation**
+
    ```bash
    # Generate Redocly documentation
    make docs
@@ -129,11 +146,42 @@ make clean
 make clean-test
 ```
 
+## Development workflows
+
+### Start a local development server
+
+With below comand you can start a local development server that serves the OpenAPI Specification.
+It supports hot reloading, so you can make changes to the `openapi.yaml` and see the changes immediately.
+
+```bash
+  yarn global add @lyra-network/openapi-dev-tool @redocly/cli
+  # Linter
+  redocly lint openapi.yaml 
+  # Life reloading webui generated of the openapi.yaml(automatically restart on crash with while loop)
+  while true; do openapi-dev-tool serve -c .openapi-dev-tool.config.json; done
+```
+
+### AI
+
+To get a good query (to much tokens only usable with gemini-1.5-pro) for ai you can use the following command:
+
+```bash
+  cat ai/context.txt ai/CFV3Docu.txt openapi.yaml ai/command.txt | pbcopy
+```
+
+Then copy the resulting yaml to `tmp.yaml`
+To merge snippets of OpenAPI Spec from `tmp.yaml` into `openapi.yaml`, run following command to merge it:
+
+```bash
+echo "$(yq eval '(.x-components) as $i ireduce({}; setpath($i | path; $i))' openapi.yaml | cat - tmp.yaml)" > tmp.yaml  && yq eval-all -i '. as $item ireduce ({}; . *+ $item)' openapi.yaml tmp.yaml &&  yq e -i '(... | select(type == "!!seq")) |= unique' openapi.yaml && echo "" > tmp.yaml && sed -i 's/!!merge //g' openapi.yaml
+```
+
 ## SDK Generation
 
 The `bin/gen` script provides a flexible way to generate SDKs for different languages and CAPI versions.
 
 ### Usage
+
 ```bash
 # Generate SDK
 ./bin/gen --version=VERSION --language=LANGUAGE [--output=PATH] [--generator=GENERATOR]
@@ -148,12 +196,14 @@ The `bin/gen` script provides a flexible way to generate SDKs for different lang
 ### Generator Options
 
 The script supports multiple code generators:
+
 - **oapi-codegen** (default for Go) - Generates a single, clean Go file with types and client
 - **openapi-generator** (default for other languages) - Full-featured generator with many customization options
 
 ### Examples
 
 #### Generate Go SDK for latest CAPI version (3.195.0)
+
 ```bash
 # Using default oapi-codegen generator (creates single client.go file)
 ./bin/gen --version=3.195.0 --language=go
@@ -165,17 +215,20 @@ The script supports multiple code generators:
 ```
 
 #### Generate Ruby SDK for latest CAPI version
+
 ```bash
 ./bin/gen --version=3.195.0 --language=ruby
 # Output: ./sdk/3.195.0/ruby/
 ```
 
 #### Generate Python SDK with custom output path
+
 ```bash
 ./bin/gen --version=3.195.0 --language=python --output=/path/to/my-sdk
 ```
 
 #### Generate SDKs for older CAPI version
+
 ```bash
 # Go SDK for CAPI 3.181.0
 ./bin/gen --version=3.181.0 --language=go
@@ -187,6 +240,7 @@ The script supports multiple code generators:
 ### Supported Languages
 
 The generator supports all languages provided by OpenAPI Generator, including:
+
 - **go** - Go client library
 - **ruby** - Ruby gem
 - **python** - Python package
@@ -206,7 +260,7 @@ Run `./bin/gen --help` to see the full list of supported languages.
 
 After generating an SDK, you may need to:
 
-1. **Go**: 
+1. **Go**:
    - With oapi-codegen: `go.mod` is automatically created and `go mod tidy` is run
    - With openapi-generator: Run `go mod tidy` in the generated directory
 2. **Ruby**: Build the gem with `gem build *.gemspec`
@@ -242,6 +296,7 @@ The repository includes an automated workflow for publishing the Go client to a 
 5. Optionally check "Force" to overwrite existing tags
 
 The published Go module will be available at:
+
 ```go
 import "github.com/cloudfoundry-community/capi-openapi-go-client/capiclient/v3"
 ```
@@ -276,24 +331,29 @@ Comprehensive documentation is available in the `docs/` directory:
 The specification covers all Cloud Foundry v3 resources:
 
 ### Core Application Resources
+
 - Applications, Processes, Builds, Droplets, Packages
 - Revisions, Deployments, Tasks, Sidecars
 
 ### Routing & Networking
+
 - Routes, Domains, Route Destinations
 - Security Groups, Route Mappings (deprecated)
 
 ### Organizations & Spaces
+
 - Organizations, Spaces, Roles
 - Organization Quotas, Space Quotas
 - Isolation Segments, Space Features
 
 ### Services
+
 - Service Instances, Service Bindings
 - Service Brokers, Service Plans, Service Offerings
 - Service Route Bindings (experimental)
 
 ### Platform Features
+
 - Jobs (async operations), Manifests
 - Feature Flags, Environment Variable Groups
 - Audit Events, Usage Events
@@ -301,6 +361,7 @@ The specification covers all Cloud Foundry v3 resources:
 ## Experimental Features
 
 Features marked as experimental using the `x-experimental` extension:
+
 - Route sharing between spaces
 - Application manifest diff
 - Service route bindings
@@ -308,6 +369,7 @@ Features marked as experimental using the `x-experimental` extension:
 ## Development
 
 ### Project Structure
+
 ```
 capi/
 ├── 3.195.0/
@@ -332,6 +394,7 @@ sdk/
 ### Validation
 
 Validate the OpenAPI specification:
+
 ```bash
 # Using openapi-generator
 openapi-generator validate -i capi/3.195.0.openapi.yaml
@@ -356,7 +419,7 @@ swagger-cli validate capi/3.195.0.openapi.yaml
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 

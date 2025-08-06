@@ -1,0 +1,22 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      protocol:
+        type: string
+      host:
+        type: string
+      path:
+        type: string
+      port:
+        type: integer
+      url:
+        type: string
+        description: Fully qualified path or address where the route directs traffic
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        $ref: './Links.yaml'
+description: A route in Cloud Foundry is used to direct traffic from a URL to an application.

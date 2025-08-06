@@ -1,0 +1,228 @@
+/v3/organizations:
+  get:
+    summary: List organizations
+    description: Retrieve all organizations the user has access to.
+    operationId: listOrganizations
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      - $ref: '#/components/parameters/OrderBy'
+      - $ref: '#/components/parameters/CreatedAts'
+      - $ref: '#/components/parameters/updatedAts'
+      - $ref: '#/components/parameters/labelSelector'
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization names to filter by
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+    responses:
+      '200':
+        description: OK
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+  post:
+    summary: Create an organization
+    description: Create a new organization.
+    operationId: createOrganization
+    tags:
+      - Organizations
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              name:
+                type: string
+              suspended:
+                type: boolean
+              metadata:
+                $ref: '#/components/schemas/metadata'
+            required:
+              - name
+    responses:
+      '201':
+        description: Created
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+      '422':
+        $ref: '#/components/responses/UnprocessableEntity'
+/v3/organizations/{guid}:
+  get:
+    summary: Get an organization
+    description: This endpoint retrieves the specified organization object.
+    operationId: getOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+  patch:
+    summary: Update an organization
+    description: Update an organization.
+    operationId: updateOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              name:
+                type: string
+              suspended:
+                type: boolean
+              metadata:
+                $ref: '#/components/schemas/metadata'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+      '422':
+        $ref: '#/components/responses/UnprocessableEntity'
+  delete:
+    summary: Delete an organization
+    description: When an organization is deleted, user roles associated with the organization will also be deleted.
+    operationId: deleteOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '202':
+        description: Accepted
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/organizations/{guid}/domains/default:
+  get:
+    summary: Get default domain
+    description: Retrieve the default domain for a given organization.
+    operationId: getDefaultDomainForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/organizations/{guid}/usage_summary:
+  get:
+    summary: Get usage summary
+    description: This endpoint retrieves the specified organization object’s memory and app instance usage summary.
+    operationId: getUsageSummaryForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/organizations/{guid}/users:
+  get:
+    summary: List users for an organization
+    description: Retrieve all users with a role in the specified organization.
+    operationId: listUsersForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      - $ref: '#/components/parameters/OrderBy'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user guids to filter by
+      - name: usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usernames to filter by
+      - name: origins
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user origins to filter by
+      - name: partial_usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of partial usernames to filter by
+      - $ref: '#/components/parameters/labelSelector'
+      - $ref: '#/components/parameters/CreatedAts'
+      - $ref: '#/components/parameters/updatedAts'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/organizations/{guid}/relationships/default_isolation_segment:
+  get:
+    summary: Get default isolation segment
+    description: Retrieve the default isolation segment for a given organization.
+    operationId: getDefaultIsolationSegmentForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationshipToOne'
+      '404':
+        $ref: '#/components/responses/NotFound'
+  patch:
+    summary: Assign default isolation segment
+    description: Set the default isolation segment for a given organization.
+    operationId: assignDefaultIsolationSegmentForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RelationshipToOne'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationshipToOne'
+      '404':
+        $ref: '#/components/responses/NotFound'

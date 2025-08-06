@@ -1,0 +1,134 @@
+/v3/service_offerings:
+  get:
+    summary: List service offerings
+    description: This endpoint retrieves the service offerings the user has access to.
+    operationId: listServiceOfferings
+    tags:
+      - Service Offerings
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service offering names to filter by
+      - name: available
+        in: query
+        schema:
+          type: boolean
+        description: Filter by the `available` property; valid values are `true` or `false`
+      - name: service_broker_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: service_broker_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker names to filter by
+      - $ref: ../components/parameters/labelSelector.yaml
+      - name: fields
+        in: query
+        schema:
+          type: object
+        description: Fields to include in the response
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/updatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceOfferingList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+/v3/service_offerings/{guid}:
+  get:
+    summary: Get a service offering
+    description: This endpoint retrieves the service offering by GUID.
+    operationId: getServiceOffering
+    tags:
+      - Service Offerings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceOffering.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a service offering
+    description: This endpoint updates a service offering with labels and annotations.
+    operationId: updateServiceOffering
+    tags:
+      - Service Offerings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceOffering.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  delete:
+    summary: Delete a service offering
+    description: |-
+      This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud
+      Foundry database when they have been removed from the service broker catalog, or when the service broker has been
+      removed. Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service
+      broker.
+    operationId: deleteServiceOffering
+    tags:
+      - Service Offerings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: purge
+        in: query
+        schema:
+          type: boolean
+        description: If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: ../components/responses/NotFound.yaml

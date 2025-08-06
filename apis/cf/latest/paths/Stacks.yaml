@@ -1,0 +1,133 @@
+/v3/stacks:
+  get:
+    summary: List stacks
+    description: Retrieve all stacks.
+    operationId: listStacks
+    tags:
+      - Stacks
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of stack names to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/StackList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+  post:
+    summary: Create a stack
+    description: Create a stack
+    operationId: createStack
+    tags:
+      - Stacks
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Stack.yaml'
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Stack.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/stacks/{guid}:
+  get:
+    summary: Get a stack
+    description: Get a stack
+    operationId: getStack
+    tags:
+      - Stacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Stack.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a stack
+    description: Update a stack
+    operationId: updateStack
+    tags:
+      - Stacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Stack.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Delete a stack
+    description: Delete a stack
+    operationId: deleteStack
+    tags:
+      - Stacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/stacks/{guid}/apps:
+  get:
+    summary: List apps on a stack
+    description: Retrieve all apps using a given stack.
+    operationId: listAppsOnStack
+    tags:
+      - Stacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

@@ -1,0 +1,180 @@
+/v3/space_quotas:
+  get:
+    summary: List space quotas
+    description: This endpoint lists all space quota resources that the user has permission to view.
+    operationId: listSpaceQuotas
+    tags:
+      - Space Quotas
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space quota guids to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space quota names to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/updatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceQuotaList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+  post:
+    summary: Create a space quota
+    description: This endpoint creates a new space quota scoped to a specific organization.
+    operationId: createSpaceQuota
+    tags:
+      - Space Quotas
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/SpaceQuota.yaml
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceQuota.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/space_quotas/{guid}:
+  get:
+    summary: Get a space quota
+    description: Get a space quota
+    operationId: getSpaceQuota
+    tags:
+      - Space Quotas
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceQuota.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a space quota
+    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+    operationId: updateSpaceQuota
+    tags:
+      - Space Quotas
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/SpaceQuota.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceQuota.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  delete:
+    summary: Delete a space quota
+    description: Space quotas cannot be deleted when applied to any spaces.
+    operationId: deleteSpaceQuota
+    tags:
+      - Space Quotas
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/space_quotas/{quota_guid}/relationships/spaces:
+  post:
+    summary: Apply a space quota to a space
+    description: This endpoint applies a space quota to one or more spaces. Only an admin or an org manager in the quota's parent organization can apply a space quota to a space.
+    operationId: applySpaceQuota
+    tags:
+      - Space Quotas
+    parameters:
+      - name: quota_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToMany.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/space_quotas/{quota_guid}/relationships/spaces/{space_guid}:
+  delete:
+    summary: Remove a space quota from a space
+    description: This endpoint removes a space quota from a space. Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
+    operationId: removeSpaceQuota
+    tags:
+      - Space Quotas
+    parameters:
+      - name: quota_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: space_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: ../components/responses/NotFound.yaml

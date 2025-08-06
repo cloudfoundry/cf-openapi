@@ -1,0 +1,5 @@
+description: User to create
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/UserCreate.yaml'

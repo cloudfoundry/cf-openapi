@@ -1,0 +1,354 @@
+/v3/service_instances:
+  get:
+    summary: List service instances
+    description: This endpoint retrieves the service instances the user has access to, including access granted by service instance sharing.
+    operationId: listServiceInstances
+    tags:
+      - Service Instances
+    parameters:
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance names to filter by
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance guids to filter by
+      - name: type
+        in: query
+        schema:
+          type: string
+          enum:
+            - managed
+            - user-provided
+        description: Filter by type; valid values are 'managed' and 'user-provided'
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: service_plan_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service plan guids to filter by
+      - name: service_plan_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service plan names to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/labelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/updatedAts.yaml
+      - name: fields
+        in: query
+        schema:
+          type: object
+        description: Fields to include in the response
+    responses:
+      '200':
+        description: Request succeeded
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceInstanceList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+  post:
+    summary: Create a service instance
+    description: |-
+      This endpoint creates a new service instance. Service instances can be of type `managed` or `user-provided`, and
+      the required parameters are different for each type. User provided service instances do not require interactions with
+      service brokers. If failures occur when creating managed service instances, the API might execute orphan mitigation steps
+      accordingly to cases outlined in the documentation.
+    operationId: createServiceInstance
+    tags:
+      - Service Instances
+    requestBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: ../components/schemas/ManagedServiceInstance.yaml
+              - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+    responses:
+      '201':
+        description: Service instance created
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: ../components/schemas/ManagedServiceInstance.yaml
+                - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      '202':
+        description: Service instance creation in progress
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Job.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/service_instances/{guid}/credentials:
+  get:
+    summary: Get credentials for a user-provided service instance
+    description: Retrieves the credentials for a user-provided service instance.
+    operationId: getServiceInstanceCredentials
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
+  get:
+    summary: Get usage summary in shared spaces
+    description: This endpoint returns the number of bound apps in spaces where the service instance has been shared to.
+    operationId: getServiceInstanceUsageSummaryInSharedSpaces
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usage_summary:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      space:
+                        $ref: ../components/schemas/Relationship.yaml
+                      bound_app_count:
+                        type: integer
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/service_instances/{guid}/relationships/shared_spaces:
+  get:
+    summary: List shared spaces relationship
+    description: This endpoint lists the spaces that the service instance has been shared to.
+    operationId: listServiceInstanceSharedSpaces
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  post:
+    summary: Share a service instance to other spaces
+    description: This endpoint shares the service instance with the specified spaces.
+    operationId: shareServiceInstance
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToMany.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}:
+  delete:
+    summary: Unshare a service instance from another space
+    description: This endpoint unshares the service instance from the specified space.
+    operationId: unshareServiceInstance
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: space_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/service_instances/{guid}/parameters:
+  get:
+    summary: Get parameters for a managed service instance
+    description: Queries the Service Broker for the parameters associated with this service instance.
+    operationId: getServiceInstanceParameters
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/service_instances/{guid}/permissions:
+  get:
+    summary: Get permissions for a service instance
+    description: Get the current user’s permissions for the given service instance.
+    operationId: getServiceInstancePermissions
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                manage:
+                  type: boolean
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/service_instances/{guid}:
+  get:
+    summary: Get a service instance
+    description: This endpoint retrieves the service instance by GUID.
+    operationId: getServiceInstance
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: ../components/schemas/ManagedServiceInstance.yaml
+                - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a service instance
+    description: Update a service instance
+    operationId: updateServiceInstance
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: ../components/schemas/ManagedServiceInstanceUpdate.yaml
+              - $ref: ../components/schemas/UserProvidedServiceInstanceUpdate.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: ../components/schemas/ManagedServiceInstance.yaml
+                - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Job.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  delete:
+    summary: Delete a service instance
+    description: |-
+      This endpoint deletes a service instance and any associated service credential
+      bindings or service route bindings. The service instance is removed from all
+      spaces where it is available. User provided service instances do not require interactions with service brokers,
+      therefore the API will respond synchronously to the delete request. For managed service instances, the API will respond asynchronously.
+      If a service credential binding or service route binding cannot be deleted
+      synchronously, then the operation will fail, and the deletion of the binding
+      will continue in the background. The operation can be retried until it is successful.
+    operationId: deleteServiceInstance
+    tags:
+      - Service Instances
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: purge
+        in: query
+        schema:
+          type: boolean
+        description: If `true`, deletes the service instance and all associated resources without any interaction with the service broker.
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Job.yaml
+      '204':
+        description: No Content
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

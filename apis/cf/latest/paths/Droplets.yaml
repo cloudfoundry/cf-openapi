@@ -1,0 +1,216 @@
+/v3/droplets:
+  get:
+    summary: List droplets
+    description: Retrieve a list of droplets available in the system.
+    operationId: listDroplets
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of droplet GUIDs to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of droplet states to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of app GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of space GUIDs to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of organization GUIDs to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/DropletList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+  post:
+    summary: Create a droplet
+    description: Create a new droplet
+    operationId: createDroplet
+    tags:
+      - Droplets
+    requestBody:
+      $ref: '../components/requestBodies/dropletCreateRequestBody.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/dropletCreateResponse.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+/v3/droplets/{guid}:
+  get:
+    summary: Retrieve a droplet
+    description: Retrieve details of a specific droplet by its GUID.
+    operationId: getDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        $ref: '../components/responses/dropletGetResponse.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+  patch:
+    summary: Update a droplet
+    description: Update attributes of a specific droplet by its GUID.
+    operationId: updateDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: Droplet object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+              image:
+                type: string
+                description: Image reference where the built complete image was stored
+            required:
+              - image
+            description: Request schema for updating a droplet
+    responses:
+      '200':
+        $ref: '../components/responses/dropletGetResponse.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        description: Unprocessable Entity
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+  delete:
+    summary: Delete a droplet
+    description: Delete a specific droplet by its GUID.
+    operationId: deleteDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: Successfully deleted droplet
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/droplets/{guid}/download:
+  get:
+    summary: Download a droplet
+    description: Download a droplet file by its GUID.
+    operationId: downloadDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      '302':
+        description: Redirect to download location
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/droplets/{guid}/upload:
+  post:
+    summary: Upload a droplet
+    description: Upload a droplet file for a specific droplet by its GUID.
+    operationId: uploadDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: The droplet file to be uploaded
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              bits:
+                type: string
+                format: binary
+                description: The droplet file to be uploaded
+            required:
+              - bits
+            description: Request schema for uploading a droplet
+    responses:
+      '200':
+        $ref: '../components/responses/dropletGetResponse.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        description: Unprocessable Entity
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'

@@ -25,15 +25,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Build
         run: |
-          yarn global add @redocly/cli
-          mkdir -p out
-          redocly build-docs openapi.yaml -o out/index.html
+          yarn install
+          yarn build
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'out'
+          path: 'dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

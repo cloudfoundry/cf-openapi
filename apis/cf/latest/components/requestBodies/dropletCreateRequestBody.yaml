@@ -1,0 +1,15 @@
+description: Droplet object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        relationships:
+          $ref: '../schemas/Relationships.yaml'
+        process_types:
+          type: object
+          description: Process names and start commands for the droplet
+      required:
+        - relationships
+      description: Request schema for creating a droplet

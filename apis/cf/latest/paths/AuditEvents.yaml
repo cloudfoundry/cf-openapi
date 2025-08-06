@@ -1,0 +1,68 @@
+/v3/audit_events:
+  get:
+    summary: List audit events
+    description: Retrieve all audit events the user has access to.
+    operationId: listAuditEvents
+    tags:
+      - Audit Events
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/updatedAts.yaml
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of event types to filter by
+      - name: target_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of target guids to filter by. Also supports filtering by exclusion.
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/AuditEventList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+/v3/audit_events/{guid}:
+  get:
+    summary: Get an audit event
+    description: Retrieve a specific audit event by its GUID.
+    operationId: getAuditEvent
+    tags:
+      - Audit Events
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/AuditEvent.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

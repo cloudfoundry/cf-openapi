@@ -1,0 +1,19 @@
+type: object
+properties:
+  name:
+    type: string
+    description: The name of the feature flag
+  enabled:
+    type: boolean
+    description: Whether the feature flag is enabled
+  updated_at:
+    type: string
+    format: date-time
+    description: The time the feature flag was last updated; this will be blank for feature flags that have not been configured
+  custom_error_message:
+    type: string
+    description: The error string returned by the API when a client performs an action disabled by the feature flag
+  links:
+    $ref: './Links.yaml'
+description: >
+  Feature flags are runtime flags that enable or disable functionality on the API.

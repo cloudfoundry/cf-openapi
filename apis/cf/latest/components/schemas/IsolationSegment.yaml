@@ -1,0 +1,17 @@
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the isolation segment
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        allOf:
+          - $ref: './Links.yaml'
+          - properties:
+              organizations:
+                allOf:
+                  - $ref: './Link.yaml'
+                  - description: The organizations assigned to this isolation segment
+description: An isolation segment provides a dedicated pool of compute resources for an organization or space.

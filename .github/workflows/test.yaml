@@ -17,12 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        run: yarn global add @redocly/cli
+        run: yarn install
       - name: Stats
-        run: redocly stats openapi.yaml --format markdown >> $GITHUB_STEP_SUMMARY
+        run: yarn run redocly stats --format markdown >> $GITHUB_STEP_SUMMARY
       - name: Lint
         run: |
-          redocly lint openapi.yaml --format markdown >> $GITHUB_STEP_SUMMARY || true
-          redocly lint openapi.yaml --format github-actions
+          yarn run redocly lint --format markdown >> $GITHUB_STEP_SUMMARY || true
+          yarn run redocly lint --format github-actions
       - name: Build
-        run: redocly build-docs openapi.yaml -o index.html
+        run: yarn build

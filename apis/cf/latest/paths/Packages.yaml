@@ -1,0 +1,248 @@
+/v3/packages:
+  get:
+    summary: List packages
+    description: Retrieve all packages the user has access to.
+    operationId: listPackages
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      - $ref: '#/components/parameters/OrderBy'
+      - $ref: '#/components/parameters/CreatedAts'
+      - $ref: '#/components/parameters/updatedAts'
+      - $ref: '#/components/parameters/labelSelector'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package guids to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package states to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package types to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+    responses:
+      '200':
+        description: List of packages
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageList'
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+  post:
+    summary: Create a package
+    description: Create a new package.
+    operationId: createPackage
+    tags:
+      - Packages
+    requestBody:
+      $ref: '#/components/requestBodies/packageCreateRequestBody'
+    responses:
+      '201':
+        description: Successfully created package
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+      '422':
+        $ref: '#/components/responses/UnprocessableEntity'
+/v3/packages/{guid}:
+  get:
+    summary: Get a package
+    description: Retrieve a specific package by its GUID.
+    operationId: getPackage
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: Successfully retrieved package
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/apps/{app_guid}/packages:
+  get:
+    summary: List packages for an app
+    description: Retrieve packages for an app that the user has access to.
+    operationId: listAppPackages
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      - $ref: '#/components/parameters/OrderBy'
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package states to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package types to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageList'
+      '404':
+        $ref: '#/components/responses/NotFound'
+  patch:
+    summary: Update a package
+    description: Update attributes of a specific package by its GUID.
+    operationId: updatePackage
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    requestBody:
+      $ref: '#/components/requestBodies/packageUpdateRequestBody'
+    responses:
+      '200':
+        description: Successfully updated package
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+      '404':
+        $ref: '#/components/responses/NotFound'
+  delete:
+    summary: Delete a package
+    description: Delete a specific package by its GUID.
+    operationId: deletePackage
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '202':
+        description: Successfully deleted package
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/job'
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/packages/{guid}/upload:
+  post:
+    summary: Upload package bits
+    description: Upload the bits for a specific package by its GUID.
+    operationId: uploadPackageBits
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    requestBody:
+      $ref: '#/components/requestBodies/packageUploadRequestBody'
+    responses:
+      '200':
+        description: Successfully uploaded package bits
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/packages/{guid}/download:
+  get:
+    summary: Download package bits
+    description: Download the bits for a specific package by its GUID.
+    operationId: downloadPackageBits
+    tags:
+      - Packages
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '302':
+        description: Redirect to download location
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/packages?source_guid={source_guid}:
+  post:
+    summary: Copy a package
+    description: Copy a package to a different app.
+    operationId: copyPackage
+    tags:
+      - Packages
+    parameters:
+      - name: source_guid
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the package to copy from
+    requestBody:
+      description: Destination app for the copied package
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              relationships:
+                $ref: '#/components/schemas/relationships'
+            required:
+              - relationships
+            description: Request schema for copying a package
+    responses:
+      '201':
+        description: Successfully copied package
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+      '404':
+        $ref: '#/components/responses/NotFound'

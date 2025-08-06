@@ -1,0 +1,8 @@
+name: order_by
+in: query
+required: false
+schema:
+  type: string
+description: |
+  Order results by a specific field. Prepend with - to sort descending.
+example: "created_at"

@@ -1,9 +1,0 @@
-{
-  "specs": [
-    {
-      "file": "openapi.yaml",
-      "enabled": true
-    }
-  ],
-  "html-injector": []
-}

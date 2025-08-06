@@ -1,0 +1,112 @@
+/v3/sidecars/{guid}:
+  get:
+    summary: Get a sidecar
+    description: Get a sidecar.
+    operationId: getSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Sidecar.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a sidecar
+    description: Update a sidecar.
+    operationId: updateSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Sidecar.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Sidecar.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/apps/{app_guid}/sidecars:
+  get:
+    summary: List sidecars for app
+    description: Retrieves all sidecars associated with a app.
+    operationId: listAppSidecars
+    tags:
+      - Sidecars
+    parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SidecarList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  post:
+    summary: Create a sidecar associated with an app
+    description: Create a sidecar associated with an app.
+    operationId: createSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Sidecar.yaml'
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Sidecar.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/processes/{process_guid}/sidecars:
+  get:
+    summary: List sidecars for process
+    description: Retrieves all sidecars associated with a process.
+    operationId: listProcessSidecars
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SidecarList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

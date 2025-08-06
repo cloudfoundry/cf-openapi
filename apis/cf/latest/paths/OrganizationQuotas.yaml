@@ -1,0 +1,128 @@
+/v3/organization_quotas:
+  get:
+    summary: List organization quotas
+    description: This endpoint lists all organization quota resources.
+    operationId: listOrganizationQuotas
+    tags:
+      - Organization Quotas
+    parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PerPage'
+      - $ref: '#/components/parameters/OrderBy'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization quota guids to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization quota names to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+    responses:
+      '200':
+        description: OK
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+  post:
+    summary: Create an organization quota
+    description: This endpoint creates a new organization quota, but does not assign it to a specific organization unless an organization GUID is provided in the relationships.organizations parameter.
+    operationId: createOrganizationQuota
+    tags:
+      - Organization Quotas
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrganizationQuota'
+    responses:
+      '201':
+        description: Created
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+      '422':
+        $ref: '#/components/responses/UnprocessableEntity'
+/v3/organization_quotas/{guid}:
+  get:
+    summary: Get an organization quota
+    description: This endpoint gets an individual organization quota resource.
+    operationId: getOrganizationQuota
+    tags:
+      - Organization Quotas
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+  patch:
+    summary: Update an organization quota
+    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+    operationId: updateOrganizationQuota
+    tags:
+      - Organization Quotas
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrganizationQuota'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'
+      '422':
+        $ref: '#/components/responses/UnprocessableEntity'
+  delete:
+    summary: Delete an organization quota
+    description: Organization quotas cannot be deleted when applied to any organizations.
+    operationId: deleteOrganizationQuota
+    tags:
+      - Organization Quotas
+    parameters:
+      - $ref: '#/components/parameters/GUID'
+    responses:
+      '202':
+        description: Accepted
+      '404':
+        $ref: '#/components/responses/NotFound'
+/v3/organization_quotas/{quota_guid}/relationships/organizations:
+  post:
+    summary: Apply an organization quota to an organization
+    description: This endpoint applies an organization quota to one or more organizations.
+    operationId: applyOrganizationQuota
+    tags:
+      - Organization Quotas
+    parameters:
+      - name: quota_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RelationshipToMany'
+    responses:
+      '200':
+        description: OK
+      '404':
+        $ref: '#/components/responses/NotFound'

@@ -1,0 +1,18 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the app
+      state:
+        type: string
+        description: Current desired state of the app; valid values are STOPPED or STARTED
+      lifecycle:
+        $ref: './Lifecycle.yaml'
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+description: >
+  Apps represent the core entities in the Cloud Foundry environment. They are the deployable units that run your code. Each app can have multiple processes, routes, and services associated with it. Apps can be scaled horizontally by increasing the number of instances. They can also be updated and restarted as needed.

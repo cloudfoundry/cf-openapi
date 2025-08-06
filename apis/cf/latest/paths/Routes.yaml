@@ -1,0 +1,461 @@
+/v3/routes:
+  get:
+    summary: List routes
+    description: Retrieve a list of routes available in the system.
+    operationId: listRoutes
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: protocols
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of protocols to filter by
+      - name: hosts
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of hosts to filter by
+      - name: paths
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of paths to filter by
+      - name: ports
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of ports to filter by
+      - name: domain_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space GUIDs to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization GUIDs to filter by
+      - name: service_instance_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance GUIDs to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of resource names to include in the response
+    responses:
+      '200':
+        $ref: '../components/responses/routeListResponse.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/routes/{guid}:
+  get:
+    summary: Get a route
+    description: Retrieve details of a specific route by its GUID.
+    operationId: getRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: Successfully retrieved route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Route.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a route
+    description: Update attributes of a specific route by its GUID.
+    operationId: updateRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: Route object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+            description: Request schema for updating a route
+    responses:
+      '200':
+        description: Successfully updated route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Route.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  delete:
+    summary: Delete a route
+    description: Delete a specific route by its GUID.
+    operationId: deleteRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '202':
+        description: Successfully deleted route
+        headers:
+          Location:
+            description: URL of the job that is deleting the route
+            schema:
+              type: string
+              format: uri
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/apps/{guid}/routes:
+  get:
+    summary: List routes for an app
+    description: Retrieve all routes that have destinations that point to the given app.
+    operationId: listAppRoutes
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - name: domain_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain guids to filter by
+      - name: hosts
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of hostnames to filter by
+      - name: paths
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of paths to filter by
+      - name: ports
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of ports to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/routes/{guid}/relationships/shared_spaces:
+  get:
+    summary: List shared spaces relationship
+    description: Lists the spaces that the route has been shared to.
+    operationId: listSharedSpacesRelationship
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToMany.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  post:
+    summary: Share a route with other spaces
+    description: This endpoint shares the route with the specified spaces.
+    operationId: shareRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: List of spaces to share the route with
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RelationshipToMany.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToMany.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
+  delete:
+    summary: Unshare a route that was shared with another space
+    description: Unshares a route that was shared with another space.
+    operationId: unshareRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: space_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the space to unshare the route from
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/routes/{guid}/relationships/space:
+  patch:
+    summary: Transfer ownership
+    description: Transfers a the ownership of a route to a another space.
+    operationId: transferRouteOwnership
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: The space to transfer ownership to
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RelationshipToOne.yaml'
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  post:
+    summary: Create a route
+    description: Create a new route
+    operationId: createRoute
+    tags:
+      - Routes
+    requestBody:
+      $ref: '../components/requestBodies/routeCreateRequestBody.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/routeCreateResponse.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/routes/{guid}/destinations:
+  get:
+    summary: List destinations for a route
+    description: Retrieve a list of destinations for a specific route by its GUID.
+    operationId: listDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestinationList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+  post:
+    summary: Insert destinations for a route
+    description: Insert destinations for a specific route by its GUID.
+    operationId: insertDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/routeDestinations.yaml'
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestinationList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  put:
+    summary: Replace all destinations for a route
+    description: Replace all destinations for a specific route by its GUID.
+    operationId: replaceDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/routeDestinations.yaml'
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestinationList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/routes/{guid}/destinations/{destination_guid}:
+  patch:
+    summary: Update a destination protocol for a route
+    description: Update the protocol of a specific route destination by its GUID.
+    operationId: updateDestinationProtocolForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: destination_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the route destination
+    requestBody:
+      description: Protocol of the destination
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              protocol:
+                type: string
+                description: Protocol of the destination
+                enum:
+                  - http1
+                  - http2
+            required:
+              - protocol
+    responses:
+      '200':
+        description: Successfully updated protocol of the destination
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestination.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Remove destination for a route
+    description: Remove a destination from a specific route by its GUID.
+    operationId: removeDestinationForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: destination_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the route destination to remove
+    responses:
+      '204':
+        description: Successfully removed destination from the route
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/routes:
+  delete:
+    summary: Delete unmapped routes for a space
+    description: Delete routes that are unmapped in a specific space.
+    operationId: deleteUnmappedRoutesForSpace
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: Successfully deleted unmapped routes from the space
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

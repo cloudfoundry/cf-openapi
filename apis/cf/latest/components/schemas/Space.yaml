@@ -1,0 +1,45 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the space
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  name:
+    type: string
+    description: Name of the space
+  relationships:
+    type: object
+    properties:
+      organization:
+        $ref: './relationshipToOne.yaml'
+      quota:
+        $ref: './relationshipToOne.yaml'
+    description: Relationships for the space
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './link.yaml'
+      organization:
+        $ref: './link.yaml'
+      features:
+        $ref: './link.yaml'
+      apply_manifest:
+        $ref: './link.yaml'
+  metadata:
+    $ref: './metadata.yaml'
+required:
+  - guid
+  - created_at
+  - updated_at
+  - name
+  - relationships
+  - links

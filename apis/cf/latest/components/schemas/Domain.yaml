@@ -1,0 +1,31 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the domain; must be between 3-253 characters and follow RFC 1035
+      internal:
+        type: boolean
+        description: Whether the domain is used for internal (container-to-container) traffic
+      router_group:
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+            description: The GUID of the router group to route TCP traffic through
+        description: The router group that the domain will use for TCP traffic
+      supported_protocols:
+        type: array
+        items:
+          type: string
+        description: Available protocols for routes using the domain, currently http and tcp
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        $ref: './Links.yaml'
+description: |
+  A domain is a fully qualified domain name that is used for application routes. A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.

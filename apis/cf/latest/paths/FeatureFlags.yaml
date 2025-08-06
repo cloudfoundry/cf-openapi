@@ -1,0 +1,88 @@
+/v3/feature_flags:
+  get:
+    summary: List feature flags
+    description: Retrieve a list of all feature flags.
+    operationId: listFeatureFlags
+    tags:
+      - Feature Flags
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: updated_ats
+        in: query
+        required: false
+        schema:
+          type: string
+        description: >
+          Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed.
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/FeatureFlagList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+/v3/feature_flags/{name}:
+  get:
+    summary: Retrieve a feature flag
+    description: Retrieve details of a specific feature flag by its name.
+    operationId: getFeatureFlag
+    tags:
+      - Feature Flags
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The name of the feature flag
+    responses:
+      '200':
+        description: Successfully retrieved feature flag
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/FeatureFlag.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a feature flag
+    description: Update the properties of a specific feature flag by its name.
+    operationId: updateFeatureFlag
+    tags:
+      - Feature Flags
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The name of the feature flag
+    requestBody:
+      description: Feature flag object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              enabled:
+                type: boolean
+                description: Whether the feature flag is enabled
+              custom_error_message:
+                type: string
+                description: The error string returned by the API when a client performs an action disabled by the feature flag
+    responses:
+      '200':
+        description: Successfully updated feature flag
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/FeatureFlag.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

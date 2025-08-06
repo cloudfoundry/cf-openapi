@@ -1,0 +1,18 @@
+/v3/jobs/{guid}:
+  get:
+    summary: Get a job
+    description: Retrieve a specific job by its GUID.
+    operationId: getJob
+    tags:
+      - Jobs
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: Successfully retrieved job
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Job.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

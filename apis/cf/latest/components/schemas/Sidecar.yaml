@@ -1,0 +1,58 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the sidecar
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  name:
+    type: string
+    description: Name of the sidecar
+  command:
+    type: string
+    description: Command to run for the sidecar
+  process_types:
+    type: array
+    items:
+      type: string
+    description: Process types that the sidecar applies to
+  memory_in_mb:
+    type: integer
+    description: Memory limit for the sidecar in MB
+  origin:
+    type: string
+    description: Origin of the sidecar
+    enum:
+      - user
+      - buildpack
+  relationships:
+    type: object
+    properties:
+      app:
+        $ref: './relationshipToOne.yaml'
+    description: Relationships for the sidecar
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './link.yaml'
+      app:
+        $ref: './link.yaml'
+  metadata:
+    $ref: './metadata.yaml'
+required:
+  - guid
+  - created_at
+  - updated_at
+  - name
+  - command
+  - process_types
+  - relationships
+  - links

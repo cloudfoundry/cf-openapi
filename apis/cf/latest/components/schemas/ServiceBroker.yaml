@@ -1,0 +1,57 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the service broker
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  name:
+    type: string
+    description: Name of the service broker
+  url:
+    type: string
+    format: uri
+    description: URL of the service broker
+  available:
+    type: boolean
+    description: Whether the service broker is available
+  status:
+    type: string
+    description: Status of the service broker
+    enum:
+      - available
+      - synchronization in progress
+      - synchronization failed
+  relationships:
+    type: object
+    properties:
+      space:
+        $ref: './relationshipToOne.yaml'
+    description: Relationships for the service broker
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './link.yaml'
+      space:
+        $ref: './link.yaml'
+      service_offerings:
+        $ref: './link.yaml'
+  metadata:
+    $ref: './metadata.yaml'
+required:
+  - guid
+  - created_at
+  - updated_at
+  - name
+  - url
+  - available
+  - status
+  - links

@@ -1,0 +1,10 @@
+description: A list of route destinations
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        destinations:
+          type: array
+          items:
+            $ref: '../schemas/RouteDestination.yaml'

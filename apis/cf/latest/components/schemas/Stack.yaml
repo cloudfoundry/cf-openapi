@@ -1,0 +1,43 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the stack
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  name:
+    type: string
+    description: Name of the stack
+  description:
+    type: string
+    description: Description of the stack
+  build_rootfs_image:
+    type: string
+    description: The filesystem root image for building
+  run_rootfs_image:
+    type: string
+    description: The filesystem root image for running
+  default:
+    type: boolean
+    description: Whether this is the default stack
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './link.yaml'
+  metadata:
+    $ref: './metadata.yaml'
+required:
+  - guid
+  - created_at
+  - updated_at
+  - name
+  - description
+  - links

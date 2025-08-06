@@ -1,0 +1,137 @@
+/v3/roles:
+  get:
+    summary: List roles
+    description: This endpoint lists roles that the user has access to.
+    operationId: listRoles
+    tags:
+      - Roles
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: guids
+        in: query
+        description: Comma-delimited list of role guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: types
+        in: query
+        description: Comma-delimited list of role types to filter by
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - organization_user
+              - organization_auditor
+              - organization_manager
+              - organization_billing_manager
+              - space_auditor
+              - space_developer
+              - space_manager
+              - space_supporter
+      - name: organization_guids
+        in: query
+        description: Comma-delimited list of organization guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: space_guids
+        in: query
+        description: Comma-delimited list of space guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: user_guids
+        in: query
+        description: Comma-delimited list of user guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: include
+        in: query
+        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - user
+              - space
+              - organization
+    responses:
+      '200':
+        $ref: '../components/responses/RoleListResponse.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+  post:
+    summary: Create a role
+    description: Create a new role.
+    operationId: createRole
+    tags:
+      - Roles
+    requestBody:
+      $ref: '../components/requestBodies/RoleCreate.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/RoleCreateResponse.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+/v3/roles/{guid}:
+  get:
+    summary: Get a role
+    description: Retrieve a specific role by its GUID.
+    operationId: getRole
+    tags:
+      - Roles
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: include
+        in: query
+        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - user
+              - space
+              - organization
+    responses:
+      '200':
+        $ref: '../components/responses/RoleGetResponse.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  delete:
+    summary: Delete a role
+    description: Delete a specific role by its GUID.
+    operationId: deleteRole
+    tags:
+      - Roles
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

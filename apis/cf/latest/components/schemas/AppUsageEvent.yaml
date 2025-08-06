@@ -1,0 +1,69 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+properties:
+  state:
+    type: object
+    properties:
+      current:
+        type: string
+      previous:
+        type: string
+  app:
+    type: object
+    properties:
+      guid:
+        type: string
+      name:
+        type: string
+  process:
+    type: object
+    properties:
+      guid:
+        type: string
+      type:
+        type: string
+  space:
+    type: object
+    properties:
+      guid:
+        type: string
+      name:
+        type: string
+  organization:
+    type: object
+    properties:
+      guid:
+        type: string
+  buildpack:
+    type: object
+    properties:
+      guid:
+        type: string
+      name:
+        type: string
+  task:
+    type: object
+    properties:
+      guid:
+        type: string
+      name:
+        type: string
+  memory_in_mb_per_instance:
+    type: object
+    properties:
+      current:
+        type: integer
+      previous:
+        type: integer
+  instance_count:
+    type: object
+    properties:
+      current:
+        type: integer
+      previous:
+        type: integer
+description: >-
+  App usage events are a record of changes in the usage of apps and tasks. Examples include starting an application, scaling an application (from, say, one to three instances), and stopping an application.
+
+  Usage events are typically used by billing and chargeback applications.

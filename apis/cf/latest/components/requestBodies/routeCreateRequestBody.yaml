@@ -1,0 +1,21 @@
+description: Route to create
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        host:
+          type: string
+        path:
+          type: string
+        port:
+          type: integer
+        relationships:
+          type: object
+          properties:
+            domain:
+              $ref: '../schemas/RelationshipToOne.yaml'
+            space:
+              $ref: '../schemas/RelationshipToOne.yaml'
+      required:
+        - relationships

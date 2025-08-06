@@ -1,0 +1,122 @@
+/v3/users:
+  get:
+    summary: List users
+    description: Retrieve all users that the current user can see.
+    operationId: listUsers
+    tags:
+      - Users
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user guids to filter by
+      - name: usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usernames to filter by
+      - name: origins
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user origins to filter by
+      - name: partial_usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of partial usernames to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/PaginatedUsers.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+  post:
+    summary: Create a user
+    description: Create a new user.
+    operationId: createUser
+    tags:
+      - Users
+    requestBody:
+      $ref: '../components/requestBodies/userCreate.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/userCreateResponse.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+/v3/users/{guid}:
+  get:
+    summary: Get a user
+    description: Retrieve a user by its GUID.
+    operationId: getUser
+    tags:
+      - Users
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/User.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a user
+    description: Update an existing user.
+    operationId: updateUser
+    tags:
+      - Users
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/userUpdate.yaml'
+    responses:
+      '200':
+        $ref: '../components/responses/userUpdateResponse.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  delete:
+    summary: Delete a user
+    description: Delete a user by its GUID.
+    operationId: deleteUser
+    tags:
+      - Users
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

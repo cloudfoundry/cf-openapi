@@ -1,6 +1,0 @@
-packageName: capiclient
-isGoSubmodule: true
-generateInterfaces: true
-withSeparateModelsAndApi: false
-enumClassPrefix: true
-packageVersion: 3.195.0

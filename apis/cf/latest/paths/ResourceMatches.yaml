@@ -1,0 +1,31 @@
+/v3/resource_matches:
+  post:
+    summary: Create a resource match
+    description: This endpoint returns a list of matching resources from the input list.
+    operationId: postResourceMatches
+    tags:
+      - Resource Matches
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              resources:
+                description: List of resources to check for in the resource cache
+                type: string
+            required:
+              - resources
+            type: object
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ResourceMatch.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

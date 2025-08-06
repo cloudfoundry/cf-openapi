@@ -1,0 +1,15 @@
+type: object
+description: Links provide URLs to relationships and actions for a resource. Links are represented as a JSON object and always contain a self link.
+properties:
+  self:
+    $ref: './link.yaml'
+  first:
+    $ref: './link.yaml'
+  last:
+    $ref: './link.yaml'
+  next:
+    $ref: './link.yaml'
+  previous:
+    $ref: './link.yaml'
+additionalProperties:
+  $ref: './link.yaml'

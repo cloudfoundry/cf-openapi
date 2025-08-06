@@ -1,0 +1,397 @@
+/v3/spaces:
+  get:
+    summary: List spaces
+    description: Retrieve all spaces the user has access to.
+    operationId: listSpaces
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space names to filter by
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of resource names to include in the response
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SpaceList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+  post:
+    summary: Create a space
+    description: Create a space
+    operationId: createSpace
+    tags:
+      - Spaces
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Space.yaml'
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Space.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/spaces/{guid}:
+  get:
+    summary: Get a space
+    description: This endpoint retrieves the specified space object.
+    operationId: getSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user guids to filter by
+      - name: usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usernames to filter by
+      - name: partial_usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of partial usernames to filter by
+      - name: origins
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user origins to filter by
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Space.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a space
+    description: Update a space
+    operationId: updateSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Space.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Space.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Delete a space
+    description: When a space is deleted, the user roles associated with the space will be deleted.
+    operationId: deleteSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Job.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/actions/apply_manifest:
+  post:
+    summary: Apply a manifest to a space
+    description: Apply changes specified in a manifest to the named apps and their underlying processes. The apps must reside in the space. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+    operationId: applyManifestToSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Job.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/features:
+  get:
+    summary: List space features
+    description: This endpoint retrieves the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+    operationId: listSpaceFeatures
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SpaceFeature.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/features/{name}:
+  get:
+    summary: Get a space feature
+    description: Get a space feature
+    operationId: getSpaceFeature
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SpaceFeature.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update space features
+    description: Update space features
+    operationId: updateSpaceFeature
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              enabled:
+                type: boolean
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SpaceFeature.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/manifest_diff:
+  post:
+    summary: Create a manifest diff for a space (experimental)
+    description: This endpoint returns a JSON representation of the difference between the provided manifest and the current state of a space.
+    operationId: createManifestDiffForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Job.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/relationships/isolation_segment:
+  get:
+    summary: Get assigned isolation segment
+    description: Get assigned isolation segment
+    operationId: getAssignedIsolationSegmentForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToOne.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Manage isolation segment
+    description: This endpoint assigns an isolation segment to the space. The isolation segment must be entitled to the space's parent organization.
+    operationId: manageIsolationSegmentForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RelationshipToOne.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToOne.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/routes:
+  delete:
+    summary: Delete unmapped routes for a space
+    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
+    operationId: deleteUnmappedRoutesForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: unmapped
+        in: query
+        required: true
+        schema:
+          type: boolean
+          enum: [true]
+        description: Filter to only delete unmapped routes
+    responses:
+      '204':
+        description: No Content
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/running_security_groups:
+  get:
+    summary: List running security groups for a space
+    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
+    operationId: listRunningSecurityGroupsForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SecurityGroupList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/staging_security_groups:
+  get:
+    summary: List staging security groups for a space
+    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
+    operationId: listStagingSecurityGroupsForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SecurityGroupList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/spaces/{guid}/users:
+  get:
+    summary: List users for a space
+    description: Retrieve all users with a role in the specified space.
+    operationId: listUsersForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/UserList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

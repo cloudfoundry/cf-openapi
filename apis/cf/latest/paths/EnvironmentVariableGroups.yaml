@@ -1,0 +1,72 @@
+/v3/environment_variable_groups/{name}:
+  get:
+    summary: Get an environment variable group
+    description: Retrieve the environment variable group.
+    operationId: getEnvironmentVariableGroup
+    tags:
+      - Environment Variable Groups
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+            - running
+            - staging
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/EnvironmentVariableGroup.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+  patch:
+    summary: Update environment variable group
+    description: Update the environment variable group.
+    operationId: updateEnvironmentVariableGroup
+    tags:
+      - Environment Variable Groups
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+            - running
+            - staging
+    requestBody:
+      description: The environment variables to update
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              var:
+                type: object
+                additionalProperties:
+                  type: string
+                description: Environment variables to inject; keys and values must be strings
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/EnvironmentVariableGroup.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '500':
+        $ref: ../components/responses/500.yaml

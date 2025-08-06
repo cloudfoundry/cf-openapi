@@ -1,0 +1,27 @@
+description: Role to create
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Role type
+          enum:
+            - organization_user
+            - organization_auditor
+            - organization_manager
+            - organization_billing_manager
+            - space_auditor
+            - space_developer
+            - space_manager
+            - space_supporter
+        relationships:
+          type: object
+          properties:
+            user:
+              $ref: '../schemas/RelationshipToOne.yaml'
+            organization:
+              $ref: '../schemas/RelationshipToOne.yaml'
+            space:
+              $ref: '../schemas/RelationshipToOne.yaml'

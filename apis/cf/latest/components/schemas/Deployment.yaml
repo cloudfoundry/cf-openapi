@@ -1,0 +1,69 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      status:
+        type: object
+        properties:
+          value:
+            type: string
+            description: The current status of the deployment; valid values are ACTIVE (in progress) and FINALIZED (finished, either successfully or not)
+          reason:
+            type: string
+            description: The reason for the status of the deployment
+          details:
+            type: object
+            properties:
+              last_successful_healthcheck:
+                type: string
+                format: date-time
+                description: Timestamp of the last successful health check
+              last_status_change:
+                type: string
+                format: date-time
+                description: Timestamp of last change to status.value or status.reason
+      strategy:
+        type: string
+        description: Strategy used for the deployment; supported strategies are rolling and canary (experimental)
+      options:
+        type: object
+        properties:
+          max_in_flight:
+            type: integer
+            description: The maximum number of new instances to deploy simultaneously
+      droplet:
+        $ref: './RelationshipToOne.yaml'
+      previous_droplet:
+        $ref: './RelationshipToOne.yaml'
+      new_processes:
+        type: array
+        items:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+              description: The GUID of the new process created as part of the deployment
+            type:
+              type: string
+              description: The type of the new process created as part of the deployment
+      revision:
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+            description: The revision the deployment is transitioning the app to
+          version:
+            type: integer
+            description: The version of the revision
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        $ref: './Links.yaml'
+description: >
+  Deployments are objects that manage updates to applications with zero downtime. They can either: - Manage updating an app’s droplet directly after an application package is staged - Roll an app back to a specific revision along with its associated droplet
+
+  Deployment strategies supported: - Rolling deployments allow for applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured to specify how many instances are rolled out simultaneously. - Canary deployments deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the continue action. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.

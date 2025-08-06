@@ -1,0 +1,7 @@
+name: label_selector
+in: query
+description: Selectors allow users to filter and group API resources by the labels applied to them.
+required: false
+schema:
+  type: string
+example: "environment=production"

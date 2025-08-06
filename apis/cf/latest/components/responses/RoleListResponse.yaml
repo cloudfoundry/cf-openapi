@@ -1,0 +1,12 @@
+description: Roles retrieved
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        pagination:
+          $ref: '../schemas/Pagination.yaml'
+        resources:
+          type: array
+          items:
+            $ref: '../schemas/Role.yaml'

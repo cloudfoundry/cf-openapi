@@ -1,0 +1,172 @@
+/v3/deployments:
+  get:
+    summary: List deployments
+    description: Retrieve a list of all deployments the user has access to.
+    operationId: listDeployments
+    tags:
+      - Deployments
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of deployment states to filter by
+      - name: status_reasons
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of status reasons to filter by; valid values include DEPLOYING, PAUSED, CANCELING, DEPLOYED, CANCELED, SUPERSEDED
+      - name: status_values
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of status values to filter by; valid values include ACTIVE and FINALIZED
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/DeploymentList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+  post:
+    summary: Create a deployment
+    description: Create a new deployment.
+    operationId: createDeployment
+    tags:
+      - Deployments
+    requestBody:
+      description: Deployment object that needs to be created
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              relationships:
+                $ref: '../components/schemas/Relationships.yaml'
+              strategy:
+                type: string
+              droplet:
+                $ref: '../components/schemas/Relationship.yaml'
+              revision:
+                $ref: '../components/schemas/Relationship.yaml'
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+    responses:
+      '201':
+        description: Successfully created deployment
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Deployment.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/deployments/{guid}:
+  get:
+    summary: Retrieve a deployment
+    description: Retrieve details of a specific deployment by its GUID.
+    operationId: getDeployment
+    tags:
+      - Deployments
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: Successfully retrieved deployment
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Deployment.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a deployment
+    description: Update attributes of a specific deployment by its GUID.
+    operationId: updateDeployment
+    tags:
+      - Deployments
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: Deployment object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+            description: Request schema for updating a deployment
+    responses:
+      '200':
+        description: Successfully updated deployment
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Deployment.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/deployments/{guid}/actions/cancel:
+  post:
+    summary: Cancel a deployment
+    description: Cancel a deployment in progress.
+    operationId: cancelDeployment
+    tags:
+      - Deployments
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: Successfully canceled deployment
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Deployment.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/deployments/{guid}/actions/continue:
+  post:
+    summary: Continue a deployment
+    description: Continue a paused deployment.
+    operationId: continueDeployment
+    tags:
+      - Deployments
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: Successfully continued deployment
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Deployment.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

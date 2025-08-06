@@ -42,4 +42,4 @@ test/sdk-integration/go/bin/
 *.iml
 dist
 node_modules
-bin
+out

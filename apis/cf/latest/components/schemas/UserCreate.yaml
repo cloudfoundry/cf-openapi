@@ -1,0 +1,28 @@
+type: object
+properties:
+  guid:
+    type: string
+    description: Unique identifier for the user
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  username:
+    type: string
+    description: The username of the user
+  presentation_name:
+    type: string
+    description: The presentation name of the user
+  origin:
+    type: string
+    description: The origin of the user
+  metadata:
+    $ref: './Metadata.yaml'
+  links:
+    $ref: './Links.yaml'
+required:
+  - guid

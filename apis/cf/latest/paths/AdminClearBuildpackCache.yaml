@@ -1,0 +1,17 @@
+post:
+  summary: Clear the buildpack cache
+  description: Clears the buildpack cache.
+  operationId: clearBuildpackCache
+  tags:
+    - Admin
+  responses:
+    '202':
+      description: Accepted
+      headers:
+        Location:
+          description: URL of the job that is clearing the buildpack cache
+          schema:
+            type: string
+            format: uri
+    '404':
+      $ref: '../components/responses/NotFound.yaml'

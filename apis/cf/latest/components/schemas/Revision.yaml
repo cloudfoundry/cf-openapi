@@ -1,0 +1,32 @@
+type: object
+allOf:
+  - $ref: '#/components/schemas/BaseSchema'
+  - properties:
+      version:
+        type: integer
+        description: Version number of the revision
+      description:
+        type: string
+        description: Description of the revision, created by the user
+      droplet:
+        $ref: '#/components/schemas/RelationshipToOne'
+      relationships:
+        allOf:
+          - $ref: '#/components/schemas/Relationships'
+          - properties:
+              app:
+                $ref: '#/components/schemas/RelationshipToOne'
+      enabled:
+        type: boolean
+        description: Whether the revision is enabled or not.
+      metadata:
+        $ref: '#/components/schemas/Metadata'
+      links:
+        allOf:
+          - $ref: '#/components/schemas/Links'
+          - properties:
+              environment_variables:
+                allOf:
+                  - $ref: '#/components/schemas/Link'
+                  - description: Link to the revision's environment variables
+description: 'An App Revision is an immutable snapshot of an app at a particular point in time. Revisions are identified by a sequential version number. The "current" revision for an app is the revision that is currently deployed for all instances of the app.'

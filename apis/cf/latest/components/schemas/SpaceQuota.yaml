@@ -1,0 +1,86 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the space quota
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the object was last updated
+  name:
+    type: string
+    description: Name of the space quota
+  apps:
+    type: object
+    properties:
+      total_memory_in_mb:
+        type: integer
+        description: Total memory allowed for all apps in MB
+      per_process_memory_in_mb:
+        type: integer
+        description: Maximum memory per process in MB
+      log_rate_limit_in_bytes_per_second:
+        type: integer
+        description: Log rate limit in bytes per second
+      total_instances:
+        type: integer
+        description: Total number of app instances allowed
+      per_app_tasks:
+        type: integer
+        description: Maximum number of tasks per app
+    description: App limits for the space quota
+  services:
+    type: object
+    properties:
+      paid_services_allowed:
+        type: boolean
+        description: Whether paid services are allowed
+      total_service_instances:
+        type: integer
+        description: Total number of service instances allowed
+      total_service_keys:
+        type: integer
+        description: Total number of service keys allowed
+    description: Service limits for the space quota
+  routes:
+    type: object
+    properties:
+      total_routes:
+        type: integer
+        description: Total number of routes allowed
+      total_reserved_ports:
+        type: integer
+        description: Total number of reserved ports allowed
+    description: Route limits for the space quota
+  relationships:
+    type: object
+    properties:
+      organization:
+        $ref: './relationshipToOne.yaml'
+      spaces:
+        $ref: './relationshipToMany.yaml'
+    description: Relationships for the space quota
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './link.yaml'
+      organization:
+        $ref: './link.yaml'
+  metadata:
+    $ref: './metadata.yaml'
+required:
+  - guid
+  - created_at
+  - updated_at
+  - name
+  - apps
+  - services
+  - routes
+  - relationships
+  - links

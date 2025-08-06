@@ -1,0 +1,32 @@
+type: object
+properties:
+  guid:
+    type: string
+  name:
+    type: string
+  description:
+    type: string
+  available:
+    type: boolean
+  tags:
+    type: array
+    items:
+      type: string
+  requires:
+    type: array
+    items:
+      type: string
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
+  service_broker_guid:
+    type: string
+  service_broker_name:
+    type: string
+  metadata:
+    $ref: './Metadata.yaml'
+  links:
+    $ref: './Links.yaml'

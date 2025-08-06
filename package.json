@@ -3,15 +3,23 @@
   "version": "1.0.0",
   "description": "Cloud Foundry CAPI OpenAPI specification generation and validation",
   "scripts": {
-    "lint": "spectral lint capi/3.195.0/enhanced/openapi.yaml --ruleset .spectral.yml",
-    "lint:generated": "spectral lint capi/3.195.0/generated/openapi.yaml --ruleset .spectral.yml",
-    "validate": "spectral lint"
-  },
-  "devDependencies": {
-    "@stoplight/spectral-cli": "^6.11.1",
-    "@stoplight/spectral-core": "^1.18.3",
-    "@stoplight/spectral-ruleset-bundler": "^1.5.2"
+    "lint": "redocly lint",
+    "build": "node bin/build.js",
+    "preview": "node bin/build.js && http-server dist",
+    "create-version": "node bin/create-version.js",
+    "test:compliance": "node bin/test-compliance.js",
+    "test:mockserver": "node bin/test-mockserver.js"
   },
   "author": "Cloud Foundry Community",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@redocly/cli": "^2.0.2",
+    "dredd": "^12.1.0",
+    "fs-extra": "^11.3.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@pb33f/wiretap": "^0.4.5",
+    "http-server": "^14.1.1"
+  }
 }

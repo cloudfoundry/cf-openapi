@@ -1,0 +1,212 @@
+/v3/buildpacks:
+  get:
+    summary: List buildpacks
+    description: Retrieve a list of buildpacks available in the system.
+    operationId: listBuildpacks
+    tags:
+      - Buildpacks
+    parameters:
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/labelSelector.yaml'
+      - name: name
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of buildpack names to filter by
+      - name: stacks
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: >
+          Comma-delimited list of stacks to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/BuildpackList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+  post:
+    summary: Create a buildpack
+    description: Create a new buildpack
+    operationId: createBuildpack
+    tags:
+      - Buildpacks
+    requestBody:
+      $ref: '../components/requestBodies/buildpackCreateRequestBody.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/buildpackCreateResponse.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/buildpacks/{guid}:
+  get:
+    summary: Retrieve a buildpack
+    description: Retrieve details of a specific buildpack by its GUID.
+    operationId: getBuildpack
+    tags:
+      - Buildpacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        $ref: '../components/responses/buildpackGetResponse.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+  patch:
+    summary: Update a buildpack
+    description: Update attributes of a specific buildpack by its GUID.
+    operationId: updateBuildpack
+    tags:
+      - Buildpacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: Buildpack object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the buildpack
+              stack:
+                type: string
+                description: The stack the buildpack is compatible with
+              position:
+                type: integer
+                description: The position of the buildpack in the order of execution
+              enabled:
+                type: boolean
+                description: Whether the buildpack is enabled
+              locked:
+                type: boolean
+                description: Whether the buildpack is locked
+              filename:
+                type: string
+                description: The filename of the buildpack
+            required:
+              - name
+            description: Request schema for updating a buildpack
+          examples:
+            buildpack:
+              summary: A sample buildpack
+              value:
+                name: ruby_buildpack
+                stack: cflinuxfs3
+                position: 1
+                enabled: true
+                locked: false
+                filename: ruby_buildpack-cflinuxfs3-v1.0.0.zip
+    responses:
+      '200':
+        description: Successfully updated buildpack
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Buildpack.yaml'
+      '400':
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        description: Unprocessable Entity
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
+  delete:
+    summary: Delete a buildpack
+    description: Delete a specific buildpack by its GUID.
+    operationId: deleteBuildpack
+    tags:
+      - Buildpacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: Successfully deleted buildpack
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/buildpacks/{guid}/upload:
+  post:
+    summary: Upload a buildpack
+    description: Upload a buildpack file for a specific buildpack by its GUID.
+    operationId: uploadBuildpack
+    tags:
+      - Buildpacks
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: The buildpack file to be uploaded
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              bits:
+                type: string
+                format: binary
+                description: The buildpack file to be uploaded
+            required:
+              - bits
+            description: Request schema for uploading a buildpack
+    responses:
+      '200':
+        description: Successfully uploaded buildpack
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Buildpack.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        description: Unprocessable Entity
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'

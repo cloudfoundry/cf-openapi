@@ -45,21 +45,21 @@ properties:
     type: object
     properties:
       route:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
       service_instance:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
     description: Relationships for the service route binding
   links:
     type: object
     properties:
       self:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       route:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       service_instance:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 required:
   - guid
   - created_at

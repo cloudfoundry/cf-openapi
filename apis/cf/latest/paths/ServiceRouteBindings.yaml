@@ -30,7 +30,7 @@
           items:
             type: string
         description: Comma-delimited list of service instance names to filter by
-      - $ref: ../components/parameters/labelSelector.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
         schema:
@@ -39,7 +39,7 @@
             type: string
         description: Comma-delimited list of service route binding guids to filter by
       - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/updatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
       - name: include
         in: query
         schema:

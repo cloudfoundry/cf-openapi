@@ -38,7 +38,7 @@
             type: string
         description: Comma-delimited list of space guids to filter by
       - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/updatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK

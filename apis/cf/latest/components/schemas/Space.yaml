@@ -19,23 +19,23 @@ properties:
     type: object
     properties:
       organization:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
       quota:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
     description: Relationships for the space
   links:
     type: object
     properties:
       self:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       organization:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       features:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       apply_manifest:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 required:
   - guid
   - created_at

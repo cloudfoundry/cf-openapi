@@ -20,5 +20,5 @@ properties:
     format: uri
     description: URL for route service
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 description: Schema for updating a user-provided service instance

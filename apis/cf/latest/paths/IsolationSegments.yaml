@@ -10,8 +10,8 @@
       - $ref: ../components/parameters/PerPage.yaml
       - $ref: ../components/parameters/OrderBy.yaml
       - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/updatedAts.yaml
-      - $ref: ../components/parameters/labelSelector.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
         schema:
@@ -55,7 +55,7 @@
     tags:
       - Isolation Segments
     requestBody:
-      $ref: ../components/requestBodies/isolationSegmentCreate.yaml
+      $ref: ../components/requestBodies/IsolationSegmentCreate.yaml
     responses:
       '201':
         description: Created

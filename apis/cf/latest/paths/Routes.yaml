@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: protocols
         in: query
         schema:
@@ -84,7 +84,7 @@
         description: Comma-delimited list of resource names to include in the response
     responses:
       '200':
-        $ref: '../components/responses/routeListResponse.yaml'
+        $ref: '../components/responses/RouteListResponse.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -298,10 +298,10 @@
     tags:
       - Routes
     requestBody:
-      $ref: '../components/requestBodies/routeCreateRequestBody.yaml'
+      $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
     responses:
       '201':
-        $ref: '../components/responses/routeCreateResponse.yaml'
+        $ref: '../components/responses/RouteCreateResponse.yaml'
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -341,7 +341,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      $ref: '../components/requestBodies/routeDestinations.yaml'
+      $ref: '../components/requestBodies/RouteDestinations.yaml'
     responses:
       '200':
         description: List of destinations for the route
@@ -366,7 +366,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      $ref: '../components/requestBodies/routeDestinations.yaml'
+      $ref: '../components/requestBodies/RouteDestinations.yaml'
     responses:
       '200':
         description: List of destinations for the route

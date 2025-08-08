@@ -15,8 +15,8 @@ properties:
     type: object
     properties:
       service_plan:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
     description: Relationships for the service instance
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 description: Schema for updating a managed service instance

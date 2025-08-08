@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: guids
         in: query
         schema:
@@ -72,10 +72,10 @@
     tags:
       - Droplets
     requestBody:
-      $ref: '../components/requestBodies/dropletCreateRequestBody.yaml'
+      $ref: '../components/requestBodies/DropletCreateRequestBody.yaml'
     responses:
       '201':
-        $ref: '../components/responses/dropletCreateResponse.yaml'
+        $ref: '../components/responses/DropletCreateResponse.yaml'
       '400':
         description: Bad request
         content:
@@ -93,7 +93,7 @@
       - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
-        $ref: '../components/responses/dropletGetResponse.yaml'
+        $ref: '../components/responses/DropletGetResponse.yaml'
       '400':
         description: Bad request
         content:
@@ -126,7 +126,7 @@
             description: Request schema for updating a droplet
     responses:
       '200':
-        $ref: '../components/responses/dropletGetResponse.yaml'
+        $ref: '../components/responses/DropletGetResponse.yaml'
       '400':
         description: Bad request
         content:
@@ -205,7 +205,7 @@
             description: Request schema for uploading a droplet
     responses:
       '200':
-        $ref: '../components/responses/dropletGetResponse.yaml'
+        $ref: '../components/responses/DropletGetResponse.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':

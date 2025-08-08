@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: guids
         in: query
         schema:
@@ -62,10 +62,10 @@
     tags:
       - Users
     requestBody:
-      $ref: '../components/requestBodies/userCreate.yaml'
+      $ref: '../components/requestBodies/UserCreate.yaml'
     responses:
       '201':
-        $ref: '../components/responses/userCreateResponse.yaml'
+        $ref: '../components/responses/UserCreateResponse.yaml'
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -101,10 +101,10 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      $ref: '../components/requestBodies/userUpdate.yaml'
+      $ref: '../components/requestBodies/UserUpdate.yaml'
     responses:
       '200':
-        $ref: '../components/responses/userUpdateResponse.yaml'
+        $ref: '../components/responses/UserUpdateResponse.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   delete:

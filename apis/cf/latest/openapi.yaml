@@ -231,10 +231,10 @@ components:
       $ref: './components/parameters/OrderBy.yaml'
     CreatedAts:
       $ref: './components/parameters/CreatedAts.yaml'
-    updatedAts:
-      $ref: './components/parameters/updatedAts.yaml'
-    labelSelector:
-      $ref: './components/parameters/labelSelector.yaml'
+    UpdatedAts:
+      $ref: './components/parameters/UpdatedAts.yaml'
+    LabelSelector:
+      $ref: './components/parameters/LabelSelector.yaml'
   responses:
     Unauthorized:
       $ref: './components/responses/Unauthorized.yaml'
@@ -248,22 +248,22 @@ components:
       $ref: './components/responses/500.yaml'
     UnprocessableEntity:
       $ref: './components/responses/UnprocessableEntity.yaml'
-    buildpackCreateResponse:
-      $ref: './components/responses/buildpackCreateResponse.yaml'
-    buildpackGetResponse:
-      $ref: './components/responses/buildpackGetResponse.yaml'
-    userCreateResponse:
-      $ref: './components/responses/userCreateResponse.yaml'
-    userUpdateResponse:
-      $ref: './components/responses/userUpdateResponse.yaml'
-    dropletCreateResponse:
-      $ref: './components/responses/dropletCreateResponse.yaml'
-    dropletGetResponse:
-      $ref: './components/responses/dropletGetResponse.yaml'
-    routeCreateResponse:
-      $ref: './components/responses/routeCreateResponse.yaml'
-    routeListResponse:
-      $ref: './components/responses/routeListResponse.yaml'
+    BuildpackCreateResponse:
+      $ref: './components/responses/BuildpackCreateResponse.yaml'
+    BuildpackGetResponse:
+      $ref: './components/responses/BuildpackGetResponse.yaml'
+    UserCreateResponse:
+      $ref: './components/responses/UserCreateResponse.yaml'
+    UserUpdateResponse:
+      $ref: './components/responses/UserUpdateResponse.yaml'
+    DropletCreateResponse:
+      $ref: './components/responses/DropletCreateResponse.yaml'
+    DropletGetResponse:
+      $ref: './components/responses/DropletGetResponse.yaml'
+    RouteCreateResponse:
+      $ref: './components/responses/RouteCreateResponse.yaml'
+    RouteListResponse:
+      $ref: './components/responses/RouteListResponse.yaml'
     RoleCreateResponse:
       $ref: './components/responses/RoleCreateResponse.yaml'
     RoleGetResponse:
@@ -271,22 +271,22 @@ components:
     RoleListResponse:
       $ref: './components/responses/RoleListResponse.yaml'
   requestBodies:
-    buildpackCreateRequestBody:
-      $ref: './components/requestBodies/buildpackCreateRequestBody.yaml'
-    userCreate:
-      $ref: './components/requestBodies/userCreate.yaml'
-    userUpdate:
-      $ref: './components/requestBodies/userUpdate.yaml'
-    dropletCreateRequestBody:
-      $ref: './components/requestBodies/dropletCreateRequestBody.yaml'
-    routeCreateRequestBody:
-      $ref: './components/requestBodies/routeCreateRequestBody.yaml'
-    routeDestinations:
-      $ref: './components/requestBodies/routeDestinations.yaml'
+    BuildpackCreateRequestBody:
+      $ref: './components/requestBodies/BuildpackCreateRequestBody.yaml'
+    UserCreate:
+      $ref: './components/requestBodies/UserCreate.yaml'
+    UserUpdate:
+      $ref: './components/requestBodies/UserUpdate.yaml'
+    DropletCreateRequestBody:
+      $ref: './components/requestBodies/DropletCreateRequestBody.yaml'
+    RouteCreateRequestBody:
+      $ref: './components/requestBodies/RouteCreateRequestBody.yaml'
+    RouteDestinations:
+      $ref: './components/requestBodies/RouteDestinations.yaml'
     RoleCreate:
       $ref: './components/requestBodies/RoleCreate.yaml'
-    isolationSegmentCreate:
-      $ref: './components/requestBodies/isolationSegmentCreate.yaml'
+    IsolationSegmentCreate:
+      $ref: './components/requestBodies/IsolationSegmentCreate.yaml'
 paths:
   /:
     $ref: './paths/Root.yaml#/'
@@ -323,11 +323,11 @@ paths:
   /v3/builds/{guid}:
     $ref: './paths/Builds.yaml#/~1v3~1builds~1{guid}'
   /v3/buildpacks:
-    $ref: './paths/buildpacks.yaml#/~1v3~1buildpacks'
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks'
   /v3/buildpacks/{guid}:
-    $ref: './paths/buildpacks.yaml#/~1v3~1buildpacks~1{guid}'
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks~1{guid}'
   /v3/buildpacks/{guid}/upload:
-    $ref: './paths/buildpacks.yaml#/~1v3~1buildpacks~1{guid}~1upload'
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks~1{guid}~1upload'
   /v3/deployments:
     $ref: './paths/Deployments.yaml#/~1v3~1deployments'
   /v3/deployments/{guid}:

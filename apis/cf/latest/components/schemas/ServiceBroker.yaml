@@ -33,19 +33,19 @@ properties:
     type: object
     properties:
       space:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
     description: Relationships for the service broker
   links:
     type: object
     properties:
       self:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       space:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       service_offerings:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 required:
   - guid
   - created_at

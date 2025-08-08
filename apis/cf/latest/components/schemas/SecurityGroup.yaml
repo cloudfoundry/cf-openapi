@@ -54,7 +54,7 @@ properties:
       data:
         type: array
         items:
-          $ref: './relationship.yaml'
+          $ref: './Relationship.yaml'
     description: Spaces where this security group is applied to running apps
   staging_spaces:
     type: object
@@ -62,19 +62,19 @@ properties:
       data:
         type: array
         items:
-          $ref: './relationship.yaml'
+          $ref: './Relationship.yaml'
     description: Spaces where this security group is applied to staging apps
   links:
     type: object
     properties:
       self:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       running_spaces:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       staging_spaces:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 required:
   - guid
   - created_at

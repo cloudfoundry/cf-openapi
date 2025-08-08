@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: states
         in: query
         schema:
@@ -124,9 +124,9 @@
           items:
             type: string
         description: Comma-delimited list of build states to filter by
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK

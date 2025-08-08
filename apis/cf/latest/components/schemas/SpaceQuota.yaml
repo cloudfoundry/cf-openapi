@@ -61,19 +61,19 @@ properties:
     type: object
     properties:
       organization:
-        $ref: './relationshipToOne.yaml'
+        $ref: './RelationshipToOne.yaml'
       spaces:
-        $ref: './relationshipToMany.yaml'
+        $ref: './RelationshipToMany.yaml'
     description: Relationships for the space quota
   links:
     type: object
     properties:
       self:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
       organization:
-        $ref: './link.yaml'
+        $ref: './Link.yaml'
   metadata:
-    $ref: './metadata.yaml'
+    $ref: './Metadata.yaml'
 required:
   - guid
   - created_at

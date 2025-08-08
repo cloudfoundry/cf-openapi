@@ -1,8 +1,8 @@
-# Cloud Foundry CAPI OpenAPI Specification
+# Cloud Foundry CAPI OpenAPI Specification - Experimental
+
+> **Note:** This repository is an experimental project to explore the OpenAPI specification for the Cloud Foundry API (CAPI). It is not an official Cloud Foundry project and may not be suitable for production use.
 
 This repository contains the OpenAPI 3.0 specification for the Cloud Foundry API (CAPI). It provides a complete, machine-readable definition of the CAPI endpoints, enabling automated client generation, documentation, and testing.
-
-The rendered documentation can be viewed at: [https://flothinkspi.github.io/cf-api-openapi-poc/](https://flothinkspi.github.io/cf-api-openapi-poc/)
 
 ## Project Structure
 
@@ -40,31 +40,31 @@ The repository is organized as follows:
 
 **Linting**
 
-`yarn run lint`
+`yarn lint`
 
 Lints the OpenAPI specification files using [`redocly lint`](https://github.com/Redocly/redocly-cli) to ensure they adhere to the defined rules and best practices. This helps maintain consistency and quality in the specification.
 
 **Building**
 
-`yarn run build`
+`yarn build`
 
 Executes the `bin/build.js` script to bundle the modular OpenAPI files from `apis/cf/**/` into individual bundled `openapi.yaml` files in the `dist/` directory. It uses [`redocly`](https://github.com/Redocly/redocly-cli) to merge the different OpenAPI files into a single file for each version.
 
 **Previewing**
 
-`yarn run preview`
+`yarn preview`
 
 First, this command runs the build script to ensure the latest specification is bundled. Then, it starts a local HTTP server using `http-server` to serve the `dist/` directory. This allows you to preview the generated documentation locally in your browser.
 
 **Creating a new version**
 
-`yarn run create-version 3.131.0`
+`yarn create-version 3.131.0`
 
 Runs the `bin/create-version.js` script, which is used to create a new versioned directory under `apis/cf/`. This is useful when a new version of the CAPI is released and you need to update the specification. It copies the current `apis/cf/latest/openapi.yaml` to a new versioned directory, and maintains the `redocly.yaml` file for the new version. After running this command and rebuilding, the new version will be available in scalar.
 
 **Compliance Testing**
 
-`yarn run test:compliance https://api.example.com dist/latest/openapi.yaml`
+`yarn test:compliance https://api.example.com dist/latest/openapi.yaml`
 
 Executes the `bin/test-compliance.js` script to run compliance tests against the OpenAPI specification. This ensures that the specification is valid and conforms to the OpenAPI standard. It uses [`wiretap`](https://github.com/pb33f/wiretap) that acts like a proxy server to intercept requests and validate them against the OpenAPI spec.
 
@@ -85,7 +85,7 @@ Hereby `Wiretap` acts as a proxy server that intercepts HTTP requests and respon
 
 **Mock Server**
 
-`yarn run test:mockserver`
+`yarn test:mockserver`
 
 Runs the `bin/test-mockserver.js` script to start a mock server based on the OpenAPI specification. This is useful for testing API clients and integrations without needing a live CAPI environment.
 

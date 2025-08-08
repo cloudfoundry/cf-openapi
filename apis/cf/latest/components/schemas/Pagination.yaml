@@ -8,19 +8,19 @@ properties:
     description: The total number of pages available
   first:
     allOf:
-      - $ref: './link.yaml'
+      - $ref: './Link.yaml'
       - description: The first page of results
   last:
     allOf:
-      - $ref: './link.yaml'
+      - $ref: './Link.yaml'
       - description: The last page of results
   next:
     allOf:
-      - $ref: './link.yaml'
+      - $ref: './Link.yaml'
       - description: The next page of results
   previous:
     allOf:
-      - $ref: './link.yaml'
+      - $ref: './Link.yaml'
       - description: The previous page of results
 description: |
   Pagination is a technique used to divide a large set of results into smaller, more manageable sets. This allows clients to retrieve results in smaller chunks, reducing the amount of data transferred and improving performance.

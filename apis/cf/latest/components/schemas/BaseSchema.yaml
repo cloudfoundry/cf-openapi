@@ -15,7 +15,7 @@ properties:
   links:
     type: object
     additionalProperties:
-      $ref: './link.yaml'
+      $ref: './Link.yaml'
 description: |
   A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
   A resource consists of several required resource fields and other attributes specific to the resource.

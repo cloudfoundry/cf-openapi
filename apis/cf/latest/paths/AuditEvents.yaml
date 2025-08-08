@@ -10,7 +10,7 @@
       - $ref: ../components/parameters/PerPage.yaml
       - $ref: ../components/parameters/OrderBy.yaml
       - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/updatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
       - name: types
         in: query
         schema:

@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: guids
         in: query
         schema:

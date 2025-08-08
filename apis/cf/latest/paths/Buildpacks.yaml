@@ -10,8 +10,8 @@
       - $ref: '../components/parameters/PerPage.yaml'
       - $ref: '../components/parameters/OrderBy.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/updatedAts.yaml'
-      - $ref: '../components/parameters/labelSelector.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: name
         in: query
         schema:
@@ -48,10 +48,10 @@
     tags:
       - Buildpacks
     requestBody:
-      $ref: '../components/requestBodies/buildpackCreateRequestBody.yaml'
+      $ref: '../components/requestBodies/BuildpackCreateRequestBody.yaml'
     responses:
       '201':
-        $ref: '../components/responses/buildpackCreateResponse.yaml'
+        $ref: '../components/responses/BuildpackCreateResponse.yaml'
       '400':
         description: Bad request
         content:
@@ -73,7 +73,7 @@
       - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
-        $ref: '../components/responses/buildpackGetResponse.yaml'
+        $ref: '../components/responses/BuildpackGetResponse.yaml'
       '400':
         description: Bad request
         content:

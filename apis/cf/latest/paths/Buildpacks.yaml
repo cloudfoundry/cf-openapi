@@ -53,11 +53,7 @@
       '201':
         $ref: '../components/responses/BuildpackCreateResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -75,11 +71,7 @@
       '200':
         $ref: '../components/responses/BuildpackGetResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -141,11 +133,7 @@
             schema:
               $ref: '../components/schemas/Buildpack.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -205,8 +193,4 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'

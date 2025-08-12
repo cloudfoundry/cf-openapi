@@ -193,11 +193,7 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/organizations/{organization_guid}/domains:
   get:
     summary: List domains for an organization
@@ -284,8 +280,4 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'

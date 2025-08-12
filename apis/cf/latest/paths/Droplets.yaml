@@ -77,11 +77,7 @@
       '201':
         $ref: '../components/responses/DropletCreateResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
 /v3/droplets/{guid}:
   get:
     summary: Retrieve a droplet
@@ -95,11 +91,7 @@
       '200':
         $ref: '../components/responses/DropletGetResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
   patch:
     summary: Update a droplet
     description: Update attributes of a specific droplet by its GUID.
@@ -128,11 +120,7 @@
       '200':
         $ref: '../components/responses/DropletGetResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -140,11 +128,7 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Delete a droplet
     description: Delete a specific droplet by its GUID.
@@ -209,8 +193,4 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'

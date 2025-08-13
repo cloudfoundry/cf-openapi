@@ -6,12 +6,12 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
-      - $ref: '#/components/parameters/CreatedAts'
-      - $ref: '#/components/parameters/UpdatedAts'
-      - $ref: '#/components/parameters/LabelSelector'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: guids
         in: query
         schema:
@@ -53,9 +53,9 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProcessList'
+              $ref: '../components/schemas/ProcessList.yaml'
       '401':
-        $ref: '#/components/responses/Unauthorized'
+        $ref: '../components/responses/Unauthorized.yaml'
 /v3/processes/{guid}:
   get:
     summary: Get a process
@@ -64,16 +64,16 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Process'
+              $ref: '../components/schemas/Process.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a process
     description: Update a process.
@@ -81,29 +81,20 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      content:
-        application/json:
-          schema:
-            properties:
-              command:
-                type: string
-              health_check:
-                $ref: '#/components/schemas/HealthCheck'
-              metadata:
-                $ref: '#/components/schemas/Metadata'
+      $ref: '../components/requestBodies/ProcessUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Process'
+              $ref: '../components/schemas/Process.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/processes/{guid}/stats:
   get:
     summary: Get stats for a process
@@ -112,16 +103,16 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProcessStats'
+              $ref: '../components/schemas/ProcessStats.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/processes/{guid}/actions/scale:
   post:
     summary: Scale a process
@@ -130,7 +121,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
@@ -150,11 +141,11 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Process'
+              $ref: '../components/schemas/Process.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/processes/{guid}/instances/{index}:
   delete:
     summary: Terminate a process instance
@@ -163,7 +154,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
       - name: index
         in: path
         required: true
@@ -173,7 +164,7 @@
       '204':
         description: No Content
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes:
   get:
     summary: List processes for an app
@@ -182,19 +173,19 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProcessList'
+              $ref: '../components/schemas/ProcessList.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}:
   get:
     summary: Get a process for an app
@@ -203,7 +194,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
       - name: type
         in: path
         required: true
@@ -215,9 +206,9 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Process'
+              $ref: '../components/schemas/Process.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}/stats:
   get:
     summary: Get stats for a process for an app
@@ -226,7 +217,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
       - name: type
         in: path
         required: true
@@ -238,9 +229,9 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProcessStats'
+              $ref: '../components/schemas/ProcessStats.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}/actions/scale:
   post:
     summary: Scale a process for an app
@@ -249,7 +240,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
       - name: type
         in: path
         required: true
@@ -274,11 +265,11 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Process'
+              $ref: '../components/schemas/Process.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/processes/{type}/instances/{index}:
   delete:
     summary: Terminate a process instance for an app
@@ -287,7 +278,7 @@
     tags:
       - Processes
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
       - name: type
         in: path
         required: true
@@ -302,4 +293,4 @@
       '204':
         description: No Content
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'

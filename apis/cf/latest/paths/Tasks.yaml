@@ -70,7 +70,7 @@
               $ref: '../components/schemas/TaskList.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
-/v3/apps/{app_guid}/tasks:
+/v3/apps/{guid}/tasks:
   post:
     summary: Create a task
     description: Create a new task.
@@ -78,12 +78,7 @@
     tags:
       - Tasks
     parameters:
-      - name: app_guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:

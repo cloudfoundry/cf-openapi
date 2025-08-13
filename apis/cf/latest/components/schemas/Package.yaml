@@ -1,6 +1,6 @@
 type: object
 allOf:
-  - $ref: '#/components/schemas/BaseSchema'
+  - $ref: './BaseSchema.yaml'
   - properties:
       type:
         type: string
@@ -44,23 +44,23 @@ allOf:
           - COPYING
           - EXPIRED
       relationships:
-        $ref: '#/components/schemas/Relationships'
+        $ref: './Relationships.yaml'
       metadata:
-        $ref: '#/components/schemas/Metadata'
+        $ref: './Metadata.yaml'
       links:
         allOf:
-          - $ref: '#/components/schemas/Links'
+          - $ref: './Links.yaml'
           - properties:
               upload:
                 allOf:
-                  - $ref: '#/components/schemas/Link'
+                  - $ref: './Link.yaml'
                   - description: The URL to upload the package bits
               download:
                 allOf:
-                  - $ref: '#/components/schemas/Link'
+                  - $ref: './Link.yaml'
                   - description: The URL to download the package bits
               stage:
                 allOf:
-                  - $ref: '#/components/schemas/Link'
+                  - $ref: './Link.yaml'
                   - description: The URL to stage the package
 description: 'A package represents an application"s "source code" - either raw bits or a pointer to these bits. Packages are used to create builds, which result in a droplet that can be deployed.'

@@ -1,0 +1,9 @@
+type: object
+allOf:
+  - $ref: './Pagination.yaml'
+  - properties:
+      resources:
+        type: array
+        items:
+          $ref: './Organization.yaml'
+description: A paginated list of organizations

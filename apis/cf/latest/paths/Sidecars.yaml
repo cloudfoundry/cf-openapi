@@ -40,7 +40,7 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
-/v3/apps/{app_guid}/sidecars:
+/v3/apps/{guid}/sidecars:
   get:
     summary: List sidecars for app
     description: Retrieves all sidecars associated with a app.
@@ -48,12 +48,7 @@
     tags:
       - Sidecars
     parameters:
-      - name: app_guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -70,12 +65,7 @@
     tags:
       - Sidecars
     parameters:
-      - name: app_guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
@@ -92,7 +82,7 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
-/v3/processes/{process_guid}/sidecars:
+/v3/processes/{guid}/sidecars:
   get:
     summary: List sidecars for process
     description: Retrieves all sidecars associated with a process.

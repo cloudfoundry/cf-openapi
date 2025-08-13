@@ -297,6 +297,8 @@
     operationId: createRoute
     tags:
       - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
     responses:

@@ -1,0 +1,46 @@
+description: Package object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the package; valid values are bits or docker
+          enum:
+            - bits
+            - docker
+        data:
+          type: object
+          description: Data for package type
+          properties:
+            image:
+              type: string
+              description: The registry address of the image (for docker packages)
+            username:
+              type: string
+              description: The username for the image's registry (for docker packages)
+            password:
+              type: string
+              description: The password for the image's registry (for docker packages)
+        relationships:
+          type: object
+          properties:
+            app:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+          required:
+            - app
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - type
+        - relationships
+      description: Request schema for creating a package

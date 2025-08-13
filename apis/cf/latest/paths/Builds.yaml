@@ -105,7 +105,7 @@
               $ref: '../components/schemas/Build.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
-/v3/apps/{app_guid}/builds:
+/v3/apps/{guid}/builds:
   get:
     summary: List builds for an app
     description: Retrieve all builds for the app.

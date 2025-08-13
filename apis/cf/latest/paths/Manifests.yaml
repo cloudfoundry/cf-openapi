@@ -6,7 +6,7 @@
     tags:
       - Manifests
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/x-yaml:
@@ -22,7 +22,7 @@
               type: string
               format: uri
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/manifest:
   get:
     summary: Generate a manifest for an app
@@ -31,7 +31,7 @@
     tags:
       - Manifests
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -40,7 +40,7 @@
             schema:
               type: string
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/manifest_diff:
   post:
     summary: Create a manifest diff for a space (experimental)
@@ -49,7 +49,7 @@
     tags:
       - Manifests
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/x-yaml:
@@ -77,4 +77,4 @@
                       value:
                         type: string
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'

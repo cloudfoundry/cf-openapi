@@ -6,12 +6,12 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
-      - $ref: '#/components/parameters/CreatedAts'
-      - $ref: '#/components/parameters/UpdatedAts'
-      - $ref: '#/components/parameters/LabelSelector'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: names
         in: query
         schema:
@@ -29,8 +29,12 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/OrganizationList.yaml'
       '401':
-        $ref: '#/components/responses/Unauthorized'
+        $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create an organization
     description: Create a new organization.
@@ -38,25 +42,18 @@
     tags:
       - Organizations
     requestBody:
-      content:
-        application/json:
-          schema:
-            properties:
-              name:
-                type: string
-              suspended:
-                type: boolean
-              metadata:
-                $ref: '#/components/schemas/metadata'
-            required:
-              - name
+      $ref: '../components/requestBodies/OrganizationCreateRequestBody.yaml'
     responses:
       '201':
         description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Organization.yaml'
       '401':
-        $ref: '#/components/responses/Unauthorized'
+        $ref: '../components/responses/Unauthorized.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/organizations/{guid}:
   get:
     summary: Get an organization
@@ -65,12 +62,16 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Organization.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update an organization
     description: Update an organization.
@@ -78,25 +79,20 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      content:
-        application/json:
-          schema:
-            properties:
-              name:
-                type: string
-              suspended:
-                type: boolean
-              metadata:
-                $ref: '#/components/schemas/metadata'
+      $ref: '../components/requestBodies/OrganizationUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Organization.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Delete an organization
     description: When an organization is deleted, user roles associated with the organization will also be deleted.
@@ -104,12 +100,12 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/domains/default:
   get:
     summary: Get default domain
@@ -118,26 +114,56 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Domain.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/usage_summary:
   get:
     summary: Get usage summary
-    description: This endpoint retrieves the specified organization object’s memory and app instance usage summary.
+    description: This endpoint retrieves the specified organization object's memory and app instance usage summary.
     operationId: getUsageSummaryForOrganization
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usage_summary:
+                  type: object
+                  properties:
+                    started_instances:
+                      type: integer
+                    memory_in_mb:
+                      type: integer
+                    routes:
+                      type: integer
+                    service_instances:
+                      type: integer
+                    reserved_ports:
+                      type: integer
+                    domains:
+                      type: integer
+                    per_app_tasks:
+                      type: integer
+                    service_keys:
+                      type: integer
+                links:
+                  $ref: '../components/schemas/Links.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/users:
   get:
     summary: List users for an organization
@@ -146,10 +172,10 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
       - name: guids
         in: query
         schema:
@@ -178,14 +204,18 @@
           items:
             type: string
         description: Comma-delimited list of partial usernames to filter by
-      - $ref: '#/components/parameters/LabelSelector'
-      - $ref: '#/components/parameters/CreatedAts'
-      - $ref: '#/components/parameters/UpdatedAts'
+      - $ref: '../components/parameters/LabelSelector.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/UserList.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/relationships/default_isolation_segment:
   get:
     summary: Get default isolation segment
@@ -194,16 +224,16 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelationshipToOne'
+              $ref: '../components/schemas/RelationshipToOne.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Assign default isolation segment
     description: Set the default isolation segment for a given organization.
@@ -211,18 +241,18 @@
     tags:
       - Organizations
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/RelationshipToOne'
+            $ref: '../components/schemas/RelationshipToOne.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelationshipToOne'
+              $ref: '../components/schemas/RelationshipToOne.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'

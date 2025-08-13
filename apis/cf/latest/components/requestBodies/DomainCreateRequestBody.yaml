@@ -1,0 +1,32 @@
+description: Domain object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the domain
+        internal:
+          type: boolean
+          description: Whether the domain is used for internal (container-to-container) traffic
+        router_group:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+          description: The router group the domain will be associated with
+        relationships:
+          type: object
+          properties:
+            organization:
+              $ref: '../schemas/RelationshipToOne.yaml'
+            shared_organizations:
+              $ref: '../schemas/RelationshipToMany.yaml'
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - name
+      description: Request schema for creating a domain

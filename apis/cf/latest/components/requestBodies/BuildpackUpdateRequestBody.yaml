@@ -1,0 +1,25 @@
+description: Buildpack object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the buildpack
+        position:
+          type: integer
+          description: The position of the buildpack in the order of execution
+        enabled:
+          type: boolean
+          description: Whether the buildpack is enabled
+        locked:
+          type: boolean
+          description: Whether the buildpack is locked
+        stack:
+          type: string
+          description: The stack the buildpack is compatible with
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      description: Request schema for updating a buildpack

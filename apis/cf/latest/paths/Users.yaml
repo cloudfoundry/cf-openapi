@@ -120,8 +120,14 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     responses:
-      '204':
-        description: No Content
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the user
+            schema:
+              type: string
+              format: uri
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

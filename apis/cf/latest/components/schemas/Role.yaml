@@ -42,6 +42,21 @@ properties:
           - $ref: './RelationshipToOne.yaml'
           - description: |
               A relationship to the user; this is the user that has the role
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this role
+      user:
+        $ref: './Link.yaml'
+        description: The URL to get the user for this role
+      organization:
+        $ref: './Link.yaml'
+        description: The URL to get the organization for this role
+      space:
+        $ref: './Link.yaml'
+        description: The URL to get the space for this role
 description: |
   Roles represent a set of permissions that can be granted to users. Roles are represented as a JSON object.
   A role consists of several required role fields and other attributes specific to the role.

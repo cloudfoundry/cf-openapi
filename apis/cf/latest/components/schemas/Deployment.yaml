@@ -62,7 +62,17 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this deployment
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this deployment
+          cancel:
+            $ref: './Link.yaml'
+            description: The URL to cancel this deployment
 description: >
   Deployments are objects that manage updates to applications with zero downtime. They can either: - Manage updating an app’s droplet directly after an application package is staged - Roll an app back to a specific revision along with its associated droplet
 

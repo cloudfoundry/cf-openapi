@@ -7,11 +7,12 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        allOf:
-          - $ref: './Links.yaml'
-          - properties:
-              organizations:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The organizations assigned to this isolation segment
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this isolation segment
+          organizations:
+            $ref: './Link.yaml'
+            description: The URL to get the organizations for this isolation segment
 description: An isolation segment provides a dedicated pool of compute resources for an organization or space.

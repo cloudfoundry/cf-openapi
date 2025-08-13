@@ -34,4 +34,14 @@ properties:
   metadata:
     $ref: './Metadata.yaml'
   links:
-    $ref: './Links.yaml'
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this service plan
+      service_offering:
+        $ref: './Link.yaml'
+        description: The URL to get the service offering for this plan
+      visibility:
+        $ref: './Link.yaml'
+        description: The URL to get the visibility for this plan

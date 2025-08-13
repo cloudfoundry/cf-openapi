@@ -19,17 +19,26 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        allOf:
-          - $ref: './Links.yaml'
-          - properties:
-              assign_current_droplet:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The URL to assign the droplet to an application
-              download:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The URL to download the droplet
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this droplet
+          package:
+            $ref: './Link.yaml'
+            description: The URL to get the package for this droplet
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this droplet
+          assign_current_droplet:
+            $ref: './Link.yaml'
+            description: The URL to assign the droplet to an application
+          download:
+            $ref: './Link.yaml'
+            description: The URL to download the droplet
+          upload:
+            $ref: './Link.yaml'
+            description: The URL to upload the droplet
       checksum:
         type: object
         properties:

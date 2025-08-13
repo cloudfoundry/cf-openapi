@@ -77,40 +77,6 @@
       - Spaces
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user guids to filter by
-      - name: usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of usernames to filter by
-      - name: partial_usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of partial usernames to filter by
-      - name: origins
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user origins to filter by
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
@@ -158,6 +124,10 @@
               $ref: '../components/schemas/Job.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
 /v3/spaces/{guid}/actions/apply_manifest:
   post:
     summary: Apply a manifest to a space

@@ -45,6 +45,10 @@ allOf:
             type: string
             description: The unique identifier for the organization where the event occurred
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this audit event
 description: >
   Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.

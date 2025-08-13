@@ -23,6 +23,10 @@ properties:
   metadata:
     $ref: './Metadata.yaml'
   links:
-    $ref: './Links.yaml'
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this user
 required:
   - guid

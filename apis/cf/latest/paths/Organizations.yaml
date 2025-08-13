@@ -161,7 +161,14 @@
                     service_keys:
                       type: integer
                 links:
-                  $ref: '../components/schemas/Links.yaml'
+                  type: object
+                  properties:
+                    self:
+                      $ref: '../components/schemas/Link.yaml'
+                      description: The URL to get this usage summary
+                      organization:
+                        $ref: '../components/schemas/Link.yaml'
+                        description: The URL to get the organization for this usage summary
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/users:

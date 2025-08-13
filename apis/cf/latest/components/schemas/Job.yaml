@@ -25,5 +25,9 @@ allOf:
           $ref: './Warning.yaml'
       links:
         allOf:
-          - $ref: './Links.yaml'
+          - type: object
+            properties:
+              self:
+                $ref: './Link.yaml'
+                description: The URL to get this job
 description: 'Jobs are created by the platform when performing certain asynchronous actions. Asynchronous jobs are commonly used for long-running tasks such as uploading large files, staging applications, or deleting resources.'

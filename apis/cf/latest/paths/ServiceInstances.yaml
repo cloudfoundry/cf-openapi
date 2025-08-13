@@ -90,13 +90,11 @@
       $ref: '../components/requestBodies/ServiceInstanceCreateRequestBody.yaml'
     responses:
       '201':
-        description: Service instance created
+        description: User Provided Service instance created
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: ../components/schemas/ManagedServiceInstance.yaml
-                - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+              $ref: ../components/schemas/UserProvidedServiceInstance.yaml
       '202':
         description: Service instance creation in progress
         headers:

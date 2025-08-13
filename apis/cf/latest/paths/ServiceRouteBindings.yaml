@@ -80,6 +80,12 @@
               $ref: ../components/schemas/ServiceRouteBinding.yaml
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the service route binding
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -151,6 +157,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the service route binding
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:

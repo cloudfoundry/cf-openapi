@@ -108,6 +108,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
+            schema:
+              type: string
+              format: uri
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

@@ -114,6 +114,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the organization quota
+            schema:
+              type: string
+              format: uri
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

@@ -134,6 +134,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the isolation segment
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:

@@ -87,12 +87,7 @@
     tags:
       - Service Instances
     requestBody:
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - $ref: ../components/schemas/ManagedServiceInstance.yaml
-              - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      $ref: '../components/requestBodies/ServiceInstanceCreateRequestBody.yaml'
     responses:
       '201':
         description: Service instance created
@@ -104,6 +99,12 @@
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
       '202':
         description: Service instance creation in progress
+        headers:
+          Location:
+            description: URL of the job that is creating the service instance
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -310,12 +311,7 @@
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - $ref: ../components/schemas/ManagedServiceInstanceUpdate.yaml
-              - $ref: ../components/schemas/UserProvidedServiceInstanceUpdate.yaml
+      $ref: '../components/requestBodies/ServiceInstanceUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK
@@ -327,6 +323,12 @@
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is updating the service instance
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -360,6 +362,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the service instance
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:

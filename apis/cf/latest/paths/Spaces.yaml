@@ -122,10 +122,16 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Job.yaml'
+              type: object
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '400':
@@ -147,6 +153,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is applying the manifest
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -248,6 +260,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:

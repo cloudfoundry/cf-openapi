@@ -51,6 +51,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the service broker
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -106,6 +112,12 @@
               $ref: ../components/schemas/ServiceBroker.yaml
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is updating the service broker
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
@@ -127,6 +139,12 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the service broker
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:

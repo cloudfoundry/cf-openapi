@@ -79,29 +79,7 @@
     tags:
       - Apps
     requestBody:
-      description: App object that needs to be created
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the app
-              relationships:
-                $ref: '../components/schemas/Relationships.yaml'
-              lifecycle:
-                $ref: '../components/schemas/Lifecycle.yaml'
-              metadata:
-                $ref: '../components/schemas/Metadata.yaml'
-              environment_variables:
-                type: object
-                description: Environment variables to be used for the App when running
-            required:
-              - name
-              - relationships
-            description: Request schema for creating an app
+      $ref: '../components/requestBodies/AppCreateRequestBody.yaml'
     responses:
       '201':
         description: Successfully created app
@@ -161,23 +139,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      description: App object that needs to be updated
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the app
-              lifecycle:
-                $ref: '../components/schemas/Lifecycle.yaml'
-              metadata:
-                $ref: '../components/schemas/Metadata.yaml'
-            required:
-              - name
-            description: Request schema for updating an app
+      $ref: '../components/requestBodies/AppUpdateRequestBody.yaml'
     responses:
       '200':
         description: Successfully updated app
@@ -188,11 +150,7 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Delete an app
     description: Delete a specific app by its GUID.
@@ -344,6 +302,10 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppEnvironment.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/environment_variables:
@@ -358,6 +320,10 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppEnvironmentVariables.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -382,12 +348,16 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppEnvironmentVariables.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/permissions:
   get:
     summary: Get permissions for an app
-    description: Get the current user’s permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
+    description: Get the current user's permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
     operationId: getPermissionsForApp
     tags:
       - Apps
@@ -396,12 +366,16 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppPermissions.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/ssh_enabled:
   get:
     summary: Get SSH enabled for an app
-    description: Returns if an application’s runtime environment will accept ssh connections. If ssh is disabled, the reason field will describe whether it is disabled globally, at the space level, or at the app level.
+    description: Returns if an application's runtime environment will accept ssh connections. If ssh is disabled, the reason field will describe whether it is disabled globally, at the space level, or at the app level.
     operationId: getSshEnabledForApp
     tags:
       - Apps
@@ -410,6 +384,10 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/AppSshEnabled.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/actions/clear_buildpack_cache:

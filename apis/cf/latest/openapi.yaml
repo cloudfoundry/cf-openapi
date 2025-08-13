@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Cloud Foundry V3 API
-  description: "# Welcome to the Cloud Foundry V3 API docs! This is the latest available specification. \n\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still depricated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
+  description: "# Welcome to the Cloud Foundry V3 API docs! This is the latest available specification. \n\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still deprecated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
   version: latest
   license:
     name: Apache 2.0
@@ -151,6 +151,14 @@ components:
       $ref: './components/schemas/App.yaml'
     AppList:
       $ref: './components/schemas/AppList.yaml'
+    AppEnvironment:
+      $ref: './components/schemas/AppEnvironment.yaml'
+    AppEnvironmentVariables:
+      $ref: './components/schemas/AppEnvironmentVariables.yaml'
+    AppPermissions:
+      $ref: './components/schemas/AppPermissions.yaml'
+    AppSshEnabled:
+      $ref: './components/schemas/AppSshEnabled.yaml'
     Route:
       $ref: './components/schemas/Route.yaml'
     RouteDestination:
@@ -171,6 +179,24 @@ components:
       $ref: './components/schemas/IsolationSegment.yaml'
     IsolationSegmentList:
       $ref: './components/schemas/IsolationSegmentList.yaml'
+    Organization:
+      $ref: './components/schemas/Organization.yaml'
+    OrganizationList:
+      $ref: './components/schemas/OrganizationList.yaml'
+    OrganizationQuota:
+      $ref: './components/schemas/OrganizationQuota.yaml'
+    OrganizationQuotaList:
+      $ref: './components/schemas/OrganizationQuotaList.yaml'
+    Package:
+      $ref: './components/schemas/Package.yaml'
+    PackageList:
+      $ref: './components/schemas/PackageList.yaml'
+    Process:
+      $ref: './components/schemas/Process.yaml'
+    ProcessList:
+      $ref: './components/schemas/ProcessList.yaml'
+    ProcessStats:
+      $ref: './components/schemas/ProcessStats.yaml'
     SecurityGroup:
       $ref: './components/schemas/SecurityGroup.yaml'
     ServiceBroker:
@@ -271,22 +297,56 @@ components:
     RoleListResponse:
       $ref: './components/responses/RoleListResponse.yaml'
   requestBodies:
+    AppCreateRequestBody:
+      $ref: './components/requestBodies/AppCreateRequestBody.yaml'
+    AppUpdateRequestBody:
+      $ref: './components/requestBodies/AppUpdateRequestBody.yaml'
+    BuildCreateRequestBody:
+      $ref: './components/requestBodies/BuildCreateRequestBody.yaml'
     BuildpackCreateRequestBody:
       $ref: './components/requestBodies/BuildpackCreateRequestBody.yaml'
-    UserCreate:
-      $ref: './components/requestBodies/UserCreate.yaml'
-    UserUpdate:
-      $ref: './components/requestBodies/UserUpdate.yaml'
+    BuildpackUpdateRequestBody:
+      $ref: './components/requestBodies/BuildpackUpdateRequestBody.yaml'
+    DomainCreateRequestBody:
+      $ref: './components/requestBodies/DomainCreateRequestBody.yaml'
+    DomainUpdateRequestBody:
+      $ref: './components/requestBodies/DomainUpdateRequestBody.yaml'
     DropletCreateRequestBody:
       $ref: './components/requestBodies/DropletCreateRequestBody.yaml'
+    IsolationSegmentCreate:
+      $ref: './components/requestBodies/IsolationSegmentCreate.yaml'
+    OrganizationCreateRequestBody:
+      $ref: './components/requestBodies/OrganizationCreateRequestBody.yaml'
+    OrganizationUpdateRequestBody:
+      $ref: './components/requestBodies/OrganizationUpdateRequestBody.yaml'
+    OrganizationQuotaCreateRequestBody:
+      $ref: './components/requestBodies/OrganizationQuotaCreateRequestBody.yaml'
+    OrganizationQuotaUpdateRequestBody:
+      $ref: './components/requestBodies/OrganizationQuotaUpdateRequestBody.yaml'
+    PackageCreateRequestBody:
+      $ref: './components/requestBodies/PackageCreateRequestBody.yaml'
+    PackageUpdateRequestBody:
+      $ref: './components/requestBodies/PackageUpdateRequestBody.yaml'
+    PackageUploadRequestBody:
+      $ref: './components/requestBodies/PackageUploadRequestBody.yaml'
+    ProcessUpdateRequestBody:
+      $ref: './components/requestBodies/ProcessUpdateRequestBody.yaml'
+    RoleCreate:
+      $ref: './components/requestBodies/RoleCreate.yaml'
     RouteCreateRequestBody:
       $ref: './components/requestBodies/RouteCreateRequestBody.yaml'
     RouteDestinations:
       $ref: './components/requestBodies/RouteDestinations.yaml'
-    RoleCreate:
-      $ref: './components/requestBodies/RoleCreate.yaml'
-    IsolationSegmentCreate:
-      $ref: './components/requestBodies/IsolationSegmentCreate.yaml'
+    SpaceCreateRequestBody:
+      $ref: './components/requestBodies/SpaceCreateRequestBody.yaml'
+    SpaceUpdateRequestBody:
+      $ref: './components/requestBodies/SpaceUpdateRequestBody.yaml'
+    TaskCreateRequestBody:
+      $ref: './components/requestBodies/TaskCreateRequestBody.yaml'
+    UserCreate:
+      $ref: './components/requestBodies/UserCreate.yaml'
+    UserUpdate:
+      $ref: './components/requestBodies/UserUpdate.yaml'
 paths:
   /:
     $ref: './paths/Root.yaml#/'
@@ -440,8 +500,8 @@ paths:
     $ref: './paths/ServiceUsageEvents.yaml#/~1v3~1service_usage_events~1actions~1destructively_purge_all_and_reseed'
   /v3/sidecars/{guid}:
     $ref: './paths/Sidecars.yaml#/~1v3~1sidecars~1{guid}'
-  /v3/apps/{app_guid}/sidecars:
-    $ref: './paths/Sidecars.yaml#/~1v3~1apps~1{app_guid}~1sidecars'
+  /v3/apps/{guid}/sidecars:
+    $ref: './paths/Sidecars.yaml#/~1v3~1apps~1{guid}~1sidecars'
   /v3/spaces:
     $ref: './paths/Spaces.yaml#/~1v3~1spaces'
   /v3/spaces/{guid}:
@@ -488,3 +548,99 @@ paths:
     $ref: './paths/Users.yaml#/~1v3~1users'
   /v3/users/{guid}:
     $ref: './paths/Users.yaml#/~1v3~1users~1{guid}'
+  /v3/organizations:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations'
+  /v3/organizations/{guid}:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}'
+  /v3/organizations/{guid}/domains/default:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1domains~1default'
+  /v3/organizations/{guid}/usage_summary:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1usage_summary'
+  /v3/organizations/{guid}/users:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1users'
+  /v3/organizations/{guid}/relationships/default_isolation_segment:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1relationships~1default_isolation_segment'
+  /v3/organization_quotas:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas'
+  /v3/organization_quotas/{guid}:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas~1{guid}'
+  /v3/organization_quotas/{quota_guid}/relationships/organizations:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas~1{quota_guid}~1relationships~1organizations'
+  /v3/packages:
+    $ref: './paths/Packages.yaml#/~1v3~1packages'
+  /v3/packages/{guid}:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}'
+  /v3/apps/{guid}/packages:
+    $ref: './paths/Packages.yaml#/~1v3~1apps~1{guid}~1packages'
+  /v3/packages/{guid}/upload:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1upload'
+  /v3/packages/{guid}/download:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1download'
+  /v3/processes:
+    $ref: './paths/Processes.yaml#/~1v3~1processes'
+  /v3/processes/{guid}:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}'
+  /v3/processes/{guid}/stats:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1stats'
+  /v3/processes/{guid}/actions/scale:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1actions~1scale'
+  /v3/processes/{guid}/instances/{index}:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1instances~1{index}'
+  /v3/apps/{guid}/processes:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes'
+  /v3/apps/{guid}/processes/{type}:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}'
+  /v3/apps/{guid}/processes/{type}/stats:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1stats'
+  /v3/apps/{guid}/processes/{type}/actions/scale:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1actions~1scale'
+  /v3/apps/{guid}/processes/{type}/instances/{index}:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1instances~1{index}'
+  /v3/apps/{guid}/manifest:
+    $ref: './paths/Manifests.yaml#/~1v3~1apps~1{guid}~1manifest'
+  /v3/apps/{guid}/builds:
+    $ref: './paths/Builds.yaml#/~1v3~1apps~1{guid}~1builds'
+  /v3/apps/{guid}/tasks:
+    $ref: './paths/Tasks.yaml#/~1v3~1apps~1{guid}~1tasks'
+  /v3/apps/{guid}/actions/clear_buildpack_cache:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1clear_buildpack_cache'
+  /v3/apps/{guid}/env:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1env'
+  /v3/apps/{guid}/environment_variables:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1environment_variables'
+  /v3/apps/{guid}/features:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1features'
+  /v3/apps/{guid}/features/{name}:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1features~1{name}'
+  /v3/apps/{guid}/permissions:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1permissions'
+  /v3/apps/{guid}/routes:
+    $ref: './paths/Routes.yaml#/~1v3~1apps~1{guid}~1routes'
+  /v3/apps/{guid}/ssh_enabled:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1ssh_enabled'
+  /v3/domains/{guid}/route_reservations:
+    $ref: './paths/Domains.yaml#/~1v3~1domains~1{guid}~1route_reservations'
+  /v3/organizations/{guid}/domains:
+    $ref: './paths/Domains.yaml#/~1v3~1organizations~1{guid}~1domains'
+  /v3/processes/{guid}/sidecars:
+    $ref: './paths/Sidecars.yaml#/~1v3~1processes~1{guid}~1sidecars'
+  /v3/routes/{guid}:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}'
+  /v3/routes/{guid}/relationships/shared_spaces:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1shared_spaces'
+  /v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1shared_spaces~1{space_guid}'
+  /v3/routes/{guid}/relationships/space:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1space'
+  /v3/service_instances/{guid}/credentials:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1credentials'
+  /v3/service_instances/{guid}/parameters:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1parameters'
+  /v3/service_instances/{guid}/permissions:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1permissions'
+  /v3/service_instances/{guid}/relationships/shared_spaces:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces'
+  /v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces~1usage_summary'
+  /v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces~1{space_guid}'

@@ -1,0 +1,25 @@
+description: Space object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the space
+        relationships:
+          type: object
+          properties:
+            organization:
+              $ref: '../schemas/RelationshipToOne.yaml'
+            isolation_segment:
+              $ref: '../schemas/RelationshipToOne.yaml'
+          required:
+            - organization
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - name
+        - relationships
+      description: Request schema for creating a space

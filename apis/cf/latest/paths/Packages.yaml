@@ -6,12 +6,12 @@
     tags:
       - Packages
     parameters:
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
-      - $ref: '#/components/parameters/CreatedAts'
-      - $ref: '#/components/parameters/UpdatedAts'
-      - $ref: '#/components/parameters/LabelSelector'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/CreatedAts.yaml'
+      - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
       - name: guids
         in: query
         schema:
@@ -60,9 +60,9 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PackageList'
+              $ref: '../components/schemas/PackageList.yaml'
       '401':
-        $ref: '#/components/responses/Unauthorized'
+        $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create a package
     description: Create a new package.
@@ -70,22 +70,22 @@
     tags:
       - Packages
     requestBody:
-      $ref: '#/components/requestBodies/packageCreateRequestBody'
+      $ref: '../components/requestBodies/PackageCreateRequestBody.yaml'
     responses:
       '201':
         description: Successfully created package
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Package'
+              $ref: '../components/schemas/Package.yaml'
       '400':
-        $ref: '#/components/responses/BadRequest'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
-        $ref: '#/components/responses/Unauthorized'
+        $ref: '../components/responses/Unauthorized.yaml'
       '403':
-        $ref: '#/components/responses/Forbidden'
+        $ref: '../components/responses/Forbidden.yaml'
       '422':
-        $ref: '#/components/responses/UnprocessableEntity'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/packages/{guid}:
   get:
     summary: Get a package
@@ -94,87 +94,16 @@
     tags:
       - Packages
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved package
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Package'
+              $ref: '../components/schemas/Package.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
-/v3/apps/{app_guid}/packages:
-  get:
-    summary: List packages for an app
-    description: Retrieve packages for an app that the user has access to.
-    operationId: listAppPackages
-    tags:
-      - Packages
-    parameters:
-      - $ref: '#/components/parameters/GUID'
-      - $ref: '#/components/parameters/Page'
-      - $ref: '#/components/parameters/PerPage'
-      - $ref: '#/components/parameters/OrderBy'
-      - name: states
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of package states to filter by
-      - name: types
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of package types to filter by
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PackageList'
-      '404':
-        $ref: '#/components/responses/NotFound'
-  patch:
-    summary: Update a package
-    description: Update attributes of a specific package by its GUID.
-    operationId: updatePackage
-    tags:
-      - Packages
-    parameters:
-      - $ref: '#/components/parameters/GUID'
-    requestBody:
-      $ref: '#/components/requestBodies/packageUpdateRequestBody'
-    responses:
-      '200':
-        description: Successfully updated package
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Package'
-      '404':
-        $ref: '#/components/responses/NotFound'
-  delete:
-    summary: Delete a package
-    description: Delete a specific package by its GUID.
-    operationId: deletePackage
-    tags:
-      - Packages
-    parameters:
-      - $ref: '#/components/parameters/GUID'
-    responses:
-      '202':
-        description: Successfully deleted package
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/job'
-      '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/packages/{guid}/upload:
   post:
     summary: Upload package bits
@@ -183,18 +112,18 @@
     tags:
       - Packages
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      $ref: '#/components/requestBodies/packageUploadRequestBody'
+      $ref: '../components/requestBodies/PackageUploadRequestBody.yaml'
     responses:
       '200':
         description: Successfully uploaded package bits
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Package'
+              $ref: '../components/schemas/Package.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/packages/{guid}/download:
   get:
     summary: Download package bits
@@ -203,12 +132,12 @@
     tags:
       - Packages
     parameters:
-      - $ref: '#/components/parameters/GUID'
+      - $ref: '../components/parameters/Guid.yaml'
     responses:
       '302':
         description: Redirect to download location
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
 /v3/packages?source_guid={source_guid}:
   post:
     summary: Copy a package
@@ -233,7 +162,7 @@
             type: object
             properties:
               relationships:
-                $ref: '#/components/schemas/relationships'
+                $ref: '../components/schemas/Relationships.yaml'
             required:
               - relationships
             description: Request schema for copying a package
@@ -243,6 +172,48 @@
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Package'
+              $ref: '../components/schemas/Package.yaml'
       '404':
-        $ref: '#/components/responses/NotFound'
+        $ref: '../components/responses/NotFound.yaml'
+/v3/apps/{guid}/packages:
+  get:
+    summary: List packages for an app
+    description: Retrieve packages for an app that the user has access to.
+    operationId: listAppPackages
+    tags:
+      - Packages
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package states to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package types to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/PackageList.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

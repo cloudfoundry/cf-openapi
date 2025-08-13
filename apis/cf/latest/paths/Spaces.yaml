@@ -56,10 +56,7 @@
     tags:
       - Spaces
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/Space.yaml'
+      $ref: '../components/requestBodies/SpaceCreateRequestBody.yaml'
     responses:
       '201':
         description: Created
@@ -132,10 +129,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/Space.yaml'
+      $ref: '../components/requestBodies/SpaceUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK

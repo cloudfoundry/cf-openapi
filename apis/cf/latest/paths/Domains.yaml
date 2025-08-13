@@ -51,35 +51,7 @@
     tags:
       - Domains
     requestBody:
-      description: Domain object that needs to be created
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the domain
-              internal:
-                type: boolean
-                description: Whether the domain is used for internal (container-to-container) traffic
-              router_group:
-                type: object
-                properties:
-                  guid:
-                    type: string
-                    format: uuid
-                    description: The desired router group GUID
-              organization:
-                $ref: '../components/schemas/RelationshipToOne.yaml'
-              shared_organizations:
-                $ref: '../components/schemas/RelationshipToMany.yaml'
-              metadata:
-                $ref: '../components/schemas/Metadata.yaml'
-            required:
-              - name
-              - internal
+      $ref: '../components/requestBodies/DomainCreateRequestBody.yaml'
     responses:
       '201':
         description: Successfully created domain
@@ -193,12 +165,8 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
-/v3/organizations/{organization_guid}/domains:
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/organizations/{guid}/domains:
   get:
     summary: List domains for an organization
     description: Retrieve all domains available in an organization for the current user.
@@ -284,8 +252,4 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'

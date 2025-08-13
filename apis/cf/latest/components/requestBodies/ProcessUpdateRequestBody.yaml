@@ -1,0 +1,17 @@
+description: Process object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        command:
+          type: [string, "null"]
+          description: The command used to start the process; use null to revert to the buildpack-detected or procfile-provided start command
+        health_check:
+          $ref: '../schemas/HealthCheck.yaml'
+        readiness_health_check:
+          $ref: '../schemas/HealthCheck.yaml'
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      description: Request schema for updating a process

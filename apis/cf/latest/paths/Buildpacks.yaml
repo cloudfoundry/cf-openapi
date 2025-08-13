@@ -53,11 +53,7 @@
       '201':
         $ref: '../components/responses/BuildpackCreateResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -75,11 +71,7 @@
       '200':
         $ref: '../components/responses/BuildpackGetResponse.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -95,44 +87,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      description: Buildpack object that needs to be updated
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the buildpack
-              stack:
-                type: string
-                description: The stack the buildpack is compatible with
-              position:
-                type: integer
-                description: The position of the buildpack in the order of execution
-              enabled:
-                type: boolean
-                description: Whether the buildpack is enabled
-              locked:
-                type: boolean
-                description: Whether the buildpack is locked
-              filename:
-                type: string
-                description: The filename of the buildpack
-            required:
-              - name
-            description: Request schema for updating a buildpack
-          examples:
-            buildpack:
-              summary: A sample buildpack
-              value:
-                name: ruby_buildpack
-                stack: cflinuxfs3
-                position: 1
-                enabled: true
-                locked: false
-                filename: ruby_buildpack-cflinuxfs3-v1.0.0.zip
+      $ref: '../components/requestBodies/BuildpackUpdateRequestBody.yaml'
     responses:
       '200':
         description: Successfully updated buildpack
@@ -141,11 +96,7 @@
             schema:
               $ref: '../components/schemas/Buildpack.yaml'
       '400':
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
@@ -205,8 +156,4 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'

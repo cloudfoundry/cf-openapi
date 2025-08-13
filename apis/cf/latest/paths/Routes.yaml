@@ -105,6 +105,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Route.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -133,6 +135,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Route.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   delete:
@@ -152,6 +156,8 @@
             schema:
               type: string
               format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/routes:
@@ -201,6 +207,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RouteList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/routes/{guid}/relationships/shared_spaces:
@@ -219,6 +227,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToMany.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   post:
@@ -243,6 +253,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToMany.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -266,6 +278,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/routes/{guid}/relationships/space:
@@ -287,6 +301,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -423,6 +439,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RouteDestination.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -445,6 +463,8 @@
     responses:
       '204':
         description: Successfully removed destination from the route
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/routes:
@@ -459,5 +479,7 @@
     responses:
       '204':
         description: Successfully deleted unmapped routes from the space
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

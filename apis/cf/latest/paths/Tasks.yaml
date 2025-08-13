@@ -115,6 +115,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -139,6 +141,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -159,5 +163,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

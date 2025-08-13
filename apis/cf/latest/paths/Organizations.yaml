@@ -70,6 +70,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -89,6 +91,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -104,6 +108,8 @@
     responses:
       '202':
         description: Accepted
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/domains/default:
@@ -122,6 +128,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/usage_summary:
@@ -169,6 +177,8 @@
                       organization:
                         $ref: '../components/schemas/Link.yaml'
                         description: The URL to get the organization for this usage summary
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/users:
@@ -221,6 +231,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/UserList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/relationships/default_isolation_segment:
@@ -239,6 +251,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -261,5 +275,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

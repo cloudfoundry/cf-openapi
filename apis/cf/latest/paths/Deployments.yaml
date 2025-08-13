@@ -104,6 +104,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -132,6 +134,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/deployments/{guid}/actions/cancel:
@@ -150,6 +154,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/deployments/{guid}/actions/continue:
@@ -168,5 +174,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

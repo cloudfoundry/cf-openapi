@@ -108,6 +108,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -132,6 +134,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -153,6 +157,8 @@
               $ref: ../components/schemas/Job.yaml
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_route_bindings/{guid}/parameters:
@@ -175,5 +181,7 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

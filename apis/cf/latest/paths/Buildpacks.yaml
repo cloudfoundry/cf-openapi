@@ -120,6 +120,8 @@
     responses:
       '204':
         description: Successfully deleted buildpack
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/buildpacks/{guid}/upload:
@@ -153,6 +155,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Buildpack.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':

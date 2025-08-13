@@ -13,5 +13,7 @@ post:
           schema:
             type: string
             format: uri
+    '401':
+      $ref: '../components/responses/Unauthorized.yaml'
     '404':
       $ref: '../components/responses/NotFound.yaml'

@@ -84,6 +84,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Space.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -103,6 +105,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Space.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -122,8 +126,6 @@
           application/json:
             schema:
               $ref: '../components/schemas/Job.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '400':
@@ -149,6 +151,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Job.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/features:
@@ -167,6 +171,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/features/{name}:
@@ -190,6 +196,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -219,6 +227,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/manifest_diff:
@@ -242,6 +252,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Job.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/relationships/isolation_segment:
@@ -260,6 +272,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -282,6 +296,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/routes:
@@ -303,6 +319,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/running_security_groups:
@@ -321,6 +339,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/staging_security_groups:
@@ -339,6 +359,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/users:
@@ -357,5 +379,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/UserList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

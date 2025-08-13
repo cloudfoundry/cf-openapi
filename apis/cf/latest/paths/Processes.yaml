@@ -72,6 +72,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -91,6 +93,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -111,6 +115,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/ProcessStats.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/processes/{guid}/actions/scale:
@@ -142,6 +148,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -163,6 +171,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes:
@@ -184,6 +194,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/ProcessList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}:
@@ -207,6 +219,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}/stats:
@@ -230,6 +244,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/ProcessStats.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/processes/{type}/actions/scale:
@@ -266,6 +282,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -292,5 +310,7 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

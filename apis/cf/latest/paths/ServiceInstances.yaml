@@ -132,6 +132,8 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
@@ -160,6 +162,8 @@
                         $ref: ../components/schemas/Relationship.yaml
                       bound_app_count:
                         type: integer
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/relationships/shared_spaces:
@@ -178,6 +182,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   post:
@@ -200,6 +206,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -222,6 +230,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/parameters:
@@ -240,6 +250,8 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/permissions:
@@ -263,6 +275,8 @@
                   type: boolean
                 manage:
                   type: boolean
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}:
@@ -283,6 +297,8 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -315,6 +331,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/Job.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -348,6 +366,8 @@
               $ref: ../components/schemas/Job.yaml
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':

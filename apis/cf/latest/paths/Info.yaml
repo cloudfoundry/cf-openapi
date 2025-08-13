@@ -53,8 +53,6 @@
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the support website for the platform
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
       '500':

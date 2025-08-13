@@ -140,6 +140,8 @@
     responses:
       '204':
         description: Successfully deleted droplet
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/droplets/{guid}/download:
@@ -161,6 +163,8 @@
               format: binary
       '302':
         description: Redirect to download location
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/droplets/{guid}/upload:
@@ -190,6 +194,8 @@
     responses:
       '200':
         $ref: '../components/responses/DropletGetResponse.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':

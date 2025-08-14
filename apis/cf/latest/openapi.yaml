@@ -50,6 +50,8 @@ tags:
     description: "Processes define the runnable units of an app."
   - name: Resource Matches
     description: "Resource Matches are used to determine if a resource has been previously uploaded to the Cloud Controller."
+  - name: Revisions
+    description: "Revisions represent code used by an application at a specific time."
   - name: Roles
     description: "Roles are used to control access to resources."
   - name: Root
@@ -435,6 +437,14 @@ paths:
     $ref: './paths/Jobs.yaml#/~1v3~1jobs~1{guid}'
   /v3/resource_matches:
     $ref: './paths/ResourceMatches.yaml#/~1v3~1resource_matches'
+  /v3/revisions/{guid}:
+    $ref: './paths/Revisions.yaml#/~1v3~1revisions~1{guid}'
+  /v3/revisions/{guid}/environment_variables:
+    $ref: './paths/Revisions.yaml#/~1v3~1revisions~1{guid}~1environment_variables'
+  /v3/apps/{guid}/revisions:
+    $ref: './paths/Revisions.yaml#/~1v3~1apps~1{guid}~1revisions'
+  /v3/apps/{guid}/revisions/deployed:
+    $ref: './paths/Revisions.yaml#/~1v3~1apps~1{guid}~1revisions~1deployed'
   /v3/roles:
     $ref: './paths/Roles.yaml#/~1v3~1roles'
   /v3/roles/{guid}:

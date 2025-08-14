@@ -1,6 +1,6 @@
 type: object
 allOf:
-  - $ref: '#/components/schemas/BaseSchema'
+  - $ref: './BaseSchema.yaml'
   - properties:
       version:
         type: integer
@@ -9,24 +9,28 @@ allOf:
         type: string
         description: Description of the revision, created by the user
       droplet:
-        $ref: '#/components/schemas/RelationshipToOne'
+        $ref: './RelationshipToOne.yaml'
       relationships:
         allOf:
-          - $ref: '#/components/schemas/Relationships'
+          - $ref: './Relationships.yaml'
           - properties:
               app:
-                $ref: '#/components/schemas/RelationshipToOne'
+                $ref: './RelationshipToOne.yaml'
       enabled:
         type: boolean
         description: Whether the revision is enabled or not.
       metadata:
-        $ref: '#/components/schemas/Metadata'
+        $ref: './Metadata.yaml'
       links:
-        allOf:
-          - $ref: '#/components/schemas/Links'
-          - properties:
-              environment_variables:
-                allOf:
-                  - $ref: '#/components/schemas/Link'
-                  - description: Link to the revision's environment variables
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this revision
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this revision
+          environment_variables:
+            $ref: './Link.yaml'
+            description: The URL to get the environment variables for this revision
 description: 'An App Revision is an immutable snapshot of an app at a particular point in time. Revisions are identified by a sequential version number. The "current" revision for an app is the revision that is currently deployed for all instances of the app.'

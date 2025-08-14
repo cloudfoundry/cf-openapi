@@ -161,10 +161,6 @@
             schema:
               type: string
               format: uri
-        content:
-          application/json:
-            schema:
-              type: object
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '400':
@@ -192,10 +188,6 @@
             schema:
               type: string
               format: uri
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Job.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -299,10 +291,6 @@
             schema:
               type: string
               format: uri
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Job.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

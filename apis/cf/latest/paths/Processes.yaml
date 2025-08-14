@@ -72,6 +72,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this process
+          revision:
+            operationId: getRevision
+            parameters:
+              guid: $response.body#/relationships/revision/data/guid
+            description: Retrieve the revision for this process
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -93,6 +104,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Process.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this process
+          revision:
+            operationId: getRevision
+            parameters:
+              guid: $response.body#/relationships/revision/data/guid
+            description: Retrieve the revision for this process
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

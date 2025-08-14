@@ -75,7 +75,17 @@
       $ref: '../components/requestBodies/DropletCreateRequestBody.yaml'
     responses:
       '201':
-        $ref: '../components/responses/DropletCreateResponse.yaml'
+        description: Droplet created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Droplet.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this droplet
       '400':
         $ref: '../components/responses/BadRequest.yaml'
 /v3/droplets/{guid}:
@@ -89,7 +99,17 @@
       - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
-        $ref: '../components/responses/DropletGetResponse.yaml'
+        description: Droplet retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Droplet.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this droplet
       '400':
         $ref: '../components/responses/BadRequest.yaml'
   patch:

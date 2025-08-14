@@ -87,6 +87,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -128,6 +139,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -149,6 +171,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

@@ -59,6 +59,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this domain (private domains only)
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -81,6 +87,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this domain (private domains only)
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

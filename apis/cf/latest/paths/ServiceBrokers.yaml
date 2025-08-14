@@ -81,6 +81,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceBroker.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service broker (space-scoped brokers only)
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -110,6 +116,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceBroker.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service broker (space-scoped brokers only)
       '202':
         description: Accepted
         headers:

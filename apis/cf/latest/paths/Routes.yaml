@@ -105,6 +105,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Route.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -135,6 +146,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Route.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -319,7 +341,22 @@
       $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
     responses:
       '201':
-        $ref: '../components/responses/RouteCreateResponse.yaml'
+        description: Route created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Route.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':

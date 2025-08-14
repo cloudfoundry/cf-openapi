@@ -78,6 +78,17 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
       '202':
         description: Accepted
         headers:
@@ -114,6 +125,17 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

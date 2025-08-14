@@ -82,6 +82,22 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this deployment
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet/data/guid
+            description: Retrieve the droplet for this deployment
+          previous_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/previous_droplet/data/guid
+            description: Retrieve the previous droplet for this deployment
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -104,6 +120,22 @@
           application/json:
             schema:
               $ref: '../components/schemas/Deployment.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this deployment
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet/data/guid
+            description: Retrieve the droplet for this deployment
+          previous_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/previous_droplet/data/guid
+            description: Retrieve the previous droplet for this deployment
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

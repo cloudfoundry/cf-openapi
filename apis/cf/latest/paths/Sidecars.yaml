@@ -14,6 +14,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Sidecar.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -38,6 +44,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Sidecar.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -84,6 +96,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Sidecar.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

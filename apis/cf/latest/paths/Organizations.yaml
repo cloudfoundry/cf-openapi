@@ -50,6 +50,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
@@ -70,6 +76,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+              description: Retrieve the quota associated with this organization
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -91,6 +103,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

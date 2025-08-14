@@ -66,6 +66,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/SpaceQuota.yaml
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space quota
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '422':
@@ -86,6 +92,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/SpaceQuota.yaml
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space quota
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -110,6 +122,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/SpaceQuota.yaml
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space quota
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

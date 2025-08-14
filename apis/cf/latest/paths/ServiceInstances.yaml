@@ -95,6 +95,12 @@
           application/json:
             schema:
               $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
       '202':
         description: Service instance creation in progress
         headers:
@@ -296,6 +302,17 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
+          service_plan:
+            operationId: getServicePlan
+            parameters:
+              guid: $response.body#/relationships/service_plan/data/guid
+            description: Retrieve the service plan for this service instance (managed instances only)
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -319,6 +336,17 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
+          service_plan:
+            operationId: getServicePlan
+            parameters:
+              guid: $response.body#/relationships/service_plan/data/guid
+            description: Retrieve the service plan for this service instance (managed instances only)
       '202':
         description: Accepted
         headers:

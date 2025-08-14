@@ -109,10 +109,6 @@
             schema:
               type: string
               format: uri
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Job.yaml
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':

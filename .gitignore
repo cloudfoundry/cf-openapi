@@ -43,3 +43,5 @@ test/sdk-integration/go/bin/
 dist
 node_modules
 out
+tmp
+.tmp

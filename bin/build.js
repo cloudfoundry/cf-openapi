@@ -5,11 +5,40 @@ const { spawn } = require('child_process');
 const apisDir = path.join(process.cwd(), 'apis', 'cf');
 const distDir = path.join(process.cwd(), 'dist');
 
-function runCommand(command, args) {
+async function fixUnresolvedReferences(outputFile, apiVersionDir) {
+    try {
+        let content = await fs.readFile(outputFile, 'utf8');
+
+        // Fix references that still point to external files
+        const fixes = [
+            { from: /\$ref: \.\.\/components\/schemas\/Job\.yaml/g, to: '#/components/schemas/Job' },
+            { from: /\$ref: \.\.\/components\/schemas\/Link\.yaml/g, to: '#/components/schemas/Link' }
+        ];
+
+        let hasChanges = false;
+        for (const fix of fixes) {
+            if (fix.from.test(content)) {
+                console.log(`Fixing unresolved reference: ${fix.from.source} -> ${fix.to}`);
+                content = content.replace(fix.from, `$ref: ${fix.to}`);
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges) {
+            await fs.writeFile(outputFile, content, 'utf8');
+            console.log(`Fixed unresolved references in ${outputFile}`);
+        }
+    } catch (error) {
+        console.warn(`Warning: Failed to fix unresolved references in ${outputFile}:`, error.message);
+    }
+}
+
+function runCommand(command, args, options = {}) {
     return new Promise((resolve) => {
         const cmd = `${command} ${args.join(' ')}`;
-        console.log(`> ${cmd}`);
-        const child = spawn(command, args);
+        const cwd = options.cwd || process.cwd();
+        console.log(`> ${cmd}${options.cwd ? ` (in ${options.cwd})` : ''}`);
+        const child = spawn(command, args, { ...options });
 
         let stdout = '';
         let stderr = '';
@@ -61,7 +90,16 @@ async function build() {
                 await fs.ensureDir(distApiDir);
 
                 const outputFile = path.join(distApiDir, 'openapi.yaml');
-                promises.push(runCommand('redocly', ['bundle', openapiFile, '-o', outputFile]));
+                // Run redocly bundle from the API directory
+                promises.push(runCommand('redocly', ['bundle', 'openapi.yaml', '-o', path.resolve(outputFile)], {
+                    cwd: apiVersionDir
+                }).then(async (result) => {
+                    // Post-process the bundled file to fix any remaining unresolved references
+                    if (result.code === 0) {
+                        await fixUnresolvedReferences(outputFile, apiVersionDir);
+                    }
+                    return result;
+                }));
 
                 const config = {
                     title: `Cloud Foundry V3 (CAPI ${version})`,

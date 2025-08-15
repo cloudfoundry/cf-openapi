@@ -49,6 +49,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/AppUsageEvent.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/app_usage_events/actions/destructively_purge_all_and_reseed:
@@ -66,5 +68,7 @@
     responses:
       '200':
         description: OK
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

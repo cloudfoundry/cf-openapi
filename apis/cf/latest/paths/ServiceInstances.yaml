@@ -87,27 +87,28 @@
     tags:
       - Service Instances
     requestBody:
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - $ref: ../components/schemas/ManagedServiceInstance.yaml
-              - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+      $ref: '../components/requestBodies/ServiceInstanceCreateRequestBody.yaml'
     responses:
       '201':
-        description: Service instance created
+        description: User Provided Service instance created
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: ../components/schemas/ManagedServiceInstance.yaml
-                - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+              $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
       '202':
         description: Service instance creation in progress
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is creating the service instance
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -132,6 +133,8 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
@@ -160,6 +163,8 @@
                         $ref: ../components/schemas/Relationship.yaml
                       bound_app_count:
                         type: integer
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/relationships/shared_spaces:
@@ -178,6 +183,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   post:
@@ -200,6 +207,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -222,6 +231,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/parameters:
@@ -240,6 +251,8 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}/permissions:
@@ -263,6 +276,8 @@
                   type: boolean
                 manage:
                   type: boolean
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_instances/{guid}:
@@ -283,6 +298,19 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
+          service_plan:
+            operationId: getServicePlan
+            parameters:
+              guid: $response.body#/relationships/service_plan/data/guid
+            description: Retrieve the service plan for this service instance (managed instances only)
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -294,12 +322,7 @@
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - $ref: ../components/schemas/ManagedServiceInstanceUpdate.yaml
-              - $ref: ../components/schemas/UserProvidedServiceInstanceUpdate.yaml
+      $ref: '../components/requestBodies/ServiceInstanceUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK
@@ -309,12 +332,27 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service instance
+          service_plan:
+            operationId: getServicePlan
+            parameters:
+              guid: $response.body#/relationships/service_plan/data/guid
+            description: Retrieve the service plan for this service instance (managed instances only)
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is updating the service instance
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -342,12 +380,16 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is deleting the service instance
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':

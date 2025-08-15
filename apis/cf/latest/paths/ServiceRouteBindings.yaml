@@ -78,12 +78,25 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is creating the service route binding
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -108,6 +121,19 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -132,6 +158,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBinding.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -147,12 +175,16 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is deleting the service route binding
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/service_route_bindings/{guid}/parameters:
@@ -175,5 +207,7 @@
           application/json:
             schema:
               type: object
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

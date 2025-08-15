@@ -21,6 +21,8 @@
             schema:
               type: string
               format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/manifest:
@@ -39,6 +41,8 @@
           application/x-yaml:
             schema:
               type: string
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/manifest_diff:
@@ -76,5 +80,7 @@
                         type: string
                       value:
                         type: string
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

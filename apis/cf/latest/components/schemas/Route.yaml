@@ -18,5 +18,18 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this route
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space for this route
+          domain:
+            $ref: './Link.yaml'
+            description: The URL to get the domain for this route
+          destinations:
+            $ref: './Link.yaml'
+            description: The URL to get the destinations for this route
 description: A route in Cloud Foundry is used to direct traffic from a URL to an application.

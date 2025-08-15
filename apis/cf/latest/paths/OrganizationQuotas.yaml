@@ -76,6 +76,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/OrganizationQuota.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -95,6 +97,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/OrganizationQuota.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -110,6 +114,14 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the organization quota
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organization_quotas/{quota_guid}/relationships/organizations:
@@ -138,5 +150,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToMany.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

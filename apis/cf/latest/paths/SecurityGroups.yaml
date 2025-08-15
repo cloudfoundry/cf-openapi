@@ -102,6 +102,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroup.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/spaces/{guid}/running_security_groups:
@@ -120,6 +122,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/spaces/{guid}/staging_security_groups:
@@ -138,6 +142,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -160,6 +166,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroup.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   delete:
@@ -171,8 +179,16 @@
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     responses:
-      '204':
-        description: No Content
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the security group
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/security_groups/{guid}/relationships/running_spaces:
@@ -196,6 +212,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/security_groups/{guid}/relationships/running_spaces/{space_guid}:
@@ -211,6 +229,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/security_groups/{guid}/relationships/staging_spaces:
@@ -234,6 +254,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}:
@@ -249,5 +271,7 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

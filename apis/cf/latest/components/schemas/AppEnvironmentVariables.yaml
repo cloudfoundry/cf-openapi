@@ -6,5 +6,12 @@ properties:
     additionalProperties:
       type: string
   links:
-    $ref: './Links.yaml'
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get the environment variables for this app
+      app:
+        $ref: './Link.yaml'
+        description: The URL to get the app for these environment variables
 description: 'App environment variables with links'

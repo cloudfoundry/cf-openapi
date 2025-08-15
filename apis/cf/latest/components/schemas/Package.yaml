@@ -48,19 +48,18 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        allOf:
-          - $ref: './Links.yaml'
-          - properties:
-              upload:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The URL to upload the package bits
-              download:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The URL to download the package bits
-              stage:
-                allOf:
-                  - $ref: './Link.yaml'
-                  - description: The URL to stage the package
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this package
+          upload:
+            $ref: './Link.yaml'
+            description: The URL to upload the package bits
+          download:
+            $ref: './Link.yaml'
+            description: The URL to download the package bits
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this package
 description: 'A package represents an application"s "source code" - either raw bits or a pointer to these bits. Packages are used to create builds, which result in a droplet that can be deployed.'

@@ -64,6 +64,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Space.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
@@ -77,40 +88,6 @@
       - Spaces
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user guids to filter by
-      - name: usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of usernames to filter by
-      - name: partial_usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of partial usernames to filter by
-      - name: origins
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user origins to filter by
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
@@ -118,6 +95,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/Space.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -137,6 +127,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/Space.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -152,12 +155,16 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
             schema:
-              $ref: '../components/schemas/Job.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
 /v3/spaces/{guid}/actions/apply_manifest:
   post:
     summary: Apply a manifest to a space
@@ -175,10 +182,14 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is applying the manifest
             schema:
-              $ref: '../components/schemas/Job.yaml'
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/features:
@@ -197,6 +208,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/features/{name}:
@@ -220,6 +233,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -249,6 +264,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SpaceFeature.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/manifest_diff:
@@ -268,10 +285,14 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
             schema:
-              $ref: '../components/schemas/Job.yaml'
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/relationships/isolation_segment:
@@ -290,6 +311,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -312,6 +335,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/routes:
@@ -331,8 +356,16 @@
           enum: [true]
         description: Filter to only delete unmapped routes
     responses:
-      '204':
-        description: No Content
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting unmapped routes
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/running_security_groups:
@@ -351,6 +384,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/staging_security_groups:
@@ -369,6 +404,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/spaces/{guid}/users:
@@ -387,5 +424,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/UserList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

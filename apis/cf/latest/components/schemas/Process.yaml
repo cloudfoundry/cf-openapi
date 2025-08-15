@@ -41,5 +41,21 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this process
+          scale:
+            $ref: './Link.yaml'
+            description: The URL to scale this process
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this process
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space for this process
+          stats:
+            $ref: './Link.yaml'
+            description: The URL to get the stats for this process
 description: 'A process defines the runnable units of an app'

@@ -51,10 +51,12 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is creating the service broker
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '422':
@@ -75,6 +77,14 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceBroker.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service broker (space-scoped brokers only)
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -102,12 +112,22 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceBroker.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this service broker (space-scoped brokers only)
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is updating the service broker
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -123,9 +143,13 @@
     responses:
       '202':
         description: Accepted
-        content:
-          application/json:
+        headers:
+          Location:
+            description: URL of the job that is deleting the service broker
             schema:
-              $ref: ../components/schemas/Job.yaml
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

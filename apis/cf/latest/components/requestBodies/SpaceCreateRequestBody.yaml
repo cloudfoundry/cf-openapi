@@ -13,8 +13,6 @@ content:
           properties:
             organization:
               $ref: '../schemas/RelationshipToOne.yaml'
-            isolation_segment:
-              $ref: '../schemas/RelationshipToOne.yaml'
           required:
             - organization
         metadata:

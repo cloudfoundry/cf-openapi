@@ -63,6 +63,13 @@ allOf:
       metadata:
         $ref: './Metadata.yaml'
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this organization quota
+          organizations:
+            $ref: './Link.yaml'
+            description: The URL to get the organizations for this quota
 description: >
   Organization quotas are named sets of memory, log rate, service, and instance usage quotas. For example, one organization quota might allow up to 10 services, 10 routes, and 2 GB of RAM, while another might offer 100 services, 100 routes, and 10 GB of RAM.

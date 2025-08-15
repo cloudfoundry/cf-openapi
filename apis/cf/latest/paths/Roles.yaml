@@ -88,7 +88,27 @@
       $ref: '../components/requestBodies/RoleCreate.yaml'
     responses:
       '201':
-        $ref: '../components/responses/RoleCreateResponse.yaml'
+        description: Role created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Role.yaml'
+        links:
+          user:
+            operationId: getUser
+            parameters:
+              guid: $response.body#/relationships/user/data/guid
+            description: Retrieve the user for this role
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this role (if organization role)
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this role (if space role)
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -119,7 +139,29 @@
               - organization
     responses:
       '200':
-        $ref: '../components/responses/RoleGetResponse.yaml'
+        description: Role retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Role.yaml'
+        links:
+          user:
+            operationId: getUser
+            parameters:
+              guid: $response.body#/relationships/user/data/guid
+            description: Retrieve the user for this role
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this role (if organization role)
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this role (if space role)
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   delete:
@@ -131,7 +173,15 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     responses:
-      '204':
-        description: No Content
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the role
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

@@ -78,6 +78,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Package.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this package
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -102,6 +108,14 @@
           application/json:
             schema:
               $ref: '../components/schemas/Package.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this package
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/packages/{guid}/upload:
@@ -122,6 +136,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Package.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/packages/{guid}/download:
@@ -173,6 +189,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Package.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/packages:
@@ -215,5 +233,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/PackageList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

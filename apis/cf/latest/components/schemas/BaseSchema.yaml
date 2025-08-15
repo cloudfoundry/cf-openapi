@@ -12,10 +12,6 @@ properties:
     type: string
     format: date-time
     description: "The time the resource was last updated\nTimestamps generally appear in created_at and updated_at fields on resources. \nPrecision beyond seconds is not supported, even if the underlying database supports it (e.g. Postgres). \nAs a result, filtering on sub-second timestamps is not allowed.\nAll v3 timestamps have the following format YYYY-MM-DDThh:mm:ssZ.\nExample timestamp (June 30, 2020 at 11:49:04 PM UTC): 2020-06-30T23:49:04Z\n"
-  links:
-    type: object
-    additionalProperties:
-      $ref: './Link.yaml'
 description: |
   A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
   A resource consists of several required resource fields and other attributes specific to the resource.

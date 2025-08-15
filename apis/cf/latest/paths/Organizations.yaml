@@ -50,6 +50,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
@@ -70,6 +76,14 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+              description: Retrieve the quota associated with this organization
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -89,6 +103,14 @@
           application/json:
             schema:
               $ref: '../components/schemas/Organization.yaml'
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -104,6 +126,14 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/domains/default:
@@ -122,6 +152,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/usage_summary:
@@ -161,7 +193,16 @@
                     service_keys:
                       type: integer
                 links:
-                  $ref: '../components/schemas/Links.yaml'
+                  type: object
+                  properties:
+                    self:
+                      $ref: '../components/schemas/Link.yaml'
+                      description: The URL to get this usage summary
+                      organization:
+                        $ref: '../components/schemas/Link.yaml'
+                        description: The URL to get the organization for this usage summary
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/users:
@@ -214,6 +255,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/UserList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/organizations/{guid}/relationships/default_isolation_segment:
@@ -232,6 +275,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -254,5 +299,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

@@ -59,6 +59,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this domain (private domains only)
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -81,6 +87,14 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this domain (private domains only)
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -109,6 +123,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Domain.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   delete:
@@ -122,6 +138,8 @@
     responses:
       '204':
         description: Successfully deleted domain
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/domains/{guid}/relationships/shared_organizations:
@@ -162,6 +180,8 @@
                     guid:
                       type: string
                       format: uuid
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -192,6 +212,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/DomainList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/domains/{guid}/route_reservations:
@@ -228,6 +250,8 @@
               properties:
                 matching_route:
                   type: boolean
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/domains/{guid}/relationships/shared_organizations/{org_guid}:
@@ -249,6 +273,8 @@
     responses:
       '204':
         description: Successfully unshared domain
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':

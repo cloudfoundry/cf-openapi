@@ -1,8 +1,8 @@
 type: object
 properties:
   pagination:
-    $ref: '#/components/schemas/Pagination'
+    $ref: './Pagination.yaml'
   resources:
     type: array
     items:
-      $ref: '#/components/schemas/Revision'
+      $ref: './Revision.yaml'

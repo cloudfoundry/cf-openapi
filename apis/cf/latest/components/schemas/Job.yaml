@@ -24,6 +24,25 @@ allOf:
         items:
           $ref: './Warning.yaml'
       links:
-        allOf:
-          - $ref: './Links.yaml'
+        type: object
+        additionalProperties: true
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this job
+          manifest:
+            $ref: './Link.yaml'
+            description: The URL to get the manifest for this job
+          service_broker:
+            $ref: './Link.yaml'
+            description: The URL to get the service broker for this job
+          service_credential_binding:
+            $ref: './Link.yaml'
+            description: The URL to get the service credential binding for this job
+          service_instance:
+            $ref: './Link.yaml'
+            description: The URL to get the service instance for this job
+          service_route_binding:
+            $ref: './Link.yaml'
+            description: The URL to get the service route binding for this job
 description: 'Jobs are created by the platform when performing certain asynchronous actions. Asynchronous jobs are commonly used for long-running tasks such as uploading large files, staging applications, or deleting resources.'

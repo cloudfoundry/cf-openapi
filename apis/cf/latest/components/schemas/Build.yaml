@@ -47,6 +47,16 @@ allOf:
             type: string
             description: The email of the user that created the build
       links:
-        $ref: './Links.yaml'
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this build
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this build
+          droplet:
+            $ref: './Link.yaml'
+            description: The URL to get the droplet for this build
 description: >
   Builds represent the process of transforming source code into a runnable artifact. Builds can be triggered manually or automatically as part of the app lifecycle. A successful build results in a droplet that can be used to run the app.

@@ -82,6 +82,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceOffering.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -106,6 +108,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/ServiceOffering.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
       '422':
@@ -130,5 +134,7 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

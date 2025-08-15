@@ -97,6 +97,8 @@ properties:
         $ref: './Link.yaml'
       service_route_bindings:
         $ref: './Link.yaml'
+      shared_spaces:
+        $ref: './Link.yaml'
   metadata:
     $ref: './Metadata.yaml'
 required:

@@ -81,6 +81,12 @@
           application/json:
             schema:
               $ref: '../components/schemas/Build.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this build
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -103,6 +109,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/Build.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this build
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet/data/guid
+            description: Retrieve the droplet for this build
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/builds:
@@ -134,6 +153,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/BuildList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -162,5 +183,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/Build.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

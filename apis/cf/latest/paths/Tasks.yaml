@@ -91,6 +91,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this task
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet_guid
+            description: Retrieve the droplet for this task
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -115,6 +126,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this task
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet_guid
+            description: Retrieve the droplet for this task
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -139,6 +163,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -159,5 +185,7 @@
           application/json:
             schema:
               $ref: '../components/schemas/Task.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

@@ -87,6 +87,17 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -128,6 +139,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -147,6 +171,19 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this app
+          current_droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/relationships/current_droplet/data/guid
+            description: Retrieve the current droplet for this app
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
@@ -168,6 +205,8 @@
             schema:
               type: string
               format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/actions/start:
@@ -186,6 +225,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/actions/stop:
@@ -204,6 +245,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/actions/restart:
@@ -222,6 +265,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/App.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/droplets/current:
@@ -240,6 +285,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Droplet.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/relationships/current_droplet:
@@ -258,6 +305,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/RelationshipToOne.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -288,6 +337,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/Relationship.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/env:
@@ -306,6 +357,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/AppEnvironment.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/environment_variables:
@@ -324,6 +377,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/AppEnvironmentVariables.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -352,6 +407,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/AppEnvironmentVariables.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/permissions:
@@ -370,6 +427,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/AppPermissions.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/ssh_enabled:
@@ -388,6 +447,8 @@
           application/json:
             schema:
               $ref: '../components/schemas/AppSshEnabled.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/actions/clear_buildpack_cache:
@@ -402,6 +463,8 @@
     responses:
       '202':
         description: Accepted
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/features:
@@ -416,6 +479,8 @@
     responses:
       '200':
         description: OK
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/features/{name}:
@@ -435,6 +500,8 @@
     responses:
       '200':
         description: OK
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
@@ -460,5 +527,7 @@
     responses:
       '200':
         description: OK
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'

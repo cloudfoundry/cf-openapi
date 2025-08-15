@@ -87,6 +87,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/IsolationSegment.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
@@ -117,6 +119,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/IsolationSegment.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   delete:
@@ -130,10 +134,18 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the isolation segment
+            schema:
+              type: string
+              format: uri
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Job.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/isolation_segments/{guid}/relationships/organizations:
@@ -160,6 +172,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
   get:
@@ -180,6 +194,8 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
@@ -201,6 +217,8 @@
     responses:
       '204':
         description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
 /v3/isolation_segments/{guid}/relationships/spaces:
@@ -221,5 +239,7 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml

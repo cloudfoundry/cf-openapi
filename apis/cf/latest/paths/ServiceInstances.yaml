@@ -298,6 +298,11 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+              discriminator: 
+                propertyName: type
+                mapping:
+                  managed: '../components/schemas/ManagedServiceInstance.yaml'
+                  user-provided: '../components/schemas/UserProvidedServiceInstance.yaml'
         links:
           space:
             operationId: getSpace
@@ -332,6 +337,11 @@
               oneOf:
                 - $ref: ../components/schemas/ManagedServiceInstance.yaml
                 - $ref: ../components/schemas/UserProvidedServiceInstance.yaml
+              discriminator:
+                propertyName: type
+                mapping:
+                  managed: '../components/schemas/ManagedServiceInstance.yaml'
+                  user-provided: '../components/schemas/UserProvidedServiceInstance.yaml'
         links:
           space:
             operationId: getSpace

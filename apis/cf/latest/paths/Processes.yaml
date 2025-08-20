@@ -141,6 +141,8 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
 /v3/processes/{guid}/actions/scale:
   post:
     summary: Scale a process
@@ -156,13 +158,13 @@
           schema:
             properties:
               instances:
-                type: integer
+                type: [integer, 'null', string]
               memory_in_mb:
-                type: integer
+                type: [integer, 'null', string]
               disk_in_mb:
-                type: integer
+                type: [integer, 'null', string]
               log_rate_limit_in_bytes_per_second:
-                type: integer
+                type: [integer, 'null', string]
     responses:
       '202':
         description: Accepted
@@ -270,6 +272,8 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
 /v3/apps/{guid}/processes/{type}/actions/scale:
   post:
     summary: Scale a process for an app
@@ -290,13 +294,13 @@
           schema:
             properties:
               instances:
-                type: integer
+                type: [integer, 'null', string]
               memory_in_mb:
-                type: integer
+                type: [integer, 'null', string]
               disk_in_mb:
-                type: integer
+                type: [integer, 'null']
               log_rate_limit_in_bytes_per_second:
-                type: integer
+                type: [integer, 'null']
     responses:
       '202':
         description: Accepted

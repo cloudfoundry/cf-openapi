@@ -89,6 +89,38 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+  post:
+    summary: Create a route
+    description: Create a new route
+    operationId: createRoute
+    tags:
+      - Routes
+    requestBody:
+      $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
+    responses:
+      '201':
+        description: Route created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Route.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/routes/{guid}:
   get:
     summary: Get a route
@@ -329,40 +361,6 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
-  post:
-    summary: Create a route
-    description: Create a new route
-    operationId: createRoute
-    tags:
-      - Routes
-    parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-    requestBody:
-      $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
-    responses:
-      '201':
-        description: Route created
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Route.yaml'
-        links:
-          space:
-            operationId: getSpace
-            parameters:
-              guid: $response.body#/relationships/space/data/guid
-            description: Retrieve the space for this route
-          domain:
-            operationId: getDomain
-            parameters:
-              guid: $response.body#/relationships/domain/data/guid
-            description: Retrieve the domain for this route
-      '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
 /v3/routes/{guid}/destinations:
   get:
     summary: List destinations for a route
@@ -391,6 +389,31 @@
     summary: Insert destinations for a route
     description: Insert destinations for a specific route by its GUID.
     operationId: insertDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/RouteDestinations.yaml'
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestinationList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  patch:
+    summary: Replace all destinations for a route
+    description: Replace all destinations for a specific route by its GUID.
+    operationId: replaceDestinationsForRouteWithPatch
     tags:
       - Routes
     parameters:

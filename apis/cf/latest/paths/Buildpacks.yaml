@@ -104,11 +104,7 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Error.yaml'
+        $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Delete a buildpack
     description: Delete a specific buildpack by its GUID.
@@ -135,22 +131,21 @@
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: The buildpack file to be uploaded
-      required: true
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              bits:
-                type: string
-                format: binary
-                description: The buildpack file to be uploaded
-            required:
-              - bits
-            description: Request schema for uploading a buildpack
+      required: false
     responses:
       '200':
         description: Successfully uploaded buildpack
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Buildpack.yaml'
+      '202':
+        description: Upload initiated
+        headers:
+          Location:
+            schema:
+              type: string
+            description: URL of the job tracking the upload
         content:
           application/json:
             schema:

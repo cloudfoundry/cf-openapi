@@ -6,7 +6,7 @@ allOf:
         type: string
         description: State of the droplet; valid states are AWAITING_UPLOAD, PROCESSING_UPLOAD, STAGED, COPYING, FAILED, or EXPIRED
       error:
-        type: string
+        type: [string, 'null']
         description: A string describing the last error during the droplet lifecycle
       lifecycle:
         $ref: './Lifecycle.yaml'
@@ -40,7 +40,7 @@ allOf:
             $ref: './Link.yaml'
             description: The URL to upload the droplet
       checksum:
-        type: object
+        type: [object, 'null']
         properties:
           type:
             type: string
@@ -57,18 +57,18 @@ allOf:
               type: string
               description: System buildpack name
             detect_output:
-              type: string
+              type: [string, 'null']
               description: Output during buildpack detect process
             version:
-              type: string
+              type: [string, 'null']
               description: Version reported by the buildpack
             buildpack_name:
               type: string
               description: Name reported by the buildpack
       stack:
-        type: string
+        type: [string, 'null']
         description: The root filesystem to use with the buildpack, for example cflinuxfs4
       image:
-        type: string
+        type: [string, 'null']
         description: Docker image name for Docker droplets
 description: A droplet is the result of staging an application package. There are two types (lifecycles) of droplets buildpack and docker. In the case of the buildpacks, the droplet contains the bits produced by the buildpack, typically application code and dependencies.

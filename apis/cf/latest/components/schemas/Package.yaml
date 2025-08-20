@@ -13,7 +13,7 @@ allOf:
         description: Data for package type
         properties:
           error:
-            type: string
+            type: [string, 'null']
             description: If an error occurs this field will contain the error message
           checksum:
             type: object
@@ -22,7 +22,7 @@ allOf:
                 type: string
                 description: The checksum type, for example sha256
               value:
-                type: string
+                type: [string, 'null']
                 description: The checksum value; this will be populated after bits are uploaded
           image:
             type: string

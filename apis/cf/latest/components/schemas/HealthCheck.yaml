@@ -8,13 +8,13 @@ properties:
     type: object
     properties:
       timeout:
-        type: integer
+        type: [integer, 'null']
         description: The duration in seconds that health checks can fail before the process is restarted
       invocation_timeout:
-        type: integer  
+        type: [integer, 'null']
         description: The timeout in seconds for individual health check requests for http and port health checks
       interval:
-        type: integer
+        type: [integer, 'null']
         description: The interval in seconds between health check requests
       endpoint:
         type: string

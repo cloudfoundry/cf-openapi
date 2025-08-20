@@ -15,13 +15,15 @@ properties:
       - $ref: './Link.yaml'
       - description: The last page of results
   next:
-    allOf:
+    oneOf:
       - $ref: './Link.yaml'
-      - description: The next page of results
+      - type: "null"
+    description: The next page of results
   previous:
-    allOf:
+    oneOf:
       - $ref: './Link.yaml'
-      - description: The previous page of results
+      - type: "null"
+    description: The previous page of results
 description: |
   Pagination is a technique used to divide a large set of results into smaller, more manageable sets. This allows clients to retrieve results in smaller chunks, reducing the amount of data transferred and improving performance.
   The pagination object is a JSON object that contains information about the pagination state of the results. It includes the total number of results available, the total number of pages available, and links to the first, last, next, and previous pages of results.

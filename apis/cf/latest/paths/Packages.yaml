@@ -118,6 +118,47 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/packages/{guid}/droplets:
+  get:
+    summary: List droplets for a package
+    description: Retrieve a list of droplets belonging to a package.
+    operationId: listPackageDroplets
+    tags:
+      - Packages
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet guids to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet states to filter by
+    responses:
+      '200':
+        description: List of droplets for the package
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/DropletList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
 /v3/packages/{guid}/upload:
   post:
     summary: Upload package bits
@@ -136,10 +177,23 @@
           application/json:
             schema:
               $ref: '../components/schemas/Package.yaml'
+      '202':
+        description: Upload initiated
+        headers:
+          Location:
+            schema:
+              type: string
+            description: URL of the job tracking the upload
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Package.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/packages/{guid}/download:
   get:
     summary: Download package bits

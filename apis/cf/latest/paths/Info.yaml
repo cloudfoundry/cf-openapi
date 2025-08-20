@@ -55,6 +55,8 @@
                         - description: Link to the support website for the platform
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
 /v3/info/usage_summary:
@@ -100,5 +102,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
       '500':
         $ref: '../components/responses/500.yaml'

@@ -9,7 +9,9 @@ allOf:
         type: boolean
         description: Whether the domain is used for internal (container-to-container) traffic
       router_group:
-        type: object
+        type: 
+          - object
+          - 'null'
         properties:
           guid:
             type: string

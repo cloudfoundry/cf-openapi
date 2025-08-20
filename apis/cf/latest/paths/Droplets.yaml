@@ -148,7 +148,11 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        description: Unprocessable Entity
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Error.yaml'
   delete:
     summary: Delete a droplet
     description: Delete a specific droplet by its GUID.
@@ -181,6 +185,9 @@
             schema:
               type: string
               format: binary
+          text/html:
+            schema:
+              type: string
       '302':
         description: Redirect to download location
       '401':
@@ -198,22 +205,21 @@
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: The droplet file to be uploaded
-      required: true
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              bits:
-                type: string
-                format: binary
-                description: The droplet file to be uploaded
-            required:
-              - bits
-            description: Request schema for uploading a droplet
+      required: false
     responses:
       '200':
         $ref: '../components/responses/DropletGetResponse.yaml'
+      '202':
+        description: Upload initiated
+        headers:
+          Location:
+            schema:
+              type: string
+            description: URL of the job tracking the upload
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Droplet.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

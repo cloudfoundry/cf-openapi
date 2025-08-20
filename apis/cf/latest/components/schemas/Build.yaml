@@ -15,7 +15,7 @@ allOf:
         type: integer
         description: Log rate limit in bytes per second allocated for staging of the build
       error:
-        type: string
+        type: [string, 'null']
         description: A string describing errors during the build process
       lifecycle:
         $ref: './Lifecycle.yaml'
@@ -33,7 +33,9 @@ allOf:
       relationships:
         $ref: './Relationships.yaml'
       droplet:
-        $ref: './RelationshipToOne.yaml'
+        oneOf:
+          - $ref: './RelationshipToOne.yaml'
+          - type: 'null'
       created_by:
         type: object
         properties:

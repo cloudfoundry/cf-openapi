@@ -2,11 +2,10 @@ const { spawn } = require('child_process');
 const fs = require('fs-extra');
 const path = require('path');
 
-const serverUrl = process.argv[2];
-const specFile = process.argv[3];
+const specFile = process.argv[2];
 
-if (!serverUrl || !specFile) {
-    console.error('Usage: node test-contract.js <server-url> <spec-file>');
+if (!specFile) {
+    console.error('Usage: yarn test:mockserver <spec-file>');
     process.exit(1);
 }
 
@@ -31,9 +30,9 @@ function runCommand(command, args) {
 
 async function testContract() {
     try {
-        const reportDir = path.join(process.cwd(), 'out', 'reports');
+        const reportDir = path.join(process.cwd(), 'out');
         await fs.ensureDir(reportDir);
-        await runCommand('wiretap', ['-u', serverUrl, '-s', specFile, '--stream-report', '--report-filename', 'out/reports/cf.json']);
+        await runCommand('wiretap', ['-s', specFile, '-x', '-u', 'http://localhost:9090', '--report-file', 'out/wiretap-mockserver.json']);
     } catch (error) {
         console.error(error.message);
         process.exit(1);

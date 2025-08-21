@@ -64,30 +64,51 @@ Runs the `bin/create-version.js` script, which is used to create a new versioned
 
 **Compliance Testing**
 
-`yarn test:compliance https://api.example.com dist/latest/openapi.yaml`
+`yarn test:compliance`
 
-Executes the `bin/test-compliance.js` script to run compliance tests against the OpenAPI specification. This ensures that the specification is valid and conforms to the OpenAPI standard. It uses [`wiretap`](https://github.com/pb33f/wiretap) that acts like a proxy server to intercept requests and validate them against the OpenAPI spec.
+Runs a comprehensive compliance test suite against a live Cloud Foundry API. This script uses `wiretap` to proxy requests to the API, validating them against the OpenAPI specification in real-time. It clones the `capi-bara-tests` repository and executes its test suite against the proxied API.
+
+> :warning: Unfortunally wiretap seems to be quite instable it cannot properly handle multiform-data requests and sometimes just crashes with memory erros. Its currently as good as it is and helped a lot making the spec compliant.
+
+**Prerequisites:**
+
+- Go must be installed and available in your `PATH`.
+- The following environment variables must be set:
+  - `CF_API_URL`: The URL of the Cloud Foundry API.
+  - `CF_APPS_DOMAIN`: The application domain for your Cloud Foundry instance.
+  - `CF_ADMIN_USER`: The username for an admin user.
+  - `CF_ADMIN_PASSWORD`: The password for the admin user.
+
+**Optional:**
+
+- `THREADS`: The number of parallel test nodes to run (default: 6).
+
+The script will generate a `wiretap-report.json` file in the `out` directory, which contains a detailed report of the API interactions and any compliance issues found.
 
 ```mermaid
 flowchart TD
-      A[CF CLI] -->|HTTP Request| B[Wiretap http://localhost:9090]
-      B -->|HTTP Request| C[Real API Server]
+      A[CAPI BARA Tests] -->|HTTP Request| B[Wiretap Proxy]
+      B -->|HTTP Request| C[CF API Server]
       C -->|HTTP Response| B
       B -->|HTTP Response| A
-
-      A2[CATS Testsuite] -->|HTTP Request| B2[Wiretap http://localhost:9090]
-      B2 -->|HTTP Request| C2[Real API Server]
-      C2 -->|HTTP Response| B2
-      B2 -->|HTTP Response| A2
 ```
 
-Hereby `Wiretap` acts as a proxy server that intercepts HTTP requests and responses between the CF CLI or CATS testsuite and the real API server. It validates the requests and responses against the OpenAPI specification, ensuring compliance.
+**Contract Testing (Mock Server)**
 
-**Mock Server**
+`yarn test:mockserver <spec-file>`
 
-`yarn test:mockserver`
+Executes the `bin/test-mockserver.js` script to run contract tests against a running server (either a live API or a mock server). This script uses `wiretap` to validate that the server's responses conform to the OpenAPI specification.
 
-Runs the `bin/test-mockserver.js` script to start a mock server based on the OpenAPI specification. This is useful for testing API clients and integrations without needing a live CAPI environment.
+**Example:**
+
+```bash
+yarn test:mockserver http://localhost:4010 dist/latest/openapi.yaml
+```
+
+This is useful for:
+
+- Validating a mock server's implementation against the OpenAPI spec.
+- Quickly checking a live API for compliance without running the full `capi-bara-tests` suite.
 
 ## Contributing
 

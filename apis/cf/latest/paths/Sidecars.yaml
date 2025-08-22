@@ -56,6 +56,21 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Delete a sidecar
+    description: Delete a sidecar.
+    operationId: deleteSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/sidecars:
   get:
     summary: List sidecars for app
@@ -88,7 +103,7 @@
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/Sidecar.yaml'
+            $ref: '../components/schemas/SidecarCreate.yaml'
     responses:
       '201':
         description: Created

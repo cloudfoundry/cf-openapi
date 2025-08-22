@@ -9,7 +9,7 @@ allOf:
       path:
         type: string
       port:
-        type: integer
+        type: [integer, 'null']
       url:
         type: string
         description: Fully qualified path or address where the route directs traffic

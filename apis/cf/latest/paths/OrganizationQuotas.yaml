@@ -43,7 +43,10 @@
         $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create an organization quota
-    description: This endpoint creates a new organization quota, but does not assign it to a specific organization unless an organization GUID is provided in the relationships.organizations parameter.
+    description: |-
+      This endpoint creates a new organization quota, but does not assign it to a specific organization unless an organization GUID is provided in the `relationships.organizations` parameter.
+
+      To create an organization quota you must be an admin.
     operationId: createOrganizationQuota
     tags:
       - Organization Quotas
@@ -127,7 +130,10 @@
 /v3/organization_quotas/{quota_guid}/relationships/organizations:
   post:
     summary: Apply an organization quota to an organization
-    description: This endpoint applies an organization quota to one or more organizations.
+    description: |-
+      This endpoint applies an organization quota to one or more organizations.
+
+      Only admin users can apply an organization quota to an organization.
     operationId: applyOrganizationQuota
     tags:
       - Organization Quotas

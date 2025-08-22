@@ -1,7 +1,7 @@
 /v3/isolation_segments:
   get:
     summary: List isolation segments
-    description: Retrieve all isolation segments the user has access to.
+    description: Retrieves all isolation segments to which the user has access. For admin, this is all the isolation segments in the system. For anyone else, this is the isolation segments in the allowed list for any organization to which the user belongs.
     operationId: listIsolationSegments
     tags:
       - Isolation Segments
@@ -50,7 +50,7 @@
         $ref: ../components/responses/500.yaml
   post:
     summary: Create an isolation segment
-    description: Create a new isolation segment.
+    description: Create an isolation segment.
     operationId: createIsolationSegment
     tags:
       - Isolation Segments
@@ -74,7 +74,7 @@
 /v3/isolation_segments/{guid}:
   get:
     summary: Get an isolation segment
-    description: Retrieve a specific isolation segment by its GUID.
+    description: Retrieve an isolation segment to which the user has access. For admin, this is any isolation segment in the system. For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.
     operationId: getIsolationSegment
     tags:
       - Isolation Segments
@@ -93,7 +93,7 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update an isolation segment
-    description: Update a specific isolation segment by its GUID.
+    description: Update an isolation segment.
     operationId: updateIsolationSegment
     tags:
       - Isolation Segments
@@ -125,7 +125,7 @@
         $ref: ../components/responses/NotFound.yaml
   delete:
     summary: Delete an isolation segment
-    description: Delete a specific isolation segment by its GUID.
+    description: An isolation segment cannot be deleted if it is entitled to any organization.
     operationId: deleteIsolationSegment
     tags:
       - Isolation Segments
@@ -177,9 +177,9 @@
       '404':
         $ref: ../components/responses/NotFound.yaml
   get:
-    summary: List organizations
+    summary: List organizations relationship
     description: |-
-      List all organizations entitled to the isolation segment.
+      This endpoint lists the organizations entitled for the isolation segment. For an Admin, this will list all entitled organizations in the system. For any other user, this will list only the entitled organizations to which the user belongs.
     operationId: listOrganizationsForIsolationSegment
     tags:
       - Isolation Segments
@@ -200,8 +200,8 @@
         $ref: ../components/responses/NotFound.yaml
 /v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
   delete:
-    summary: Revoke entitlement of an organization
-    description: Revoke the entitlement of an organization for an isolation segment.
+    summary: Revoke entitlement to isolation segment for an organization
+    description: This endpoint revokes the entitlement for the specified organization to the isolation segment. If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked. If the isolation segment is the organization’s default, the entitlement cannot be revoked.
     operationId: revokeIsolationSegmentForOrganization
     tags:
       - Isolation Segments
@@ -223,8 +223,8 @@
         $ref: ../components/responses/NotFound.yaml
 /v3/isolation_segments/{guid}/relationships/spaces:
   get:
-    summary: List spaces
-    description: List all spaces assigned to the isolation segment.
+    summary: List spaces relationship
+    description: This endpoint lists the spaces to which the isolation segment is assigned. For an Admin, this will list all associated spaces in the system. For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager. For any other user, this will list only those associated spaces to which the user has access.
     operationId: listSpacesForIsolationSegment
     tags:
       - Isolation Segments

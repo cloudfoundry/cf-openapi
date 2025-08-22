@@ -83,7 +83,10 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of resource names to include in the response
+            enum:
+              - space.organization
+              - service_offering
+        description: Optionally include a list of unique related resources in the response
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: fields
         in: query
@@ -188,7 +191,7 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a service plan visibility
-    description: This endpoint updates a service plan visibility. It behaves similar to the `POST` endpoint but this endpoint will replace the existing list of organizations when the service plan is `organization` visible.
+    description: This endpoint updates a service plan visibility. It behaves similar to the [POST service plan visibility endpoint](#apply-a-service-plan-visibility) but this endpoint will replace the existing list of organizations when the service plan is `organization` visible.
     operationId: updateServicePlanVisibility
     tags:
       - Service Plans
@@ -214,7 +217,7 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
   post:
     summary: Apply a service plan visibility
-    description: This endpoint applies a service plan visibility. It behaves similar to the `PATCH` endpoint but this endpoint will append to the existing list of organizations when the service plan is `organization` visible.
+    description: This endpoint applies a service plan visibility. It behaves similar to the [PATCH service plan visibility endpoint](#update-a-service-plan-visibility) but this endpoint will append to the existing list of organizations when the service plan is `organization` visible.
     operationId: applyServicePlanVisibility
     tags:
       - Service Plans

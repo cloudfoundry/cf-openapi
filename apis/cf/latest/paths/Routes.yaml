@@ -1,7 +1,7 @@
 /v3/routes:
   get:
     summary: List routes
-    description: Retrieve a list of routes available in the system.
+    description: Retrieve all routes the user has access to.
     operationId: listRoutes
     tags:
       - Routes
@@ -18,6 +18,9 @@
           type: array
           items:
             type: string
+            enum:
+              - http
+              - tcp
         description: Comma-delimited list of protocols to filter by
       - name: hosts
         in: query
@@ -81,7 +84,11 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of resource names to include in the response
+            enum:
+              - domain
+              - space.organization
+              - space
+        description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         $ref: '../components/responses/RouteListResponse.yaml'
@@ -89,10 +96,42 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+  post:
+    summary: Create a route
+    description: Create a route.
+    operationId: createRoute
+    tags:
+      - Routes
+    requestBody:
+      $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
+    responses:
+      '201':
+        description: Route created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Route.yaml'
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/routes/{guid}:
   get:
     summary: Get a route
-    description: Retrieve details of a specific route by its GUID.
+    description: Retrieve a route.
     operationId: getRoute
     tags:
       - Routes
@@ -122,7 +161,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a route
-    description: Update attributes of a specific route by its GUID.
+    description: Update a route.
     operationId: updateRoute
     tags:
       - Routes
@@ -163,7 +202,7 @@
         $ref: '../components/responses/NotFound.yaml'
   delete:
     summary: Delete a route
-    description: Delete a specific route by its GUID.
+    description: Delete a route.
     operationId: deleteRoute
     tags:
       - Routes
@@ -254,8 +293,8 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
   post:
-    summary: Share a route with other spaces
-    description: This endpoint shares the route with the specified spaces.
+    summary: Share a route with other spaces (experimental)
+    description: This endpoint shares the route with the specified spaces. This allows users with read and write access in both the route’s space and a shared space to bind a route to an app in the shared space. In order to share into a space the requesting user must have write permission in the target space.
     operationId: shareRoute
     tags:
       - Routes
@@ -283,7 +322,7 @@
         $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
   delete:
-    summary: Unshare a route that was shared with another space
+    summary: Unshare a route that was shared with another space (experimental)
     description: Unshares a route that was shared with another space.
     operationId: unshareRoute
     tags:
@@ -306,8 +345,8 @@
         $ref: '../components/responses/NotFound.yaml'
 /v3/routes/{guid}/relationships/space:
   patch:
-    summary: Transfer ownership
-    description: Transfers a the ownership of a route to a another space.
+    summary: Transfer ownership (experimental)
+    description: Transfers a the ownership of a route to a another space. Users must have write access for both spaces to perform this action. The original owning space will still retain access to the route as a [shared space](#share-a-route-with-other-spaces-experimental). To completely remove a space from a route, users will have to use [unshare route](#unshare-a-route-that-was-shared-with-another-space-experimental).
     operationId: transferRouteOwnership
     tags:
       - Routes
@@ -329,44 +368,10 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
-  post:
-    summary: Create a route
-    description: Create a new route
-    operationId: createRoute
-    tags:
-      - Routes
-    parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-    requestBody:
-      $ref: '../components/requestBodies/RouteCreateRequestBody.yaml'
-    responses:
-      '201':
-        description: Route created
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/Route.yaml'
-        links:
-          space:
-            operationId: getSpace
-            parameters:
-              guid: $response.body#/relationships/space/data/guid
-            description: Retrieve the space for this route
-          domain:
-            operationId: getDomain
-            parameters:
-              guid: $response.body#/relationships/domain/data/guid
-            description: Retrieve the domain for this route
-      '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
 /v3/routes/{guid}/destinations:
   get:
     summary: List destinations for a route
-    description: Retrieve a list of destinations for a specific route by its GUID.
+    description: Retrieve all destinations associated with a route.
     operationId: listDestinationsForRoute
     tags:
       - Routes
@@ -389,8 +394,41 @@
         $ref: '../components/responses/Forbidden.yaml'
   post:
     summary: Insert destinations for a route
-    description: Insert destinations for a specific route by its GUID.
+    description: |-
+      Add one or more destinations to a route, preserving any existing destinations.
+
+      Weighted destinations (deprecated) cannot be added with this endpoint.
     operationId: insertDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/RouteDestinations.yaml'
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RouteDestinationList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  patch:
+    summary: Replace all destinations for a route
+    description: |-
+      Replaces all destinations for a route, removing any destinations not included in the provided list.
+
+      Weighted destinations are **deprecated**. Development of the experimental Istio Service Mesh routing layer was discontinued in 2020 and is no longer supported by the platform. Specifying a `weight` for a destination will take no effect.
+
+      If weighted destinations are provided, however, all destinations provided here must have a `weight` specified, and all weights for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted and unweighted destinations for a route is not allowed.
+    operationId: replaceDestinationsForRouteWithPatch
     tags:
       - Routes
     parameters:
@@ -414,7 +452,12 @@
         $ref: '../components/responses/UnprocessableEntity.yaml'
   put:
     summary: Replace all destinations for a route
-    description: Replace all destinations for a specific route by its GUID.
+    description: |-
+      Replaces all destinations for a route, removing any destinations not included in the provided list.
+
+      Weighted destinations are **deprecated**. Development of the experimental Istio Service Mesh routing layer was discontinued in 2020 and is no longer supported by the platform. Specifying a `weight` for a destination will take no effect.
+
+      If weighted destinations are provided, however, all destinations provided here must have a `weight` specified, and all weights for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted and unweighted destinations for a route is not allowed.
     operationId: replaceDestinationsForRoute
     tags:
       - Routes
@@ -440,7 +483,7 @@
 /v3/routes/{guid}/destinations/{destination_guid}:
   patch:
     summary: Update a destination protocol for a route
-    description: Update the protocol of a specific route destination by its GUID.
+    description: This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
     operationId: updateDestinationProtocolForRoute
     tags:
       - Routes
@@ -484,7 +527,7 @@
         $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Remove destination for a route
-    description: Remove a destination from a specific route by its GUID.
+    description: Remove a destination from a route.
     operationId: removeDestinationForRoute
     tags:
       - Routes
@@ -507,7 +550,7 @@
 /v3/spaces/{guid}/routes:
   delete:
     summary: Delete unmapped routes for a space
-    description: Delete routes that are unmapped in a specific space.
+    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
     operationId: deleteUnmappedRoutesForSpace
     tags:
       - Routes

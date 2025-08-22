@@ -1,6 +1,6 @@
 post:
   summary: Clear the buildpack cache
-  description: Clears the buildpack cache.
+  description: This endpoint will delete all of the existing buildpack caches in the blobstore. The buildpack cache is used during staging by buildpacks as a way to cache certain resources, e.g. downloaded Ruby gems. An admin who wants to decrease the size of their blobstore could use this endpoint to delete unnecessary blobs.
   operationId: clearBuildpackCache
   tags:
     - Admin

@@ -33,16 +33,16 @@ allOf:
           manifest:
             $ref: './Link.yaml'
             description: The URL to get the manifest for this job
-          service_broker:
+          service_brokers:
             $ref: './Link.yaml'
             description: The URL to get the service broker for this job
           service_credential_binding:
             $ref: './Link.yaml'
             description: The URL to get the service credential binding for this job
-          service_instance:
+          service_instances:
             $ref: './Link.yaml'
             description: The URL to get the service instance for this job
-          service_route_binding:
+          service_route_bindings:
             $ref: './Link.yaml'
             description: The URL to get the service route binding for this job
 description: 'Jobs are created by the platform when performing certain asynchronous actions. Asynchronous jobs are commonly used for long-running tasks such as uploading large files, staging applications, or deleting resources.'

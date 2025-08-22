@@ -1,7 +1,7 @@
 /v3/domains:
   get:
     summary: List domains
-    description: Retrieve a list of all domains the user has access to.
+    description: Retrieve all domains the user has access to.
     operationId: listDomains
     tags:
       - Domains
@@ -46,7 +46,7 @@
         $ref: '../components/responses/Forbidden.yaml'
   post:
     summary: Create a domain
-    description: Create a new domain.
+    description: Create a domain.
     operationId: createDomain
     tags:
       - Domains
@@ -73,8 +73,8 @@
         $ref: '../components/responses/Forbidden.yaml'
 /v3/domains/{guid}:
   get:
-    summary: Retrieve a domain
-    description: Retrieve details of a specific domain by its GUID.
+    summary: Get a domain
+    description: Retrieve a domain.
     operationId: getDomain
     tags:
       - Domains
@@ -99,7 +99,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a domain
-    description: Update attributes of a specific domain by its GUID.
+    description: Update a domain.
     operationId: updateDomain
     tags:
       - Domains
@@ -129,7 +129,7 @@
         $ref: '../components/responses/NotFound.yaml'
   delete:
     summary: Delete a domain
-    description: Delete a specific domain by its GUID.
+    description: Delete a domain.
     operationId: deleteDomain
     tags:
       - Domains
@@ -152,7 +152,7 @@
 /v3/domains/{guid}/relationships/shared_organizations:
   post:
     summary: Share a domain
-    description: Share an organization-scoped domain to other organizations specified by a list of organization GUIDs.
+    description: This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
     operationId: shareDomain
     tags:
       - Domains
@@ -196,7 +196,10 @@
 /v3/organizations/{guid}/domains:
   get:
     summary: List domains for an organization
-    description: Retrieve all domains available in an organization for the current user.
+    description: |-
+      Retrieve all domains available in an organization for the current user. This will return unscoped domains (those without an owning organization), domains that are scoped to the given organization (owned by the given organization), and domains that have been shared with the organization.
+
+      To retrieve the default domain for an organization, use the [get default domain](#get-default-domain) endpoint.
     operationId: listDomainsForOrganization
     tags:
       - Domains
@@ -226,7 +229,7 @@
 /v3/domains/{guid}/route_reservations:
   get:
     summary: Check reserved routes for a domain
-    description: Check if a specific route for a domain exists.
+    description: Check if a specific route for a domain exists, regardless of the user’s visibility for the route in case the route belongs to a space the user does not belong to.
     operationId: checkReservedRoutesForDomain
     tags:
       - Domains
@@ -264,7 +267,7 @@
 /v3/domains/{guid}/relationships/shared_organizations/{org_guid}:
   delete:
     summary: Unshare a domain
-    description: Unshare a domain from a specific organization.
+    description: This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.
     operationId: unshareDomain
     tags:
       - Domains

@@ -1,7 +1,7 @@
 /v3/feature_flags:
   get:
     summary: List feature flags
-    description: Retrieve a list of all feature flags.
+    description: Retrieve all feature_flags.
     operationId: listFeatureFlags
     tags:
       - Feature Flags
@@ -29,8 +29,8 @@
         $ref: ../components/responses/Forbidden.yaml
 /v3/feature_flags/{name}:
   get:
-    summary: Retrieve a feature flag
-    description: Retrieve details of a specific feature flag by its name.
+    summary: Get a feature flag
+    description: Get a feature flag.
     operationId: getFeatureFlag
     tags:
       - Feature Flags
@@ -40,6 +40,25 @@
         required: true
         schema:
           type: string
+          enum:
+            - app_bits_upload
+            - app_scaling
+            - diego_docker
+            - diego_cnb
+            - env_var_visibility
+            - hide_marketplace_from_unauthenticated_users
+            - private_domain_creation
+            - resource_matching
+            - route_creation
+            - route_sharing
+            - service_instance_creation
+            - service_instance_sharing
+            - set_roles_by_username
+            - space_developer_env_var_visibility
+            - space_scoped_private_broker_creation
+            - task_creation
+            - unset_roles_by_username
+            - user_org_creation
         description: The name of the feature flag
     responses:
       '200':
@@ -54,7 +73,7 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a feature flag
-    description: Update the properties of a specific feature flag by its name.
+    description: Update a feature flag.
     operationId: updateFeatureFlag
     tags:
       - Feature Flags
@@ -64,6 +83,25 @@
         required: true
         schema:
           type: string
+          enum:
+            - app_bits_upload
+            - app_scaling
+            - diego_docker
+            - diego_cnb
+            - env_var_visibility
+            - hide_marketplace_from_unauthenticated_users
+            - private_domain_creation
+            - resource_matching
+            - route_creation
+            - route_sharing
+            - service_instance_creation
+            - service_instance_sharing
+            - set_roles_by_username
+            - space_developer_env_var_visibility
+            - space_scoped_private_broker_creation
+            - task_creation
+            - unset_roles_by_username
+            - user_org_creation
         description: The name of the feature flag
     requestBody:
       description: Feature flag object that needs to be updated

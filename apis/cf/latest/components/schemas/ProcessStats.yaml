@@ -11,17 +11,17 @@ properties:
           type: integer
         state:
           type: string
-          enum: ["RUNNING", "CRASHED", "STARTING", "DOWN"]
+          enum: ["RUNNING", "CRASHED", "STARTING", "DOWN", "STOPPING"]
         host:
           type: string
         uptime:
           type: integer
         mem_quota:
-          type: integer
+          type: [integer, 'null']
         disk_quota:
-          type: integer
+          type: [integer, 'null']
         log_rate_limit:
-          type: integer
+          type: [integer, 'null']
         usage:
           type: object
           properties:

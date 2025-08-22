@@ -51,6 +51,10 @@
         in: query
         schema:
           type: string
+          enum:
+            - buildpack
+            - cnb
+            - docker
         description: Lifecycle type to filter by
       - name: include
         in: query
@@ -58,7 +62,10 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of resource names to include in the response
+            enum:
+              - space
+              - space.organization
+        description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         description: OK
@@ -74,7 +81,7 @@
         $ref: '../components/responses/500.yaml'
   post:
     summary: Create an app
-    description: Create a new app.
+    description: Creates a new app.
     operationId: createApp
     tags:
       - Apps
@@ -126,7 +133,7 @@
 /v3/apps/{guid}:
   get:
     summary: Get an app
-    description: Retrieve details of a specific app by its GUID.
+    description: Retrieve a specific app.
     operationId: getApp
     tags:
       - Apps
@@ -156,7 +163,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update an app
-    description: Update attributes of a specific app by its GUID.
+    description: Update an app.
     operationId: updateApp
     tags:
       - Apps
@@ -190,7 +197,7 @@
         $ref: '../components/responses/UnprocessableEntity.yaml'
   delete:
     summary: Delete an app
-    description: Delete a specific app by its GUID.
+    description: Delete an app.
     operationId: deleteApp
     tags:
       - Apps
@@ -212,7 +219,7 @@
 /v3/apps/{guid}/actions/start:
   post:
     summary: Start an app
-    description: Start a specific app by its GUID.
+    description: Start an app.
     operationId: startApp
     tags:
       - Apps
@@ -232,7 +239,7 @@
 /v3/apps/{guid}/actions/stop:
   post:
     summary: Stop an app
-    description: Stop a specific app by its GUID.
+    description: Stop an app.
     operationId: stopApp
     tags:
       - Apps
@@ -252,7 +259,7 @@
 /v3/apps/{guid}/actions/restart:
   post:
     summary: Restart an app
-    description: Stop and then start a specific app by its GUID.
+    description: This endpoint will synchronously stop and start an application. Unlike the start and stop actions, this endpoint will error if the app is not successfully stopped in the runtime. For restarting applications without downtime, see the deployments resource.
     operationId: restartApp
     tags:
       - Apps
@@ -383,7 +390,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update environment variables for an app
-    description: Update the environment variables associated with the given app. The variables given in the request will be merged with the existing app environment variables. Any requested variables with a value of null will be removed from the app. Environment variable names may not start with VCAP_. PORT is not a valid environment variable. The updated environment variables will not take effect until the app is restarted.
+    description: Update the environment variables associated with the given app. The variables given in the request will be merged with the existing app environment variables. Any requested variables with a value of `null` will be removed from the app. Environment variable names may not start with VCAP_. PORT is not a valid environment variable. The updated environment variables will not take effect until the app is restarted.
     operationId: updateEnvironmentVariablesForApp
     tags:
       - Apps
@@ -414,7 +421,7 @@
 /v3/apps/{guid}/permissions:
   get:
     summary: Get permissions for an app
-    description: Get the current user's permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
+    description: Get the current user’s permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
     operationId: getPermissionsForApp
     tags:
       - Apps
@@ -434,7 +441,7 @@
 /v3/apps/{guid}/ssh_enabled:
   get:
     summary: Get SSH enabled for an app
-    description: Returns if an application's runtime environment will accept ssh connections. If ssh is disabled, the reason field will describe whether it is disabled globally, at the space level, or at the app level.
+    description: Returns if an application’s runtime environment will accept ssh connections. If ssh is disabled, the `reason` field will describe whether it is disabled globally, at the space level, or at the app level.
     operationId: getSshEnabledForApp
     tags:
       - Apps
@@ -497,6 +504,11 @@
         required: true
         schema:
           type: string
+          enum:
+            - ssh
+            - revisions
+            - service-binding-k8s
+            - file-based-vcap-services
     responses:
       '200':
         description: OK
@@ -517,6 +529,11 @@
         required: true
         schema:
           type: string
+          enum:
+            - ssh
+            - revisions
+            - service-binding-k8s
+            - file-based-vcap-services
     requestBody:
       content:
         application/json:

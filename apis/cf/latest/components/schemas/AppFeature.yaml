@@ -8,6 +8,6 @@ properties:
     description: The description of the app feature
   enabled:
     type: boolean
-    description: Whether the app feature is enabled
+    description: Denotes whether or not the app feature is enabled
 description: >
   App features are used to manage whether optional capabilities are enabled for a given application.

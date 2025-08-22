@@ -58,7 +58,7 @@
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/SpaceQuota.yaml
+            $ref: ../components/schemas/SpaceQuotaCreate.yaml
     responses:
       '201':
         description: Created
@@ -114,7 +114,7 @@
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/SpaceQuota.yaml
+            $ref: ../components/schemas/SpaceQuotaUpdate.yaml
     responses:
       '200':
         description: OK
@@ -158,7 +158,10 @@
 /v3/space_quotas/{quota_guid}/relationships/spaces:
   post:
     summary: Apply a space quota to a space
-    description: This endpoint applies a space quota to one or more spaces. Only an admin or an org manager in the quota's parent organization can apply a space quota to a space.
+    description: |-
+      This endpoint applies a space quota to one or more spaces.
+
+      Only an admin or an org manager in the quota’s parent organization can apply a space quota to a space.
     operationId: applySpaceQuota
     tags:
       - Space Quotas
@@ -185,20 +188,43 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: ../components/responses/NotFound.yaml
-/v3/space_quotas/{quota_guid}/relationships/spaces/{space_guid}:
+/v3/space_quotas/{guid}/relationships/spaces/{space_guid}:
   delete:
     summary: Remove a space quota from a space
-    description: This endpoint removes a space quota from a space. Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
-    operationId: removeSpaceQuota
+    description: |-
+      This endpoint removes a space quota from a space.
+
+      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
+    operationId: removeSpaceQuotaFromSpace
     tags:
       - Space Quotas
     parameters:
-      - name: quota_guid
+      - $ref: ../components/parameters/Guid.yaml
+      - name: space_guid
         in: path
         required: true
         schema:
           type: string
           format: uuid
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/space_quotas/{guid}/relationships/spaces/{space_guid}/:
+  delete:
+    summary: Remove a space quota from a space (with trailing slash)
+    description: |-
+      This endpoint removes a space quota from a space.
+
+      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
+    operationId: removeSpaceQuotaFromSpaceWithSlash
+    tags:
+      - Space Quotas
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
       - name: space_guid
         in: path
         required: true

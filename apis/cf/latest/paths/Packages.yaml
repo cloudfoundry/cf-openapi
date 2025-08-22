@@ -1,7 +1,7 @@
 /v3/packages:
   get:
     summary: List packages
-    description: Retrieve all packages the user has access to.
+    description: Retrieve all packages.
     operationId: listPackages
     tags:
       - Packages
@@ -25,6 +25,13 @@
           type: array
           items:
             type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - READY
+              - FAILED
+              - COPYING
+              - EXPIRED
         description: Comma-delimited list of package states to filter by
       - name: types
         in: query
@@ -32,6 +39,9 @@
           type: array
           items:
             type: string
+            enum:
+              - bits
+              - docker
         description: Comma-delimited list of package types to filter by
       - name: app_guids
         in: query
@@ -65,7 +75,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create a package
-    description: Create a new package.
+    description: Create a package.
     operationId: createPackage
     tags:
       - Packages
@@ -95,7 +105,7 @@
 /v3/packages/{guid}:
   get:
     summary: Get a package
-    description: Retrieve a specific package by its GUID.
+    description: Retrieve a package.
     operationId: getPackage
     tags:
       - Packages
@@ -118,20 +128,35 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
-/v3/packages/{guid}/upload:
-  post:
-    summary: Upload package bits
-    description: Upload the bits for a specific package by its GUID.
-    operationId: uploadPackageBits
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  patch:
+    summary: Update a package
+    description: Update a package.
+    operationId: updatePackage
     tags:
       - Packages
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      $ref: '../components/requestBodies/PackageUploadRequestBody.yaml'
+      description: Package object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: '../components/schemas/Metadata.yaml'
+              username:
+                type: string
+                description: The username for the image’s registry. Only possible for Docker package.
+              password:
+                type: string
+                description: The password for the image’s registry. Only possible for Docker package.
     responses:
       '200':
-        description: Successfully uploaded package bits
+        description: Successfully updated package
         content:
           application/json:
             schema:
@@ -140,10 +165,131 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Delete a package
+    description: Delete a package.
+    operationId: deletePackage
+    tags:
+      - Packages
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the package
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/packages/{guid}/droplets:
+  get:
+    summary: List droplets for a package
+    description: Retrieve a list of droplets belonging to a package.
+    operationId: listPackageDroplets
+    tags:
+      - Packages
+      - Droplets
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+      - $ref: '../components/parameters/Page.yaml'
+      - $ref: '../components/parameters/PerPage.yaml'
+      - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: '../components/parameters/LabelSelector.yaml'
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet guids to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet states to filter by
+    responses:
+      '200':
+        description: List of droplets for the package
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/DropletList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+/v3/packages/{guid}/upload:
+  post:
+    summary: Upload package bits
+    description: This upload endpoint takes a multi-part form requests for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object) under the `resources` field. These field may be used together.
+    operationId: uploadPackageBits
+    tags:
+      - Packages
+    parameters:
+      - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              bits:
+                type: string
+                format: binary
+              resources:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: string
+                    size_in_bytes:
+                      type: integer
+                    checksum:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+    responses:
+      '200':
+        description: Successfully uploaded package bits
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Package.yaml'
+      '202':
+        description: Upload initiated
+        headers:
+          Location:
+            schema:
+              type: string
+            description: URL of the job tracking the upload
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Package.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/packages/{guid}/download:
   get:
     summary: Download package bits
-    description: Download the bits for a specific package by its GUID.
+    description: |-
+      This endpoint downloads the bits of an existing package.
+
+      When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
     operationId: downloadPackageBits
     tags:
       - Packages
@@ -157,7 +303,7 @@
 /v3/packages?source_guid={source_guid}:
   post:
     summary: Copy a package
-    description: Copy a package to a different app.
+    description: This endpoint copies the bits of a source package to a target package.
     operationId: copyPackage
     tags:
       - Packages
@@ -218,6 +364,13 @@
           type: array
           items:
             type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - READY
+              - FAILED
+              - COPYING
+              - EXPIRED
         description: Comma-delimited list of package states to filter by
       - name: types
         in: query
@@ -225,6 +378,9 @@
           type: array
           items:
             type: string
+            enum:
+              - bits
+              - docker
         description: Comma-delimited list of package types to filter by
     responses:
       '200':

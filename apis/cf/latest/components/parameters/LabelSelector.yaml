@@ -1,6 +1,6 @@
 name: label_selector
 in: query
-description: Selectors allow users to filter and group API resources by the labels applied to them.
+description: A query string containing a list of [label selector](#labels-and-selectors) requirements
 required: false
 schema:
   type: string

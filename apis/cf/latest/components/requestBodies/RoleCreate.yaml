@@ -6,7 +6,7 @@ content:
       properties:
         type:
           type: string
-          description: Role type
+          description: Role to create
           enum:
             - organization_user
             - organization_auditor
@@ -21,7 +21,10 @@ content:
           properties:
             user:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to a user; the user can be defined by either a `guid` or, if the `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled, a `username` (with the option of including an `origin` to disambiguate it)
             organization:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to an organization; required only when creating an organization role
             space:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to a space; required only when creating a space role

@@ -8,3 +8,4 @@ content:
           type: array
           items:
             $ref: '../schemas/RouteDestination.yaml'
+          description: List of destinations to add to route; destinations without `process.type` specified will get process type `"web"` by default

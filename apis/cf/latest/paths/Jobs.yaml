@@ -1,7 +1,7 @@
 /v3/jobs/{guid}:
   get:
     summary: Get a job
-    description: Retrieve a specific job by its GUID.
+    description: Retrieve a specific job.
     operationId: getJob
     tags:
       - Jobs

@@ -19,7 +19,7 @@ content:
           description: Name of the service instance
         parameters:
           type: object
-          description: A JSON object that is passed to the service broker (managed services only)
+          description: A JSON object that is passed to the service broker
         credentials:
           type: object
           description: A JSON object that is made available to apps bound to this service instance (user-provided services only)
@@ -41,9 +41,10 @@ content:
           properties:
             space:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: The space in which to create the service instance
             service_plan:
               $ref: '../schemas/RelationshipToOne.yaml'
-              description: Required for managed service instances
+              description: The service plan from which to create the service instance
           description: Relationships for the service instance
         metadata:
           $ref: '../schemas/Metadata.yaml'

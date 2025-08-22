@@ -7,7 +7,7 @@ content:
       properties:
         name:
           type: string
-          description: Name of the space
+          description: New space name
         metadata:
           $ref: '../schemas/Metadata.yaml'
       description: Request schema for updating a space

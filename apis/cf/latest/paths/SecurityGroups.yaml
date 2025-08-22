@@ -1,7 +1,7 @@
 /v3/security_groups:
   get:
     summary: List security groups
-    description: List security groups
+    description: List security groups.
     operationId: listSecurityGroups
     tags:
       - Security Groups
@@ -62,7 +62,7 @@
         $ref: ../components/responses/Forbidden.yaml
   post:
     summary: Create a security group
-    description: Create a security group
+    description: Create a security group.
     operationId: createSecurityGroup
     tags:
       - Security Groups
@@ -89,7 +89,7 @@
 /v3/security_groups/{guid}:
   get:
     summary: Get a security group
-    description: Get a security group
+    description: Get a security group.
     operationId: getSecurityGroup
     tags:
       - Security Groups
@@ -145,10 +145,10 @@
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a security group
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values. Updates to the `rules` parameter will fully replace the current set of `rules` for the security group. Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `running` parameter will not affect the `staging` configuration.
+    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values. Updates to the `rules` parameter will fully replace the current set of `rules` for the security group. Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
     operationId: updateSecurityGroup
     tags:
       - Security Groups
@@ -172,7 +172,7 @@
         $ref: ../components/responses/NotFound.yaml
   delete:
     summary: Delete a security group
-    description: Delete a security group
+    description: Delete a security group.
     operationId: deleteSecurityGroup
     tags:
       - Security Groups

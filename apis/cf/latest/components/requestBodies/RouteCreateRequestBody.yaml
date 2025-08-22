@@ -6,16 +6,21 @@ content:
       properties:
         host:
           type: string
+          description: The host component for the route; not compatible with routes specifying the `tcp` protocol
         path:
           type: string
+          description: The path component for the route; should begin with a `/` and not compatible with routes specifying the `tcp` protocol
         port:
           type: integer
+          description: The port the route will listen on; only compatible with routes leveraging a domain that supports the `tcp` protocol. For `tcp` domains, a port will be randomly assigned if not specified
         relationships:
           type: object
           properties:
             domain:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to the domain of the route
             space:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to the space containing the route; routes can only be mapped to destinations in that space
       required:
         - relationships

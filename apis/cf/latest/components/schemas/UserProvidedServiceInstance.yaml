@@ -33,9 +33,6 @@ properties:
     type: string
     format: uri
     description: URL for route service
-  credentials:
-    type: object
-    description: Service credentials
   relationships:
     type: object
     properties:
@@ -52,6 +49,8 @@ properties:
       service_credential_bindings:
         $ref: './Link.yaml'
       service_route_bindings:
+        $ref: './Link.yaml'
+      credentials:
         $ref: './Link.yaml'
   metadata:
     $ref: './Metadata.yaml'

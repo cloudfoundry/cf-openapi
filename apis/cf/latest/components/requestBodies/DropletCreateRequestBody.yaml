@@ -6,7 +6,13 @@ content:
       type: object
       properties:
         relationships:
-          $ref: '../schemas/Relationships.yaml'
+          type: object
+          properties:
+            app:
+              $ref: '../schemas/RelationshipToOne.yaml'
+              description: App to create droplet for
+          required:
+            - app
         process_types:
           type: object
           description: Process names and start commands for the droplet

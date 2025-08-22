@@ -37,7 +37,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create an organization
-    description: Create a new organization.
+    description: Create an organization.
     operationId: createOrganization
     tags:
       - Organizations
@@ -281,7 +281,10 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Assign default isolation segment
-    description: Set the default isolation segment for a given organization.
+    description: |-
+      Set the default isolation segment for a given organization. Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
+
+      Apps will not run in the new default isolation segment until they are restarted.
     operationId: assignDefaultIsolationSegmentForOrganization
     tags:
       - Organizations

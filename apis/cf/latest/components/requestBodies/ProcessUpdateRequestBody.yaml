@@ -10,8 +10,10 @@ content:
           description: The command used to start the process; use null to revert to the buildpack-detected or procfile-provided start command
         health_check:
           $ref: '../schemas/HealthCheck.yaml'
+          description: The health check to perform on the process
         readiness_health_check:
           $ref: '../schemas/HealthCheck.yaml'
+          description: The readiness health check to perform on the process
         metadata:
           $ref: '../schemas/Metadata.yaml'
       description: Request schema for updating a process

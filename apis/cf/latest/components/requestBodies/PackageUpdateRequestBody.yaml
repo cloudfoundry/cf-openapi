@@ -7,4 +7,10 @@ content:
       properties:
         metadata:
           $ref: '../schemas/Metadata.yaml'
+        username:
+          type: string
+          description: The username for the image’s registry. Only possible for Docker package.
+        password:
+          type: string
+          description: The password for the image’s registry. Only possible for Docker package.
       description: Request schema for updating a package

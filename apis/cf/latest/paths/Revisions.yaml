@@ -1,7 +1,7 @@
 /v3/revisions/{guid}:
   get:
     summary: Get a revision
-    description: Retrieve a specific revision by its GUID.
+    description: Retrieve a revision.
     operationId: getRevision
     tags:
       - Revisions
@@ -26,7 +26,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a revision
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+    description: Update a revision.
     operationId: updateRevision
     tags:
       - Revisions

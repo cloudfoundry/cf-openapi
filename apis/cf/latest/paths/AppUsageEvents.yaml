@@ -1,7 +1,7 @@
 /v3/app_usage_events:
   get:
     summary: List app usage events
-    description: Retrieve all app usage events the user has access to.
+    description: Retrieve all app usage events.
     operationId: listAppUsageEvents
     tags:
       - App Usage Events
@@ -36,7 +36,7 @@
 /v3/app_usage_events/{guid}:
   get:
     summary: Get an app usage event
-    description: Retrieve a specific app usage event by its GUID.
+    description: Retrieve a specific app usage event.
     operationId: getAppUsageEvent
     tags:
       - App Usage Events

@@ -7,7 +7,7 @@ content:
       properties:
         command:
           type: string
-          description: The command to run for the task
+          description: The command to run for the task. **NOTE:** optional if a `template.process.guid` is provided
         name:
           type: string
           description: Human-readable name for the task
@@ -36,6 +36,7 @@ content:
                   format: uuid
               required:
                 - guid
+              description: The guid of the process that will be used as a template
         metadata:
           $ref: '../schemas/Metadata.yaml'
       description: Request schema for creating a task

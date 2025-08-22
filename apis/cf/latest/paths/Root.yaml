@@ -1,7 +1,7 @@
 get:
-  summary: Get API root
+  summary: Global API Root
   description: |-
-    Returns the root API endpoint information.
+    This endpoint returns links to the APIs available on a given Cloud Foundry deployment.
   operationId: getApiRoot
   tags:
     - Root

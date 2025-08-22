@@ -4,7 +4,7 @@ allOf:
   - properties:
       name:
         type: string
-        description: The name of the domain; must be between 3-253 characters and follow RFC 1035
+        description: The name of the domain; must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035)
       internal:
         type: boolean
         description: Whether the domain is used for internal (container-to-container) traffic
@@ -16,13 +16,15 @@ allOf:
           guid:
             type: string
             format: uuid
-            description: The GUID of the router group to route TCP traffic through
-        description: The router group that the domain will use for TCP traffic
+        description: The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
       supported_protocols:
         type: array
         items:
           type: string
-        description: Available protocols for routes using the domain, currently http and tcp
+          enum:
+            - http
+            - tcp
+        description: Available protocols for routes using the domain, currently `http` and `tcp`
       relationships:
         $ref: './Relationships.yaml'
       metadata:

@@ -32,6 +32,12 @@
           type: array
           items:
             type: string
+            enum:
+              - PENDING
+              - RUNNING
+              - SUCCEEDED
+              - CANCELING
+              - FAILED
         description: Comma-delimited list of task states to filter by
       - name: app_guids
         in: query
@@ -73,7 +79,7 @@
 /v3/apps/{guid}/tasks:
   post:
     summary: Create a task
-    description: Create a new task.
+    description: Create a task.
     operationId: createTask
     tags:
       - Tasks
@@ -113,7 +119,7 @@
 /v3/tasks/{guid}:
   get:
     summary: Get a task
-    description: Retrieve a specific task. The `command` field may be excluded in the response based on the user's role.
+    description: Retrieve a task. The `command` field may be excluded in the response based on the user’s role.
     operationId: getTask
     tags:
       - Tasks
@@ -143,7 +149,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a task
-    description: Update a task
+    description: Update a task.
     operationId: updateTask
     tags:
       - Tasks

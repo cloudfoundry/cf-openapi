@@ -117,10 +117,9 @@
   delete:
     summary: Delete a service offering
     description: |-
-      This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud
-      Foundry database when they have been removed from the service broker catalog, or when the service broker has been
-      removed. Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service
-      broker.
+      This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud Foundry database when they have been removed from the service broker catalog, or when the service broker has been removed.
+
+      Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service broker.
     operationId: deleteServiceOffering
     tags:
       - Service Offerings

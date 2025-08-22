@@ -1,7 +1,7 @@
 /v3/processes:
   get:
     summary: List processes
-    description: Retrieve all processes the user has access to.
+    description: Retrieve all processes.
     operationId: listProcesses
     tags:
       - Processes
@@ -181,7 +181,10 @@
 /v3/processes/{guid}/instances/{index}:
   delete:
     summary: Terminate a process instance
-    description: Terminate a process instance.
+    description: |-
+      Terminate an instance of a specific process. Health management will eventually restart the instance.
+
+      This allows a user to stop a single misbehaving instance of a process.
     operationId: terminateProcessInstance
     tags:
       - Processes
@@ -202,7 +205,7 @@
 /v3/apps/{guid}/processes:
   get:
     summary: List processes for an app
-    description: Retrieve all processes for an app.
+    description: Retrieves all processes belonging to an app.
     operationId: listAppProcesses
     tags:
       - Processes

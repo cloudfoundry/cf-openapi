@@ -4,6 +4,8 @@ content:
   application/json:
     schema:
       type: object
+      required:
+        - name
       properties:
         name:
           type: string
@@ -17,16 +19,15 @@ content:
             guid:
               type: string
               format: uuid
-          description: The router group the domain will be associated with
+          description: "The desired router group guid.  _note: creates a `tcp` domain; cannot be used when `internal` is set to `true` or domain is scoped to an org_\""
         relationships:
           type: object
           properties:
             organization:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to the organization the domain will be scoped to;  _note cannot be used when `internal` is set to `true` or domain is associated with a router group_
             shared_organizations:
               $ref: '../schemas/RelationshipToMany.yaml'
+              description: A relationship to organizations the domain will be shared with  _Note cannot be used without an organization relationship_
         metadata:
           $ref: '../schemas/Metadata.yaml'
-      required:
-        - name
-      description: Request schema for creating a domain

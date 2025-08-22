@@ -158,7 +158,10 @@
 /v3/space_quotas/{quota_guid}/relationships/spaces:
   post:
     summary: Apply a space quota to a space
-    description: This endpoint applies a space quota to one or more spaces. Only an admin or an org manager in the quota's parent organization can apply a space quota to a space.
+    description: |-
+      This endpoint applies a space quota to one or more spaces.
+
+      Only an admin or an org manager in the quota’s parent organization can apply a space quota to a space.
     operationId: applySpaceQuota
     tags:
       - Space Quotas
@@ -188,7 +191,10 @@
 /v3/space_quotas/{guid}/relationships/spaces/{space_guid}:
   delete:
     summary: Remove a space quota from a space
-    description: This endpoint removes a space quota from a space. Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
+    description: |-
+      This endpoint removes a space quota from a space.
+
+      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
     operationId: removeSpaceQuotaFromSpace
     tags:
       - Space Quotas
@@ -210,7 +216,10 @@
 /v3/space_quotas/{guid}/relationships/spaces/{space_guid}/:
   delete:
     summary: Remove a space quota from a space (with trailing slash)
-    description: This endpoint removes a space quota from a space. Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
+    description: |-
+      This endpoint removes a space quota from a space.
+
+      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
     operationId: removeSpaceQuotaFromSpaceWithSlash
     tags:
       - Space Quotas

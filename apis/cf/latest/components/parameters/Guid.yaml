@@ -4,4 +4,4 @@ required: true
 schema:
   type: string
   format: uuid
-description: The GUID of the resource
+description: The unique identifier for the resource

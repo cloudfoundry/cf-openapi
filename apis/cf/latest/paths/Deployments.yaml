@@ -1,7 +1,7 @@
 /v3/deployments:
   get:
     summary: List deployments
-    description: Retrieve a list of all deployments the user has access to.
+    description: Retrieve all deployments.
     operationId: listDeployments
     tags:
       - Deployments
@@ -25,21 +25,31 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of deployment states to filter by
+        description: Comma-delimited list of states to filter by
       - name: status_reasons
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of status reasons to filter by; valid values include DEPLOYING, PAUSED, CANCELING, DEPLOYED, CANCELED, SUPERSEDED
+            enum:
+              - DEPLOYING
+              - PAUSED
+              - CANCELING
+              - DEPLOYED
+              - CANCELED
+              - SUPERSEDED
+        description: Comma-delimited list of status reasons to filter by
       - name: status_values
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of status values to filter by; valid values include ACTIVE and FINALIZED
+            enum:
+              - ACTIVE
+              - FINALIZED
+        description: Comma-delimited list of status values to filter by
     responses:
       '200':
         description: OK
@@ -53,7 +63,7 @@
         $ref: '../components/responses/Forbidden.yaml'
   post:
     summary: Create a deployment
-    description: Create a new deployment.
+    description: When you create a new deployment you can either provide a specific droplet or revision to deploy. If no revision or droplet is provided, the droplet associated with the app is deployed.
     operationId: createDeployment
     tags:
       - Deployments
@@ -69,6 +79,9 @@
                 $ref: '../components/schemas/Relationships.yaml'
               strategy:
                 type: string
+                enum:
+                  - rolling
+                  - canary
               droplet:
                 $ref: '../components/schemas/Relationship.yaml'
               revision:
@@ -106,8 +119,8 @@
         $ref: '../components/responses/Forbidden.yaml'
 /v3/deployments/{guid}:
   get:
-    summary: Retrieve a deployment
-    description: Retrieve details of a specific deployment by its GUID.
+    summary: Get a deployment
+    description: Retrieve a deployment.
     operationId: getDeployment
     tags:
       - Deployments
@@ -142,7 +155,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a deployment
-    description: Update attributes of a specific deployment by its GUID.
+    description: Update a deployment.
     operationId: updateDeployment
     tags:
       - Deployments
@@ -173,7 +186,7 @@
 /v3/deployments/{guid}/actions/cancel:
   post:
     summary: Cancel a deployment
-    description: Cancel a deployment in progress.
+    description: Cancel a deployment.
     operationId: cancelDeployment
     tags:
       - Deployments
@@ -193,7 +206,7 @@
 /v3/deployments/{guid}/actions/continue:
   post:
     summary: Continue a deployment
-    description: Continue a paused deployment.
+    description: Continue a deployment.
     operationId: continueDeployment
     tags:
       - Deployments

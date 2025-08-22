@@ -15,11 +15,13 @@ content:
             type: string
         lifecycle:
           $ref: '../schemas/Lifecycle.yaml'
+          description: Provides the lifecycle object for the application
         relationships:
           type: object
           properties:
             space:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to a space
           required:
             - space
         metadata:

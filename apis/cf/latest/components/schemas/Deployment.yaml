@@ -7,10 +7,20 @@ allOf:
         properties:
           value:
             type: string
-            description: The current status of the deployment; valid values are ACTIVE (in progress) and FINALIZED (finished, either successfully or not)
+            description: The current status of the deployment
+            enum:
+              - ACTIVE
+              - FINALIZED
           reason:
             type: string
             description: The reason for the status of the deployment
+            enum:
+              - DEPLOYING
+              - PAUSED
+              - CANCELING
+              - DEPLOYED
+              - CANCELED
+              - SUPERSEDED
           details:
             type: object
             properties:
@@ -24,7 +34,10 @@ allOf:
                 description: Timestamp of last change to status.value or status.reason
       strategy:
         type: string
-        description: Strategy used for the deployment; supported strategies are rolling and canary (experimental)
+        description: Strategy used for the deployment
+        enum:
+          - rolling
+          - canary
       options:
         type: object
         properties:
@@ -32,9 +45,19 @@ allOf:
             type: integer
             description: The maximum number of new instances to deploy simultaneously
       droplet:
-        $ref: './RelationshipToOne.yaml'
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: The droplet guid that the deployment is transitioning the app to
       previous_droplet:
-        $ref: './RelationshipToOne.yaml'
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: The app’s [current droplet guid](#get-current-droplet-association-for-an-app) before the deployment was created
       new_processes:
         type: array
         items:

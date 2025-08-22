@@ -79,10 +79,9 @@
   post:
     summary: Create a service instance
     description: |-
-      This endpoint creates a new service instance. Service instances can be of type `managed` or `user-provided`, and
-      the required parameters are different for each type. User provided service instances do not require interactions with
-      service brokers. If failures occur when creating managed service instances, the API might execute orphan mitigation steps
-      accordingly to cases outlined in the documentation.
+      This endpoint creates a new service instance. Service instances can be of type `managed` or `user-provided`, and the required parameters are different for each type. User provided service instances do not require interactions with service brokers.
+
+      If failures occur when creating managed service instances, the API might execute orphan mitigation steps accordingly to cases outlined in the [OSBAPI specification](https://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#orphan-mitigation)
     operationId: createServiceInstance
     tags:
       - Service Instances
@@ -120,7 +119,7 @@
 /v3/service_instances/{guid}/credentials:
   get:
     summary: Get credentials for a user-provided service instance
-    description: Retrieves the credentials for a user-provided service instance.
+    description: Retrieves the credentials for a user-provided service instance. This endpoint is not available for managed service instances.
     operationId: getServiceInstanceCredentials
     tags:
       - Service Instances
@@ -189,7 +188,7 @@
         $ref: ../components/responses/NotFound.yaml
   post:
     summary: Share a service instance to other spaces
-    description: This endpoint shares the service instance with the specified spaces.
+    description: This endpoint shares the service instance with the specified spaces. In order to share into a space the requesting user must be a space developer in the target space.
     operationId: shareServiceInstance
     tags:
       - Service Instances
@@ -216,7 +215,7 @@
 /v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}:
   delete:
     summary: Unshare a service instance from another space
-    description: This endpoint unshares the service instance from the specified space.
+    description: This endpoint unshares the service instance from the specified space. This will automatically unbind any applications bound to this service instance in the specified space. Unsharing a service instance from a space will not delete any service keys.
     operationId: unshareServiceInstance
     tags:
       - Service Instances
@@ -238,7 +237,7 @@
 /v3/service_instances/{guid}/parameters:
   get:
     summary: Get parameters for a managed service instance
-    description: Queries the Service Broker for the parameters associated with this service instance.
+    description: Queries the Service Broker for the parameters associated with this service instance. The broker catalog must have enabled the `instances_retrievable` feature for the Service Offering. Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag.
     operationId: getServiceInstanceParameters
     tags:
       - Service Instances
@@ -258,7 +257,10 @@
 /v3/service_instances/{guid}/permissions:
   get:
     summary: Get permissions for a service instance
-    description: Get the current user’s permissions for the given service instance.
+    description: |-
+      Get the current user’s permissions for the given service instance. If a user can get a service instance then they can ‘read’ it. Users who can update a service instance can ‘manage’ it.
+
+      This endpoint’s primary purpose is to enable third-party service dashboards to determine the permissions of a given Cloud Foundry user that has authenticated with the dashboard via single sign-on (SSO). For more information, see the Cloud Foundry documentation on [Dashboard Single Sign-On](https://docs.cloudfoundry.org/services/dashboard-sso.html).
     operationId: getServiceInstancePermissions
     tags:
       - Service Instances
@@ -315,7 +317,14 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a service instance
-    description: Update a service instance
+    description: |-
+      Some updates can be performed entirely within the Cloud Controller in which case the response is synchronous. Some updates require communication with the service broker, in which case the response will be asynchronous. The response will be asynchronous if any of these parameters are specified:
+      * `parameters`
+      * `service_plan`
+      * `maintenance_info`
+      * `name` - when the service offering has `allow_context_updates` feature enabled
+
+      Otherwise the response will be synchronous.
     operationId: updateServiceInstance
     tags:
       - Service Instances

@@ -46,7 +46,10 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of resource names to include in the response
+            enum:
+              - route
+              - service_instance
+        description: "Optionally include a list of unique related resources in the response. Valid values are: `route`, `service_instance`"
     responses:
       '200':
         description: OK
@@ -59,10 +62,11 @@
   post:
     summary: Create a service route binding
     description: |-
-      This endpoint creates a new route service binding. The service instance and the route
-      must be in the same space. To bind a route to a user-provided service instance, the service instance must
-      have the `route_service_url` property set. To bind a route to a managed service instance, the service offering must be bindable,
-      and the service offering must have `route_service` set in the `requires` property.
+      This endpoint creates a new route service binding. The service instance and the route must be in the same space.
+
+      To bind a route to a user-provided service instance, the service instance must have the `route_service_url` property set.
+
+      To bind a route to a managed service instance, the service offering must be bindable, and the service offering must have `route_forwarding` set in the `requires` property.
     operationId: createServiceRouteBinding
     tags:
       - Service Route Bindings
@@ -191,10 +195,7 @@
   get:
     summary: Get parameters for a route binding
     description: |-
-      Queries the Service Broker for the parameters associated with this service route binding.
-      The broker catalog must have enabled the `bindings_retrievable` feature for the Service Offering.
-      Check the `feature_flags` for the value of this feature flag.
-      This endpoint is not available for User-Provided Service Instances.
+      Queries the Service Broker for the parameters associated with this service route binding. The broker catalog must have enabled the `bindings_retrievable` feature for the Service Offering. Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag. This endpoint is not available for User-Provided Service Instances.
     operationId: getServiceRouteBindingParameters
     tags:
       - Service Route Bindings
@@ -210,4 +211,4 @@
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'

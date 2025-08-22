@@ -29,7 +29,7 @@ content:
           properties:
             service_plan:
               $ref: '../schemas/RelationshipToOne.yaml'
-              description: The service plan from which to create the service instance (managed services only)
+              description: The service plan from which to create the service instance
           description: Relationships for the service instance
         maintenance_info:
           type: object
@@ -39,7 +39,7 @@ content:
             version:
               type: string
               description: Must be a semantic version value and it must match the version in the maintenance_info for the service instance plan in the updated broker catalog
-          description: Maintenance info object for service instance upgrades (managed services only)
+          description: If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
         metadata:
           $ref: '../schemas/Metadata.yaml'
     examples:

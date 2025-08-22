@@ -100,7 +100,7 @@ func main() {
 		_, reqErrors := v.ValidateHttpRequest(httpReq)
 		if len(reqErrors) > 0 {
 			isValid = false
-			log.Printf("Request %d validation failed:", i+1)
+			log.Printf("Request %d validation failed, url %s", i+1, httpReq.URL.String())
 			for _, e := range reqErrors {
 				log.Printf("  - %s", e.Error())
 			}
@@ -117,7 +117,7 @@ func main() {
 		_, respErrors := v.ValidateHttpResponse(httpReq, httpResp)
 		if len(respErrors) > 0 {
 			isValid = false
-			log.Printf("Response %d validation failed:", i+1)
+			log.Printf("Response %d validation failed, url %s", i+1, httpReq.URL.String())
 			for _, e := range respErrors {
 				log.Printf("  - %s", e.Error())
 			}

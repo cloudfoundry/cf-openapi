@@ -19,16 +19,6 @@ properties:
     type: string
     format: uri
     description: URL of the service broker
-  available:
-    type: boolean
-    description: Whether the service broker is available
-  status:
-    type: string
-    description: Status of the service broker
-    enum:
-      - available
-      - synchronization in progress
-      - synchronization failed
   relationships:
     type: object
     properties:
@@ -52,6 +42,4 @@ required:
   - updated_at
   - name
   - url
-  - available
-  - status
   - links

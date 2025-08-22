@@ -136,8 +136,15 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     responses:
-      '204':
-        description: Successfully deleted domain
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the domain
+            schema:
+              type: string
+              format: uri
+
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

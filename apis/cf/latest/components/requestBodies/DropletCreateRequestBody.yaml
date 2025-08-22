@@ -16,6 +16,8 @@ content:
         process_types:
           type: object
           description: Process names and start commands for the droplet
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
       required:
         - relationships
       description: Request schema for creating a droplet

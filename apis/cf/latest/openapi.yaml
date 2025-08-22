@@ -210,10 +210,6 @@ components:
       $ref: './components/schemas/ManagedServiceInstance.yaml'
     UserProvidedServiceInstance:
       $ref: './components/schemas/UserProvidedServiceInstance.yaml'
-    ManagedServiceInstanceUpdate:
-      $ref: './components/schemas/ManagedServiceInstanceUpdate.yaml'
-    UserProvidedServiceInstanceUpdate:
-      $ref: './components/schemas/UserProvidedServiceInstanceUpdate.yaml'
     ServicePlanVisibility:
       $ref: './components/schemas/ServicePlanVisibility.yaml'
     ServiceRouteBinding:
@@ -348,6 +344,18 @@ components:
       $ref: './components/requestBodies/UserCreate.yaml'
     UserUpdate:
       $ref: './components/requestBodies/UserUpdate.yaml'
+    ServiceBrokerCreate:
+      $ref: './components/requestBodies/ServiceBrokerCreate.yaml'
+    SpaceQuotaCreate:
+      $ref: './components/requestBodies/SpaceQuotaCreate.yaml'
+    SpaceQuotaUpdate:
+      $ref: './components/requestBodies/SpaceQuotaUpdate.yaml'
+    UserProvidedServiceInstanceUpdate:
+      $ref: './components/requestBodies/UserProvidedServiceInstanceUpdate.yaml'
+    ManagedServiceInstanceUpdate:
+      $ref: './components/requestBodies/ManagedServiceInstanceUpdate.yaml'
+    SidecarCreate:
+      $ref: './components/requestBodies/SidecarCreate.yaml'
 paths:
   /:
     $ref: './paths/Root.yaml#/'

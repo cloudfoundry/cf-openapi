@@ -26,8 +26,8 @@ The repository is organized as follows:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/cloudfoundry-community/capi-openapi-spec.git
-   cd capi-openapi-spec
+   git clone https://github.com/cloudfoundry/cf-openapi.git
+   cd cf-openapi
    ```
 
 2. Install the dependencies:

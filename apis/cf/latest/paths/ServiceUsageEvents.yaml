@@ -75,11 +75,13 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is purging and seeding the service usage events
+            schema:
+              type: string
+              format: uri
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Job.yaml

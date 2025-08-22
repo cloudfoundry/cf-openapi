@@ -60,6 +60,26 @@
           schema:
             type: string
     responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diff:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      op:
+                        type: string
+                      path:
+                        type: string
+                      was:
+                        type: string
+                      value:
+                        type: string
       '202':
         description: Accepted
         content:

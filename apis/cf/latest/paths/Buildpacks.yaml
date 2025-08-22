@@ -118,8 +118,15 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     responses:
-      '204':
-        description: Successfully deleted buildpack
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the buildpack
+            schema:
+              type: string
+              format: uri
+
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

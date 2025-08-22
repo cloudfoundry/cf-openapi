@@ -198,9 +198,9 @@
                     self:
                       $ref: '../components/schemas/Link.yaml'
                       description: The URL to get this usage summary
-                      organization:
-                        $ref: '../components/schemas/Link.yaml'
-                        description: The URL to get the organization for this usage summary
+                    organization:
+                      $ref: '../components/schemas/Link.yaml'
+                      description: The URL to get the organization for this usage summary
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':

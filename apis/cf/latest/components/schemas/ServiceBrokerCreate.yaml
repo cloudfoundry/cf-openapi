@@ -1,5 +1,13 @@
 type: object
 properties:
+  metadata:
+    $ref: './Metadata.yaml'
+  relationships:
+    type: object
+    properties:
+      space:
+        $ref: './RelationshipToOne.yaml'
+    description: Relationships for the service broker
   name:
     type: string
     description: Name of the service broker

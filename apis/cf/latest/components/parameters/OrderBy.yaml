@@ -4,5 +4,5 @@ required: false
 schema:
   type: string
 description: |
-  Order results by a specific field. Prepend with - to sort descending.
+  Value to sort by. Defaults to ascending; prepend with `-` to sort descending.
 example: "created_at"

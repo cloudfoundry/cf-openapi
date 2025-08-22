@@ -4,7 +4,11 @@ allOf:
   - properties:
       state:
         type: string
-        description: State of the build; valid states are STAGING, STAGED, or FAILED
+        description: State of the build
+        enum:
+          - STAGING
+          - STAGED
+          - FAILED
       staging_memory_in_mb:
         type: integer
         description: Memory in MB allocated for staging of the build
@@ -15,10 +19,11 @@ allOf:
         type: integer
         description: Log rate limit in bytes per second allocated for staging of the build
       error:
-        type: string
+        type: [string, 'null']
         description: A string describing errors during the build process
       lifecycle:
         $ref: './Lifecycle.yaml'
+        description: Provides the lifecycle object to use during staging; this will override the build’s application’s default lifecycle for this build
       checksum:
         type: object
         properties:
@@ -32,14 +37,26 @@ allOf:
         $ref: './Metadata.yaml'
       relationships:
         $ref: './Relationships.yaml'
+      package:
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: The package that is the input to the staging process
       droplet:
-        $ref: './RelationshipToOne.yaml'
+        type: [object, 'null']
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: A resulting droplet from the staging process; `droplet` will be `null` if staging has not completed
       created_by:
         type: object
         properties:
           guid:
             type: string
-            description: The GUID of the user that created the build
+            description: The guid of the user that created the build
           name:
             type: string
             description: The name of the user that created the build

@@ -2,7 +2,7 @@
   get:
     summary: Get platform info
     description: |-
-      Returns information about the platform.
+      Get information about the platform.
     operationId: getPlatformInfo
     tags:
       - Info
@@ -55,6 +55,8 @@
                         - description: Link to the support website for the platform
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
 /v3/info/usage_summary:
@@ -75,12 +77,7 @@
               properties:
                 usage_summary:
                   type: object
-                  description: |-
-                    Usage summary object
-
-                    Name                    Type     Description
-                    started_instances        integer Total number of process instances in the STARTED state
-                    memory_in_mb            integer Sum of memory usage of all tasks in the RUNNING state and all process instances in the STARTED state
+                  description: Usage summary
                   properties:
                     started_instances:
                       type: integer
@@ -88,6 +85,24 @@
                     memory_in_mb:
                       type: integer
                       description: Sum of memory usage of all tasks in the RUNNING state and all process instances in the STARTED state
+                    routes:
+                      type: integer
+                      description: Total number of routes
+                    service_instances:
+                      type: integer
+                      description: Total number of managed service instances
+                    reserved_ports:
+                      type: integer
+                      description: Total number of reserved ports
+                    domains:
+                      type: integer
+                      description: Total number of private domains
+                    per_app_tasks:
+                      type: integer
+                      description: Total number of running tasks
+                    service_keys:
+                      type: integer
+                      description: Total number of service keys
                 links:
                   type: object
                   description: Links to related resources
@@ -100,5 +115,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
       '500':
         $ref: '../components/responses/500.yaml'

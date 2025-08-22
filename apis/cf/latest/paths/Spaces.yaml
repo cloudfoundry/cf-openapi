@@ -39,7 +39,9 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of resource names to include in the response
+            enum:
+              - organization
+        description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         description: OK
@@ -51,7 +53,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create a space
-    description: Create a space
+    description: Create a space.
     operationId: createSpace
     tags:
       - Spaces
@@ -153,6 +155,14 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     responses:
+      '201':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
+            schema:
+              type: string
+              format: uri
       '202':
         description: Accepted
         headers:
@@ -168,7 +178,10 @@
 /v3/spaces/{guid}/actions/apply_manifest:
   post:
     summary: Apply a manifest to a space
-    description: Apply changes specified in a manifest to the named apps and their underlying processes. The apps must reside in the space. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+    description: |-
+      Apply changes specified in a manifest to the named apps and their underlying processes. The apps must reside in the space. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, app features, routes, or services.
+
+      Apply manifest will only trigger an immediate update for the “instances” property or routing changes. All other properties require an app restart to take effect.
     operationId: applyManifestToSpace
     tags:
       - Spaces
@@ -226,6 +239,8 @@
         required: true
         schema:
           type: string
+          enum:
+            - ssh
     responses:
       '200':
         description: OK
@@ -238,8 +253,8 @@
       '404':
         $ref: '../components/responses/NotFound.yaml'
   patch:
-    summary: Update space features
-    description: Update space features
+    summary: Update a space feature
+    description: Update a space feature.
     operationId: updateSpaceFeature
     tags:
       - Spaces
@@ -250,6 +265,8 @@
         required: true
         schema:
           type: string
+          enum:
+            - ssh
     requestBody:
       content:
         application/json:
@@ -271,7 +288,10 @@
 /v3/spaces/{guid}/manifest_diff:
   post:
     summary: Create a manifest diff for a space (experimental)
-    description: This endpoint returns a JSON representation of the difference between the provided manifest and the current state of a space.
+    description: |-
+      This endpoint returns a JSON representation of the difference between the provided manifest and the current state of a space.
+
+      Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.
     operationId: createManifestDiffForSpace
     tags:
       - Spaces
@@ -283,6 +303,14 @@
           schema:
             type: string
     responses:
+      '201':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
+            schema:
+              type: string
+              format: uri
       '202':
         description: Accepted
         headers:
@@ -317,7 +345,10 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Manage isolation segment
-    description: This endpoint assigns an isolation segment to the space. The isolation segment must be entitled to the space's parent organization.
+    description: |-
+      This endpoint assigns an isolation segment to the space. The isolation segment must be [entitled](#entitle-organizations-for-an-isolation-segment) to the space’s parent organization.
+
+      Apps will not run in the newly assigned isolation segment until they are restarted.
     operationId: manageIsolationSegmentForSpace
     tags:
       - Spaces

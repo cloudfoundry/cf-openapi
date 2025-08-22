@@ -16,6 +16,7 @@ content:
           description: App package to stage
         lifecycle:
           $ref: '../schemas/Lifecycle.yaml'
+          description: Lifecycle information for a build
         metadata:
           $ref: '../schemas/Metadata.yaml'
       required:

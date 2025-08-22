@@ -55,4 +55,3 @@ required:
   - command
   - process_types
   - relationships
-  - links

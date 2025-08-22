@@ -37,7 +37,9 @@ allOf:
           app:
             $ref: './RelationshipToOne.yaml'
           revision:
-            $ref: './RelationshipToOne.yaml'
+            oneOf:
+              - $ref: './RelationshipToOne.yaml'
+              - type: 'null'
       metadata:
         $ref: './Metadata.yaml'
       links:

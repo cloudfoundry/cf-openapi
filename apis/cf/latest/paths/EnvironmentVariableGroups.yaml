@@ -1,7 +1,7 @@
 /v3/environment_variable_groups/{name}:
   get:
     summary: Get an environment variable group
-    description: Retrieve the environment variable group.
+    description: Retrieve an environment variable group.
     operationId: getEnvironmentVariableGroup
     tags:
       - Environment Variable Groups
@@ -29,7 +29,10 @@
         $ref: ../components/responses/500.yaml
   patch:
     summary: Update environment variable group
-    description: Update the environment variable group.
+    description: |-
+      Update the environment variable group. The variables given in the request will be merged with the existing environment variable group. Any requested variables with a value of `null` will be removed from the group. Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+
+      Variables updated in the **running** environment variable group will not take effect until apps are restarted.
     operationId: updateEnvironmentVariableGroup
     tags:
       - Environment Variable Groups

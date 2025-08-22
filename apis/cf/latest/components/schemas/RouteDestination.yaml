@@ -13,7 +13,9 @@ properties:
           type:
             type: string
   weight:
-    type: integer
+    type:
+      - integer
+      - 'null'
   port:
     type: integer
   protocol:

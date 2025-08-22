@@ -539,8 +539,8 @@ paths:
     $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{guid}'
   /v3/space_quotas/{quota_guid}/relationships/spaces:
     $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{quota_guid}~1relationships~1spaces'
-  /v3/space_quotas/{quota_guid}/relationships/spaces/{space_guid}:
-    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{quota_guid}~1relationships~1spaces~1{space_guid}'
+  /v3/space_quotas/{guid}/relationships/spaces/{space_guid}:
+    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{guid}~1relationships~1spaces~1{space_guid}'
   /v3/stacks:
     $ref: './paths/Stacks.yaml#/~1v3~1stacks'
   /v3/stacks/{guid}:
@@ -579,6 +579,8 @@ paths:
     $ref: './paths/Packages.yaml#/~1v3~1packages'
   /v3/packages/{guid}:
     $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}'
+  /v3/packages/{guid}/droplets:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1droplets'
   /v3/apps/{guid}/packages:
     $ref: './paths/Packages.yaml#/~1v3~1apps~1{guid}~1packages'
   /v3/packages/{guid}/upload:

@@ -4,21 +4,30 @@ allOf:
   - properties:
       name:
         type: string
-        description: The name of the buildpack
-      stack:
+        description: The name of the buildpack; to be used by app buildpack field (only alphanumeric characters)
+      state:
         type: string
-        description: The stack the buildpack is compatible with
+        description: The state of the buildpack
+        enum:
+          - AWAITING_UPLOAD
+          - READY
+      stack:
+        type: [string, 'null']
+        description: The name of the stack that the buildpack uses
+      lifecycle:
+        type: string
+        description: The version of buildpacks the buildpack uses. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
       position:
         type: integer
-        description: The position of the buildpack in the order of execution
+        description: The order in which the buildpacks are checked during buildpack auto-detection
       enabled:
         type: boolean
-        description: Whether the buildpack is enabled
+        description: Whether or not the buildpack can be used for staging
       locked:
         type: boolean
-        description: Whether the buildpack is locked
+        description: Whether or not the buildpack is locked to prevent updating the bits
       filename:
-        type: string
+        type: [string, 'null']
         description: The filename of the buildpack
       metadata:
         $ref: './Metadata.yaml'

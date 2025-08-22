@@ -28,14 +28,8 @@ content:
           type: object
           properties:
             app:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    guid:
-                      type: string
-                      format: uuid
+              $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to an app
           required:
             - app
         metadata:

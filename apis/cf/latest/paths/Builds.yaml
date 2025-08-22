@@ -1,7 +1,7 @@
 /v3/builds:
   get:
     summary: List builds
-    description: Retrieve all builds the user has access to.
+    description: Retrieve all builds.
     operationId: listBuilds
     tags:
       - Builds
@@ -18,6 +18,10 @@
           type: array
           items:
             type: string
+            enum:
+              - STAGING
+              - STAGED
+              - FAILED
         description: Comma-delimited list of build states to filter by
       - name: app_guids
         in: query
@@ -44,7 +48,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
   post:
     summary: Create a build
-    description: Create a new build.
+    description: Create a build.
     operationId: createBuild
     tags:
       - Builds
@@ -96,7 +100,7 @@
 /v3/builds/{guid}:
   get:
     summary: Get a build
-    description: Retrieve details of a specific build by its GUID.
+    description: Retrieve a build.
     operationId: getBuild
     tags:
       - Builds
@@ -127,7 +131,7 @@
 /v3/apps/{guid}/builds:
   get:
     summary: List builds for an app
-    description: Retrieve all builds for the app.
+    description: Retrieve all builds for an app.
     operationId: listAppBuilds
     tags:
       - Builds
@@ -142,6 +146,10 @@
           type: array
           items:
             type: string
+            enum:
+              - STAGING
+              - STAGED
+              - FAILED
         description: Comma-delimited list of build states to filter by
       - $ref: '../components/parameters/LabelSelector.yaml'
       - $ref: '../components/parameters/CreatedAts.yaml'
@@ -159,7 +167,7 @@
         $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a build
-    description: Update attributes of a specific build by its GUID.
+    description: Update a build.
     operationId: updateBuild
     tags:
       - Builds

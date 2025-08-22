@@ -13,6 +13,7 @@ content:
           properties:
             organization:
               $ref: '../schemas/RelationshipToOne.yaml'
+              description: A relationship to an organization
           required:
             - organization
         metadata:

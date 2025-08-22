@@ -24,11 +24,14 @@
             type: string
       - name: service_instance_types
         in: query
-        description: Comma-delimited list of service instance types to filter by; valid values are `managed` and `user-provided`
+        description: Comma-delimited list of service instance types to filter by; valid values are `managed_service_instance` and `user_provided_service_instance`
         schema:
           type: array
           items:
             type: string
+            enum:
+              - managed_service_instance
+              - user_provided_service_instance
       - name: service_offering_guids
         in: query
         description: Comma-delimited list of service offering guids to filter by
@@ -73,13 +76,9 @@
     tags:
       - Service Usage Events
     responses:
-      '202':
-        description: Accepted
+      '200':
+        description: OK
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Job.yaml

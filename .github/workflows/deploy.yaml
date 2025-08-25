@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         run: |
-          apk add python3 make g++
+          apk add python3 make g++ git
           yarn install
       - name: Build
         run: |

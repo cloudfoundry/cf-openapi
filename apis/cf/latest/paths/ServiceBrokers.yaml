@@ -43,10 +43,7 @@
     tags:
       - Service Brokers
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/ServiceBrokerCreate.yaml'
+      $ref: '../components/requestBodies/ServiceBrokerCreate.yaml'
     responses:
       '202':
         description: Accepted

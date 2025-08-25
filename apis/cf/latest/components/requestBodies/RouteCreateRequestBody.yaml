@@ -22,5 +22,7 @@ content:
             space:
               $ref: '../schemas/RelationshipToOne.yaml'
               description: A relationship to the space containing the route; routes can only be mapped to destinations in that space
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
       required:
         - relationships

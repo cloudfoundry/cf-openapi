@@ -55,10 +55,7 @@
     tags:
       - Space Quotas
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/SpaceQuotaCreate.yaml
+      $ref: ../components/requestBodies/SpaceQuotaCreate.yaml
     responses:
       '201':
         description: Created
@@ -111,10 +108,7 @@
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/SpaceQuotaUpdate.yaml
+      $ref: ../components/requestBodies/SpaceQuotaUpdate.yaml
     responses:
       '200':
         description: OK

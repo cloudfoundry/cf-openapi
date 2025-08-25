@@ -2,4 +2,16 @@ description: User to create
 content:
   application/json:
     schema:
-      $ref: '../schemas/UserCreate.yaml'
+      type: object
+      properties:
+        guid:
+          type: string
+          description: Unique identifier for the user
+        username:
+          type: string
+          description: Username of the user to be created. This can only be provided together with origin
+        origin:
+          type: string
+          description: Origin of the user to be created. This can only be provided together with username and cannot be uaa
+        metadata:
+          $ref: '../schemas/Metadata.yaml'

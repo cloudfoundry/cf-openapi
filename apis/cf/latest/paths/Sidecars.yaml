@@ -100,10 +100,7 @@
     parameters:
       - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/SidecarCreate.yaml'
+      $ref: '../components/requestBodies/SidecarCreate.yaml'
     responses:
       '201':
         description: Created

@@ -59,6 +59,16 @@
         $ref: '../components/responses/NotFound.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/info/usage_summary:
   get:
     summary: Get platform usage summary

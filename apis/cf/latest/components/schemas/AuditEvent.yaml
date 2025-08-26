@@ -33,13 +33,13 @@ allOf:
         type: object
         description: Additional information about event
       space:
-        type: object
+        type: [object, "null"]
         properties:
           guid:
             type: string
             description: Unique identifier for the space where the event occurred; if the event did not occur within a space, the `space` field will be `null`
       organization:
-        type: object
+        type: [object, "null"]
         properties:
           guid:
             type: string

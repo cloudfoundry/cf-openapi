@@ -14,7 +14,7 @@ properties:
           type: string
         description: List of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack during staging (applicable for buildpack and cnb lifecycles)
       stack:
-        type: string
+        type: [string, "null"]
         description: The root filesystem to use with the buildpack, for example cflinuxfs4 (applicable for buildpack lifecycle)
       credentials:
         type: object
@@ -22,9 +22,9 @@ properties:
           type: object
           properties:
             username:
-              type: string
+              type: [string, "null"]
             password:
-              type: string
+              type: [string, "null"]
             token:
               type: string
         description: Credentials used to download the configured buildpacks (applicable for cnb lifecycle)

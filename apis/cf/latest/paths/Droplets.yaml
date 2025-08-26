@@ -4,61 +4,66 @@
     description: Retrieve all droplets.
     operationId: listDroplets
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of droplet GUIDs to filter by
-      - name: states
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - AWAITING_UPLOAD
-              - PROCESSING_UPLOAD
-              - STAGED
-              - COPYING
-              - FAILED
-              - EXPIRED
-        description: >
-          Comma-delimited list of droplet states to filter by
-      - name: app_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of app GUIDs to filter by
-      - name: space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of space GUIDs to filter by
-      - name: organization_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of organization GUIDs to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of droplet GUIDs to filter by
+
+        '
+    - name: states
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - AWAITING_UPLOAD
+          - PROCESSING_UPLOAD
+          - STAGED
+          - COPYING
+          - FAILED
+          - EXPIRED
+      description: 'Comma-delimited list of droplet states to filter by
+
+        '
+    - name: app_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of app GUIDs to filter by
+
+        '
+    - name: space_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of space GUIDs to filter by
+
+        '
+    - name: organization_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of organization GUIDs to filter by
+
+        '
     responses:
       '200':
         description: OK
@@ -72,12 +77,23 @@
         $ref: '../components/responses/Forbidden.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a droplet
-    description: This endpoint is only for creating a droplet without a package. To create a droplet based on a package, see [Create a build](#create-a-build).
+    description: This endpoint is only for creating a droplet without a package. To
+      create a droplet based on a package, see [Create a build](#create-a-build).
     operationId: createDroplet
     tags:
-      - Droplets
+    - Droplets
     requestBody:
       $ref: '../components/requestBodies/DropletCreateRequestBody.yaml'
     responses:
@@ -95,15 +111,29 @@
             description: Retrieve the app for this droplet
       '400':
         $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/droplets/{guid}:
   get:
     summary: Get a droplet
     description: Retrieve a droplet.
     operationId: getDroplet
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Droplet retrieved
@@ -119,14 +149,18 @@
             description: Retrieve the app for this droplet
       '400':
         $ref: '../components/responses/BadRequest.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
   patch:
     summary: Update a droplet
     description: Update a droplet.
     operationId: updateDroplet
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: Droplet object that needs to be updated
       required: true
@@ -141,7 +175,7 @@
                 type: string
                 description: Image reference where the built complete image was stored
             required:
-              - image
+            - image
             description: Request schema for updating a droplet
     responses:
       '200':
@@ -160,33 +194,63 @@
           application/json:
             schema:
               $ref: '../components/schemas/Error.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a droplet
     description: Delete a droplet.
     operationId: deleteDroplet
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
-      '204':
-        description: Successfully deleted droplet
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the droplet
+            schema:
+              type: string
+              format: uri
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Job.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
 /v3/droplets/{guid}/download:
   get:
     summary: Download droplet bits
-    description: |-
-      Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet.
-      When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
-      Only droplets that are in the `STAGED` state and have lifecycle type `buildpack` can be downloaded.
+    description: 'Download a gzip compressed tarball file containing a Cloud Foundry
+      compatible droplet.
+
+      When using a remote blobstore, such as AWS, the response is a redirect to the
+      actual location of the bits. If the client is automatically following redirects,
+      then the OAuth token that was used to communicate with Cloud Controller will
+      be relayed on the new redirect request. Some blobstores may reject the request
+      in that case. Clients may need to follow the redirect without including the
+      OAuth token.
+
+      Only droplets that are in the `STAGED` state and have lifecycle type `buildpack`
+      can be downloaded.'
     operationId: downloadDroplet
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -204,15 +268,22 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
 /v3/droplets/{guid}/upload:
   post:
     summary: Upload droplet bits
-    description: Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet. The file must be sent as part of a multi-part form.
+    description: Upload a gzip compressed tarball file containing a Cloud Foundry
+      compatible droplet. The file must be sent as part of a multi-part form.
     operationId: uploadDroplet
     tags:
-      - Droplets
+    - Droplets
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: The droplet file to be uploaded
       required: true
@@ -224,6 +295,24 @@
               bits:
                 type: string
                 format: binary
+              resources:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: string
+                    size_in_bytes:
+                      type: integer
+                    checksum:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+        application/json:
+          schema:
+            type: object
+            properties:
               resources:
                 type: array
                 items:
@@ -258,3 +347,5 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'

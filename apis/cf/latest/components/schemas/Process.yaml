@@ -19,10 +19,10 @@ allOf:
         type: integer
         description: The number of instances to run
       memory_in_mb:
-        type: integer
+        type: [integer, "null"]
         description: The memory in MB allocated per instance
       disk_in_mb:
-        type: integer
+        type: [integer, "null"]
         description: The disk in MB allocated per instance
       log_rate_limit_in_bytes_per_second:
         type: integer

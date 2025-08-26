@@ -1,42 +1,10 @@
 type: object
-properties:
-  guid:
-    type: string
-  state:
-    type: string
-  space_guid:
-    type: string
-  space_name:
-    type: string
-  org_guid:
-    type: string
-  service_instance_guid:
-    type: string
-  service_instance_name:
-    type: string
-  service_instance_type:
-    type: string
-  service_plan_guid:
-    type: string
-  service_plan_name:
-    type: string
-  service_offering_guid:
-    type: string
-  service_offering_name:
-    type: string
-  service_broker_guid:
-    type: string
-  service_broker_name:
-    type: string
-  created_at:
-    type: string
-    format: date-time
-  updated_at:
-    type: string
-    format: date-time
-  links:
-    type: object
-    properties:
-      self:
-        $ref: './Link.yaml'
-        description: The URL to get this service usage event
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this service usage event

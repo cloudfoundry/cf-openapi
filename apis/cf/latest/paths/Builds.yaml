@@ -4,39 +4,39 @@
     description: Retrieve all builds.
     operationId: listBuilds
     tags:
-      - Builds
+    - Builds
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: states
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - STAGING
-              - STAGED
-              - FAILED
-        description: Comma-delimited list of build states to filter by
-      - name: app_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of app GUIDs to filter by
-      - name: package_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of package GUIDs to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: states
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - STAGING
+          - STAGED
+          - FAILED
+      description: Comma-delimited list of build states to filter by
+    - name: app_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of app GUIDs to filter by
+    - name: package_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of package GUIDs to filter by
     responses:
       '200':
         description: OK
@@ -46,12 +46,26 @@
               $ref: '../components/schemas/BuildList.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a build
     description: Create a build.
     operationId: createBuild
     tags:
-      - Builds
+    - Builds
     requestBody:
       description: Build object that needs to be created
       required: true
@@ -72,11 +86,12 @@
                 description: Disk space in MB allocated for staging of the build
               staging_log_rate_limit_bytes_per_second:
                 type: integer
-                description: Log rate limit in bytes per second allocated for staging of the build
+                description: Log rate limit in bytes per second allocated for staging
+                  of the build
               metadata:
                 $ref: '../components/schemas/Metadata.yaml'
             required:
-              - package
+            - package
             description: Request schema for creating a build
     responses:
       '201':
@@ -97,15 +112,23 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/builds/{guid}:
   get:
     summary: Get a build
     description: Retrieve a build.
     operationId: getBuild
     tags:
-      - Builds
+    - Builds
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved build
@@ -128,32 +151,70 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+  patch:
+    summary: Update a build
+    description: Update a build.
+    operationId: updateBuild
+    tags:
+    - Builds
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/BuildUpdate.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Build.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/apps/{guid}/builds:
   get:
     summary: List builds for an app
     description: Retrieve all builds for an app.
     operationId: listAppBuilds
     tags:
-      - Builds
+    - Builds
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - name: states
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - STAGING
-              - STAGED
-              - FAILED
-        description: Comma-delimited list of build states to filter by
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - name: states
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - STAGING
+          - STAGED
+          - FAILED
+      description: Comma-delimited list of build states to filter by
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
@@ -165,14 +226,16 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a build
     description: Update a build.
-    operationId: updateBuild
+    operationId: updateBuildViaApp
     tags:
-      - Builds
+    - Builds
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: Build object that needs to be updated
       required: true
@@ -195,3 +258,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

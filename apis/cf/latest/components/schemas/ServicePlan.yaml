@@ -1,47 +1,22 @@
 type: object
-properties:
-  guid:
-    type: string
-  name:
-    type: string
-  description:
-    type: string
-  available:
-    type: boolean
-  free:
-    type: boolean
-  public:
-    type: boolean
-  costs:
-    type: array
-    items:
-      type: object
-      properties:
-        amount:
-          type: number
-        unit:
-          type: string
-  created_at:
-    type: string
-    format: date-time
-  updated_at:
-    type: string
-    format: date-time
-  service_offering_guid:
-    type: string
-  service_offering_name:
-    type: string
-  metadata:
-    $ref: './Metadata.yaml'
-  links:
-    type: object
-    properties:
-      self:
-        $ref: './Link.yaml'
-        description: The URL to get this service plan
-      service_offering:
-        $ref: './Link.yaml'
-        description: The URL to get the service offering for this plan
-      visibility:
-        $ref: './Link.yaml'
-        description: The URL to get the visibility for this plan
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      service_offering_guid:
+        type: string
+      service_offering_name:
+        type: string
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this service plan
+          service_offering:
+            $ref: './Link.yaml'
+            description: The URL to get the service offering for this plan
+          visibility:
+            $ref: './Link.yaml'
+            description: The URL to get the visibility for this plan

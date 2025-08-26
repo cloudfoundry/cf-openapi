@@ -4,67 +4,88 @@
     description: Retrieve all app usage events.
     operationId: listAppUsageEvents
     tags:
-      - App Usage Events
+    - App Usage Events
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - name: after_guid
-        in: query
-        schema:
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - name: after_guid
+      in: query
+      schema:
+        type: string
+      description: Filters out events before and including the event with the given
+        guid
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
           type: string
-        description: Filters out events before and including the event with the given guid
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of usage event guids to filter by
-      - $ref: ../components/parameters/CreatedAts.yaml
+      description: Comma-delimited list of usage event guids to filter by
+    - $ref: '../components/parameters/CreatedAts.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/AppUsageEventList.yaml
+              $ref: '../components/schemas/AppUsageEventList.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/app_usage_events/{guid}:
   get:
     summary: Get an app usage event
     description: Retrieve a specific app usage event.
     operationId: getAppUsageEvent
     tags:
-      - App Usage Events
+    - App Usage Events
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/AppUsageEvent.yaml
+              $ref: '../components/schemas/AppUsageEvent.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/app_usage_events/actions/destructively_purge_all_and_reseed:
   post:
     summary: Purge and seed app usage events
-    description: |-
-      Destroys all existing events. Populates new usage events, one for each
+    description: 'Destroys all existing events. Populates new usage events, one for
+      each
+
       started app. All populated events will have a created_at value of
+
       current time. There is the potential race condition if apps are
+
       currently being started, stopped, or scaled. The seeded usage events
-      will have the same guid as the app.
+
+      will have the same guid as the app.'
     operationId: purgeAndSeedAppUsageEvents
     tags:
-      - App Usage Events
+    - App Usage Events
     responses:
       '200':
         description: OK
@@ -72,3 +93,15 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'

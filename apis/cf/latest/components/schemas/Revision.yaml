@@ -6,7 +6,7 @@ allOf:
         type: integer
         description: Version number of the revision
       description:
-        type: string
+        type: [string, "null"]
         description: Description of the revision, created by the user
       droplet:
         $ref: './RelationshipToOne.yaml'

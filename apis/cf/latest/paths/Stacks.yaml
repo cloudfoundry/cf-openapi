@@ -4,21 +4,21 @@
     description: Retrieve all stacks.
     operationId: listStacks
     tags:
-      - Stacks
+    - Stacks
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of stack names to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of stack names to filter by
     responses:
       '200':
         description: OK
@@ -28,17 +28,28 @@
               $ref: '../components/schemas/StackList.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a stack
     description: Create a stack.
     operationId: createStack
     tags:
-      - Stacks
+    - Stacks
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/Stack.yaml'
+      $ref: '../components/requestBodies/StackCreateRequestBody.yaml'
     responses:
       '201':
         description: Created
@@ -50,15 +61,25 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/stacks/{guid}:
   get:
     summary: Get a stack
     description: Get a stack.
     operationId: getStack
     tags:
-      - Stacks
+    - Stacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -70,14 +91,16 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a stack
     description: Update a stack.
     operationId: updateStack
     tags:
-      - Stacks
+    - Stacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
@@ -98,14 +121,24 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a stack
     description: Delete a stack.
     operationId: deleteStack
     tags:
-      - Stacks
+    - Stacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '204':
         description: No Content
@@ -113,21 +146,27 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
 /v3/stacks/{guid}/apps:
   get:
     summary: List apps on a stack
     description: Retrieve all apps using a given stack.
     operationId: listAppsOnStack
     tags:
-      - Stacks
+    - Stacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
     responses:
       '200':
         description: OK
@@ -139,3 +178,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'

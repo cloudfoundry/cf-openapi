@@ -10,10 +10,10 @@ allOf:
           - STAGED
           - FAILED
       staging_memory_in_mb:
-        type: integer
+        type: [integer, "null"]
         description: Memory in MB allocated for staging of the build
       staging_disk_in_mb:
-        type: integer
+        type: [integer, "null"]
         description: Disk space in MB allocated for staging of the build
       staging_log_rate_limit_bytes_per_second:
         type: integer
@@ -58,10 +58,10 @@ allOf:
             type: string
             description: The guid of the user that created the build
           name:
-            type: string
+            type: [string, "null"]
             description: The name of the user that created the build
           email:
-            type: string
+            type: [string, "null"]
             description: The email of the user that created the build
       links:
         type: object

@@ -11,7 +11,7 @@ allOf:
       lifecycle:
         $ref: './Lifecycle.yaml'
       execution_metadata:
-        type: string
+        type: [string, "null"]
         description: Serialized JSON data resulting from staging for use when executing a droplet
       process_types:
         type: object
@@ -49,12 +49,12 @@ allOf:
             type: string
             description: Checksum of the droplet
       buildpacks:
-        type: array
+        type: [array, "null"]
         items:
           type: object
           properties:
             name:
-              type: string
+              type: [string, "null"]
               description: System buildpack name
             detect_output:
               type: [string, 'null']
@@ -63,7 +63,7 @@ allOf:
               type: [string, 'null']
               description: Version reported by the buildpack
             buildpack_name:
-              type: string
+              type: [string, "null"]
               description: Name reported by the buildpack
       stack:
         type: [string, 'null']

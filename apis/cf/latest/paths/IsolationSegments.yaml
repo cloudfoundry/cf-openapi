@@ -1,104 +1,125 @@
 /v3/isolation_segments:
   get:
     summary: List isolation segments
-    description: Retrieves all isolation segments to which the user has access. For admin, this is all the isolation segments in the system. For anyone else, this is the isolation segments in the allowed list for any organization to which the user belongs.
+    description: Retrieves all isolation segments to which the user has access. For
+      admin, this is all the isolation segments in the system. For anyone else, this
+      is the isolation segments in the allowed list for any organization to which
+      the user belongs.
     operationId: listIsolationSegments
     tags:
-      - Isolation Segments
+    - Isolation Segments
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of isolation segment guids to filter by.
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of isolation segment names to filter by.
-      - name: organization_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of organization guids to filter by.
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of isolation segment guids to filter by.
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of isolation segment names to filter by.
+    - name: organization_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of organization guids to filter by.
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/IsolationSegmentList.yaml
+              $ref: '../components/schemas/IsolationSegmentList.yaml'
       '400':
-        $ref: ../components/responses/BadRequest.yaml
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
       '403':
-        $ref: ../components/responses/Forbidden.yaml
+        $ref: '../components/responses/Forbidden.yaml'
       '500':
-        $ref: ../components/responses/500.yaml
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create an isolation segment
     description: Create an isolation segment.
     operationId: createIsolationSegment
     tags:
-      - Isolation Segments
+    - Isolation Segments
     requestBody:
-      $ref: ../components/requestBodies/IsolationSegmentCreate.yaml
+      $ref: '../components/requestBodies/IsolationSegmentCreate.yaml'
     responses:
       '201':
         description: Created
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/IsolationSegment.yaml
+              $ref: '../components/schemas/IsolationSegment.yaml'
       '400':
-        $ref: ../components/responses/BadRequest.yaml
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
       '403':
-        $ref: ../components/responses/Forbidden.yaml
+        $ref: '../components/responses/Forbidden.yaml'
       '500':
-        $ref: ../components/responses/500.yaml
+        $ref: '../components/responses/500.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/isolation_segments/{guid}:
   get:
     summary: Get an isolation segment
-    description: Retrieve an isolation segment to which the user has access. For admin, this is any isolation segment in the system. For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.
+    description: Retrieve an isolation segment to which the user has access. For admin,
+      this is any isolation segment in the system. For anyone else, this is an isolation
+      segment in the allowed list for any organization to which the user belongs.
     operationId: getIsolationSegment
     tags:
-      - Isolation Segments
+    - Isolation Segments
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/IsolationSegment.yaml
+              $ref: '../components/schemas/IsolationSegment.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update an isolation segment
     description: Update an isolation segment.
     operationId: updateIsolationSegment
     tags:
-      - Isolation Segments
+    - Isolation Segments
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: Isolation segment to update
       required: true
@@ -111,135 +132,194 @@
                 type: string
                 description: The name of the isolation segment
               metadata:
-                $ref: ../components/schemas/Metadata.yaml
+                $ref: '../components/schemas/Metadata.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/IsolationSegment.yaml
+              $ref: '../components/schemas/IsolationSegment.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete an isolation segment
     description: An isolation segment cannot be deleted if it is entitled to any organization.
     operationId: deleteIsolationSegment
     tags:
-      - Isolation Segments
+    - Isolation Segments
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '202':
-        description: Accepted
-        headers:
-          Location:
-            description: URL of the job that is deleting the isolation segment
-            schema:
-              type: string
-              format: uri
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Job.yaml
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/isolation_segments/{guid}/relationships/organizations:
-  post:
-    summary: Entitle organizations for isolation segment
-    description: |-
-      This endpoint entitles the specified organizations for the isolation segment. In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the default for that organization.
-    operationId: entitleOrganizationsForIsolationSegment
-    tags:
-      - Isolation Segments
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    requestBody:
-      description: List of organizations to entitle
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-  get:
-    summary: List organizations relationship
-    description: |-
-      This endpoint lists the organizations entitled for the isolation segment. For an Admin, this will list all entitled organizations in the system. For any other user, this will list only the entitled organizations to which the user belongs.
-    operationId: listOrganizationsForIsolationSegment
-    tags:
-      - Isolation Segments
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
-  delete:
-    summary: Revoke entitlement to isolation segment for an organization
-    description: This endpoint revokes the entitlement for the specified organization to the isolation segment. If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked. If the isolation segment is the organization’s default, the entitlement cannot be revoked.
-    operationId: revokeIsolationSegmentForOrganization
-    tags:
-      - Isolation Segments
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - name: org_guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: The GUID of the organization to revoke entitlement from.
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '204':
         description: No Content
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/isolation_segments/{guid}/relationships/spaces:
-  get:
-    summary: List spaces relationship
-    description: This endpoint lists the spaces to which the isolation segment is assigned. For an Admin, this will list all associated spaces in the system. For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager. For any other user, this will list only those associated spaces to which the user has access.
-    operationId: listSpacesForIsolationSegment
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+/v3/isolation_segments/{guid}/relationships/organizations:
+  post:
+    summary: Entitle organizations for isolation segment
+    description: This endpoint entitles the specified organizations for the isolation
+      segment. In the case where the specified isolation segment is the system-wide
+      shared segment, and if an organization is not already entitled for any other
+      isolation segment, then the shared isolation segment automatically gets assigned
+      as the default for that organization.
+    operationId: entitleOrganizationsForIsolationSegment
     tags:
-      - Isolation Segments
+    - Isolation Segments
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
+    - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      description: List of organizations to entitle
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RelationshipToMany.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
+              $ref: '../components/schemas/RelationshipToMany.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  get:
+    summary: List organizations relationship
+    description: This endpoint lists the organizations entitled for the isolation
+      segment. For an Admin, this will list all entitled organizations in the system.
+      For any other user, this will list only the entitled organizations to which
+      the user belongs.
+    operationId: listOrganizationsForIsolationSegment
+    tags:
+    - Isolation Segments
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToMany.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
+  delete:
+    summary: Revoke entitlement to isolation segment for an organization
+    description: This endpoint revokes the entitlement for the specified organization
+      to the isolation segment. If the isolation segment is assigned to a space within
+      an organization, the entitlement cannot be revoked. If the isolation segment
+      is the organization’s default, the entitlement cannot be revoked.
+    operationId: revokeIsolationSegmentForOrganization
+    tags:
+    - Isolation Segments
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    - name: org_guid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The GUID of the organization to revoke entitlement from.
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/isolation_segments/{guid}/relationships/spaces:
+  get:
+    summary: List spaces relationship
+    description: This endpoint lists the spaces to which the isolation segment is
+      assigned. For an Admin, this will list all associated spaces in the system.
+      For an org manager, this will list only those associated spaces belonging to
+      orgs for which the user is a manager. For any other user, this will list only
+      those associated spaces to which the user has access.
+    operationId: listSpacesForIsolationSegment
+    tags:
+    - Isolation Segments
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RelationshipToMany.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/isolation_segments/{guid}/organizations:
+  get:
+    summary: List organizations for isolation segment
+    description: This endpoint lists the organizations entitled for the isolation
+      segment. For an Admin, this will list all entitled organizations in the system.
+      For any other user, this will list only the entitled organizations to which
+      the user belongs.
+    operationId: listOrganizationsForIsolationSegmentShort
+    tags:
+    - Isolation Segments
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/OrganizationList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'

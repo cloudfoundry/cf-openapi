@@ -4,44 +4,61 @@
     description: This endpoint retrieves the service brokers the user has access to.
     operationId: listServiceBrokers
     tags:
-      - Service Brokers
+    - Service Brokers
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of service broker names to filter by
-      - name: space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of space guids to filter by
-      - $ref: ../components/parameters/LabelSelector.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of service broker names to filter by
+    - name: space_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of space guids to filter by
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/ServiceBrokerList.yaml
+              $ref: '../components/schemas/ServiceBrokerList.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a service broker
-    description: |-
-      This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker’s catalog. The `Location` header refers to the created job which syncs the broker with the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+    description: This endpoint creates a new service broker and a job to synchronize
+      the service offerings and service plans with those in the broker’s catalog.
+      The `Location` header refers to the created job which syncs the broker with
+      the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information
+      and limitations.
     operationId: createServiceBroker
     tags:
-      - Service Brokers
+    - Service Brokers
     requestBody:
       $ref: '../components/requestBodies/ServiceBrokerCreate.yaml'
     responses:
@@ -57,15 +74,25 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/service_brokers/{guid}:
   get:
     summary: Get a service broker
     description: This endpoint retrieves the service broker by GUID.
     operationId: getServiceBroker
     tags:
-      - Service Brokers
+    - Service Brokers
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -78,27 +105,30 @@
             operationId: getSpace
             parameters:
               guid: $response.body#/relationships/space/data/guid
-            description: Retrieve the space for this service broker (space-scoped brokers only)
+            description: Retrieve the space for this service broker (space-scoped
+              brokers only)
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a service broker
-    description: |-
-      This endpoint updates a service broker. Depending on the parameters specified, the endpoint may respond with a background job, and it may synchronize the service offerings and service plans with those in the broker’s catalog.
+    description: 'This endpoint updates a service broker. Depending on the parameters
+      specified, the endpoint may respond with a background job, and it may synchronize
+      the service offerings and service plans with those in the broker’s catalog.
 
-      When a service broker has a synchronization job in progress, only updates with `metadata` are permitted until the synchronization job is complete.
+
+      When a service broker has a synchronization job in progress, only updates with
+      `metadata` are permitted until the synchronization job is complete.'
     operationId: updateServiceBroker
     tags:
-      - Service Brokers
+    - Service Brokers
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/ServiceBroker.yaml'
+      $ref: '../components/requestBodies/ServiceBrokerUpdateRequestBody.yaml'
     responses:
       '200':
         description: OK
@@ -111,7 +141,8 @@
             operationId: getSpace
             parameters:
               guid: $response.body#/relationships/space/data/guid
-            description: Retrieve the space for this service broker (space-scoped brokers only)
+            description: Retrieve the space for this service broker (space-scoped
+              brokers only)
       '202':
         description: Accepted
         headers:
@@ -126,14 +157,26 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a service broker
-    description: This endpoint creates a job to delete an existing service broker. The `Location` header refers to the created job. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+    description: This endpoint creates a job to delete an existing service broker.
+      The `Location` header refers to the created job. See [_Service broker jobs_](#service-broker-jobs)
+      for more information and limitations.
     operationId: deleteServiceBroker
     tags:
-      - Service Brokers
+    - Service Brokers
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
@@ -147,3 +190,9 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'

@@ -19,12 +19,12 @@ properties:
   port:
     type: integer
   protocol:
-    type: string
+    type: [string, "null"]
   created_at:
     type: string
     format: date-time
   updated_at:
-    type: string
+    type: [string, "null"]
     format: date-time
   metadata:
     $ref: './Metadata.yaml'

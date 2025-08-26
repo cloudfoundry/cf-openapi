@@ -4,6 +4,8 @@
 
 This repository contains the OpenAPI 3.0 specification for the Cloud Foundry API (CAPI). It provides a complete, machine-readable definition of the CAPI endpoints, enabling automated client generation, documentation, and testing.
 
+A rendered version can be consumed at https://cloudfoundry.github.io/cf-openapi/ 
+
 ## Project Structure
 
 The repository is organized as follows:

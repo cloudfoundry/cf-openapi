@@ -32,4 +32,7 @@ allOf:
           destinations:
             $ref: './Link.yaml'
             description: The URL to get the destinations for this route
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Additional related resources included in the response when using the include parameter
 description: A route in Cloud Foundry is used to direct traffic from a URL to an application.

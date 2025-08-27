@@ -145,6 +145,16 @@
     - Service Route Bindings
     parameters:
     - $ref: '../components/parameters/Guid.yaml'
+    - name: include
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - route
+          - service_instance
+      description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         description: OK

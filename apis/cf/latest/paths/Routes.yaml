@@ -157,6 +157,17 @@
     - Routes
     parameters:
     - $ref: '../components/parameters/Guid.yaml'
+    - name: include
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - domain
+          - space
+          - space.organization
+      description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         description: Successfully retrieved route

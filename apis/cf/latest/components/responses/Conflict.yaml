@@ -1,0 +1,20 @@
+description: Conflict
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 10008
+              title:
+                type: string
+                example: "CF-ResourceConflict"
+              detail:
+                type: string
+                example: "The resource could not be updated due to a conflict"

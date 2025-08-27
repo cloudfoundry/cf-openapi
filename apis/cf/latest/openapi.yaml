@@ -34,6 +34,8 @@ tags:
     description: "Feature flags are runtime flags that enable or disable functionality on the API."
   - name: Info
     description: "Info endpoints expose Cloud Controller configuration information."
+  - name: Internal
+    description: "Internal endpoints for system monitoring and metrics."
   - name: Isolation Segments
     description: "Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads."
   - name: Jobs
@@ -373,6 +375,8 @@ paths:
     $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1stop'
   /v3/apps/{guid}/actions/restart:
     $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1restart'
+  /v3/apps/{guid}/droplets:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1droplets'
   /v3/apps/{guid}/droplets/current:
     $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1droplets~1current'
   /v3/apps/{guid}/relationships/current_droplet:
@@ -561,6 +565,8 @@ paths:
     $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}'
   /v3/tasks/{guid}/actions/cancel:
     $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}~1actions~1cancel'
+  /v3/tasks/{guid}/cancel:
+    $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}~1cancel'
   /v3/users:
     $ref: './paths/Users.yaml#/~1v3~1users'
   /v3/users/{guid}:

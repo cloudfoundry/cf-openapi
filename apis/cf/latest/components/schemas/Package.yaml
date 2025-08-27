@@ -28,10 +28,10 @@ allOf:
             type: string
             description: The registry address of the image
           username:
-            type: string
+            type: [string, "null"]
             description: The username for the image's registry
           password:
-            type: string
+            type: [string, "null"]
             description: The password for the image's registry
       state:
         type: string

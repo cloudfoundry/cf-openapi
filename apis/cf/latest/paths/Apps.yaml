@@ -4,68 +4,68 @@
     description: Retrieve all apps the user has access to.
     operationId: listApps
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of app GUIDs to filter by
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of app names to filter by
-      - name: space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of space GUIDs to filter by
-      - name: organization_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of organization GUIDs to filter by
-      - name: stacks
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of stack names to filter by
-      - name: lifecycle_type
-        in: query
-        schema:
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of app GUIDs to filter by
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of app names to filter by
+    - name: space_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of space GUIDs to filter by
+    - name: organization_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of organization GUIDs to filter by
+    - name: stacks
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of stack names to filter by
+    - name: lifecycle_type
+      in: query
+      schema:
+        type: string
+        enum:
+        - buildpack
+        - cnb
+        - docker
+      description: Lifecycle type to filter by
+    - name: include
+      in: query
+      schema:
+        type: array
+        items:
           type: string
           enum:
-            - buildpack
-            - cnb
-            - docker
-        description: Lifecycle type to filter by
-      - name: include
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - space
-              - space.organization
-        description: Optionally include a list of unique related resources in the response
+          - space
+          - space.organization
+      description: Optionally include a list of unique related resources in the response
     responses:
       '200':
         description: OK
@@ -79,12 +79,22 @@
         $ref: '../components/responses/Forbidden.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create an app
     description: Creates a new app.
     operationId: createApp
     tags:
-      - Apps
+    - Apps
     requestBody:
       $ref: '../components/requestBodies/AppCreateRequestBody.yaml'
     responses:
@@ -121,24 +131,31 @@
               uniqueness_error:
                 value:
                   errors:
-                    - code: 10016
-                      title: CF-UniquenessError
-                      detail: The given app name is already taken in the targeted space
+                  - code: 10016
+                    title: CF-UniquenessError
+                    detail: The given app name is already taken in the targeted space
               feature_disabled:
                 value:
                   errors:
-                    - code: 330002
-                      title: CF-FeatureDisabled
-                      detail: Some feature flag must be enabled by the Cloud Foundry admin in order to push the app as is.
+                  - code: 330002
+                    title: CF-FeatureDisabled
+                    detail: Some feature flag must be enabled by the Cloud Foundry
+                      admin in order to push the app as is.
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/apps/{guid}:
   get:
     summary: Get an app
     description: Retrieve a specific app.
     operationId: getApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved app
@@ -161,14 +178,16 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update an app
     description: Update an app.
     operationId: updateApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       $ref: '../components/requestBodies/AppUpdateRequestBody.yaml'
     responses:
@@ -195,14 +214,24 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete an app
     description: Delete an app.
     operationId: deleteApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Successfully deleted app
@@ -216,15 +245,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
 /v3/apps/{guid}/actions/start:
   post:
     summary: Start an app
     description: Start an app.
     operationId: startApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully started app
@@ -236,15 +271,19 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/actions/stop:
   post:
     summary: Stop an app
     description: Stop an app.
     operationId: stopApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully stopped app
@@ -256,15 +295,22 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/actions/restart:
   post:
     summary: Restart an app
-    description: This endpoint will synchronously stop and start an application. Unlike the start and stop actions, this endpoint will error if the app is not successfully stopped in the runtime. For restarting applications without downtime, see the deployments resource.
+    description: This endpoint will synchronously stop and start an application. Unlike
+      the start and stop actions, this endpoint will error if the app is not successfully
+      stopped in the runtime. For restarting applications without downtime, see the
+      deployments resource.
     operationId: restartApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully restarted app
@@ -276,15 +322,67 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/apps/{guid}/droplets:
+  get:
+    summary: List droplets for an app
+    description: Retrieve all droplets belonging to an app.
+    operationId: listAppDroplets
+    tags:
+    - Apps
+    - Droplets
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of droplet guids to filter by
+    - name: states
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - AWAITING_UPLOAD
+          - PROCESSING_UPLOAD
+          - STAGED
+          - COPYING
+          - FAILED
+          - EXPIRED
+      description: Comma-delimited list of droplet states to filter by
+    responses:
+      '200':
+        description: List of droplets for the app
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/DropletList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
 /v3/apps/{guid}/droplets/current:
   get:
     summary: Get current droplet
     description: Get the current droplet for an app.
     operationId: getCurrentDropletForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved droplet
@@ -296,15 +394,17 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/relationships/current_droplet:
   get:
     summary: Get current droplet association for an app
     description: This endpoint retrieves the current droplet relationship for an app.
     operationId: getCurrentDropletAssociationForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -316,14 +416,17 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Set current droplet
-    description: Set the current droplet for an app. The current droplet is the droplet that the app will use when running.
+    description: Set the current droplet for an app. The current droplet is the droplet
+      that the app will use when running.
     operationId: setCurrentDropletForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: Droplet relationship object that needs to be set
       required: true
@@ -335,7 +438,7 @@
               data:
                 $ref: '../components/schemas/Relationship.yaml'
             required:
-              - data
+            - data
             description: Request schema for setting the current droplet
     responses:
       '200':
@@ -348,15 +451,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/env:
   get:
     summary: Get environment for an app
-    description: Retrieve the environment variables that will be provided to an app at runtime. It will include environment variables for Environment Variable Groups and Service Bindings.
+    description: Retrieve the environment variables that will be provided to an app
+      at runtime. It will include environment variables for Environment Variable Groups
+      and Service Bindings.
     operationId: getEnvForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -368,15 +477,19 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/environment_variables:
   get:
     summary: Get environment variables for an app
-    description: Retrieve the environment variables that are associated with the given app. For the entire list of environment variables that will be available to the app at runtime, see the env endpoint.
+    description: Retrieve the environment variables that are associated with the given
+      app. For the entire list of environment variables that will be available to
+      the app at runtime, see the env endpoint.
     operationId: getEnvironmentVariablesForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -388,14 +501,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update environment variables for an app
-    description: Update the environment variables associated with the given app. The variables given in the request will be merged with the existing app environment variables. Any requested variables with a value of `null` will be removed from the app. Environment variable names may not start with VCAP_. PORT is not a valid environment variable. The updated environment variables will not take effect until the app is restarted.
+    description: Update the environment variables associated with the given app. The
+      variables given in the request will be merged with the existing app environment
+      variables. Any requested variables with a value of `null` will be removed from
+      the app. Environment variable names may not start with VCAP_. PORT is not a
+      valid environment variable. The updated environment variables will not take
+      effect until the app is restarted.
     operationId: updateEnvironmentVariablesForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
@@ -406,7 +526,8 @@
                 type: object
                 additionalProperties:
                   type: string
-                description: Environment variables to inject; keys and values must be strings
+                description: Environment variables to inject; keys and values must
+                  be strings
     responses:
       '200':
         description: OK
@@ -418,15 +539,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/permissions:
   get:
     summary: Get permissions for an app
-    description: Get the current user’s permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
+    description: Get the current user’s permissions for the given app. If a user can
+      see an app, then they can see its basic data. Only admin, read-only admins,
+      and space developers can read sensitive data.
     operationId: getPermissionsForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -438,15 +565,19 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/ssh_enabled:
   get:
     summary: Get SSH enabled for an app
-    description: Returns if an application’s runtime environment will accept ssh connections. If ssh is disabled, the `reason` field will describe whether it is disabled globally, at the space level, or at the app level.
+    description: Returns if an application’s runtime environment will accept ssh connections.
+      If ssh is disabled, the `reason` field will describe whether it is disabled
+      globally, at the space level, or at the app level.
     operationId: getSshEnabledForApp
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -458,15 +589,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/actions/clear_buildpack_cache:
   post:
     summary: Clear buildpack cache for application
-    description: This endpoint will delete the buildpack cache for a specified app. The buildpack cache is used during staging by buildpacks as a way to cache certain resources, e.g. downloaded Ruby gems. A user may want to use this endpoint when an app doesn’t stage anymore due to out-of-disk caused by a large buildpack cache content.
+    description: This endpoint will delete the buildpack cache for a specified app.
+      The buildpack cache is used during staging by buildpacks as a way to cache certain
+      resources, e.g. downloaded Ruby gems. A user may want to use this endpoint when
+      an app doesn’t stage anymore due to out-of-disk caused by a large buildpack
+      cache content.
     operationId: clearBuildpackCacheForApplication
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
@@ -474,15 +611,19 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/apps/{guid}/features:
   get:
     summary: List app features
     description: This endpoint retrieves the list of features for the specified app.
     operationId: listAppFeatures
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -490,25 +631,27 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/features/{name}:
   get:
     summary: Get an app feature
     description: Get an app feature.
     operationId: getAppFeature
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-          enum:
-            - ssh
-            - revisions
-            - service-binding-k8s
-            - file-based-vcap-services
+    - $ref: '../components/parameters/Guid.yaml'
+    - name: name
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - ssh
+        - revisions
+        - service-binding-k8s
+        - file-based-vcap-services
     responses:
       '200':
         description: OK
@@ -516,24 +659,26 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update an app feature
     description: Update an app feature.
     operationId: updateAppFeature
     tags:
-      - Apps
+    - Apps
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-          enum:
-            - ssh
-            - revisions
-            - service-binding-k8s
-            - file-based-vcap-services
+    - $ref: '../components/parameters/Guid.yaml'
+    - name: name
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - ssh
+        - revisions
+        - service-binding-k8s
+        - file-based-vcap-services
     requestBody:
       content:
         application/json:
@@ -544,7 +689,13 @@
     responses:
       '200':
         description: OK
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

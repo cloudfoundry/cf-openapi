@@ -4,7 +4,7 @@ properties:
     type: object
     description: Environment variables
     additionalProperties:
-      type: string
+      type: [string, "null"]
   links:
     type: object
     properties:

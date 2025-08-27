@@ -1,4 +1,4 @@
-description: Package object that needs to be created
+description: Package object that needs to be created or copied. When copying (source_guid query parameter is provided), only relationships.app is required. When creating a new package, type and relationships.app are required.
 required: true
 content:
   application/json:
@@ -7,7 +7,7 @@ content:
       properties:
         type:
           type: string
-          description: Type of the package; valid values are bits or docker
+          description: Type of the package; valid values are bits or docker. Required when creating a new package (when source_guid is not provided). Not required when copying a package (when source_guid is provided).
           enum:
             - bits
             - docker
@@ -35,6 +35,5 @@ content:
         metadata:
           $ref: '../schemas/Metadata.yaml'
       required:
-        - type
         - relationships
       description: Request schema for creating a package

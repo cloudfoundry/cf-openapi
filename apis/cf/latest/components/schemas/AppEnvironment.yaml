@@ -12,7 +12,7 @@ properties:
     type: object
     description: User-defined environment variables
     additionalProperties:
-      type: string
+      type: [string, "null"]
   system_env_json:
     type: object
     description: System environment variables including VCAP_SERVICES

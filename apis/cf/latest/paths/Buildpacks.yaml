@@ -4,30 +4,32 @@
     description: Retrieve all buildpacks.
     operationId: listBuildpacks
     tags:
-      - Buildpacks
+    - Buildpacks
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of buildpack names to filter by
-      - name: stacks
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: >
-          Comma-delimited list of stacks to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of buildpack names to filter by
+
+        '
+    - name: stacks
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: 'Comma-delimited list of stacks to filter by
+
+        '
     responses:
       '200':
         description: OK
@@ -41,12 +43,22 @@
         $ref: '../components/responses/Forbidden.yaml'
       '500':
         $ref: '../components/responses/500.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a buildpack
     description: Create a buildpack.
     operationId: createBuildpack
     tags:
-      - Buildpacks
+    - Buildpacks
     requestBody:
       $ref: '../components/requestBodies/BuildpackCreateRequestBody.yaml'
     responses:
@@ -58,15 +70,23 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '403':
         $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/buildpacks/{guid}:
   get:
     summary: Get a buildpack
     description: Retrieve a buildpack.
     operationId: getBuildpack
     tags:
-      - Buildpacks
+    - Buildpacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         $ref: '../components/responses/BuildpackGetResponse.yaml'
@@ -83,9 +103,9 @@
     description: Update a buildpack.
     operationId: updateBuildpack
     tags:
-      - Buildpacks
+    - Buildpacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       $ref: '../components/requestBodies/BuildpackUpdateRequestBody.yaml'
     responses:
@@ -105,14 +125,20 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a buildpack
     description: Delete a buildpack.
     operationId: deleteBuildpack
     tags:
-      - Buildpacks
+    - Buildpacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
@@ -122,20 +148,26 @@
             schema:
               type: string
               format: uri
-
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
 /v3/buildpacks/{guid}/upload:
   post:
     summary: Upload buildpack bits
-    description: Upload a zip file containing a Cloud Foundry compatible buildpack. The file must be sent as part of a multi-part form.
+    description: Upload a zip file containing a Cloud Foundry compatible buildpack.
+      The file must be sent as part of a multi-part form.
     operationId: uploadBuildpack
     tags:
-      - Buildpacks
+    - Buildpacks
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: The buildpack file to be uploaded
       required: true
@@ -185,3 +217,5 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'

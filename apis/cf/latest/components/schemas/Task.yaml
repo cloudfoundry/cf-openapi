@@ -17,16 +17,16 @@ allOf:
       sequence_id:
         type: integer
       memory_in_mb:
-        type: integer
+        type: [integer, "null"]
       disk_in_mb:
-        type: integer
+        type: [integer, "null"]
       droplet_guid:
         type: string
       result:
         type: object
         properties:
           failure_reason:
-            type: string
+            type: [string, "null"]
       metadata:
         $ref: './Metadata.yaml'
       links:

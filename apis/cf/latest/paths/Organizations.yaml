@@ -4,28 +4,28 @@
     description: Retrieve all organizations the user has access to.
     operationId: listOrganizations
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of organization names to filter by
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of organization guids to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of organization names to filter by
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of organization guids to filter by
     responses:
       '200':
         description: OK
@@ -35,12 +35,26 @@
               $ref: '../components/schemas/OrganizationList.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create an organization
     description: Create an organization.
     operationId: createOrganization
     tags:
-      - Organizations
+    - Organizations
     requestBody:
       $ref: '../components/requestBodies/OrganizationCreateRequestBody.yaml'
     responses:
@@ -60,15 +74,25 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/organizations/{guid}:
   get:
     summary: Get an organization
     description: This endpoint retrieves the specified organization object.
     operationId: getOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -86,14 +110,16 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update an organization
     description: Update an organization.
     operationId: updateOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       $ref: '../components/requestBodies/OrganizationUpdateRequestBody.yaml'
     responses:
@@ -115,14 +141,25 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete an organization
-    description: When an organization is deleted, user roles associated with the organization will also be deleted.
+    description: When an organization is deleted, user roles associated with the organization
+      will also be deleted.
     operationId: deleteOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
@@ -136,15 +173,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
 /v3/organizations/{guid}/domains/default:
   get:
     summary: Get default domain
     description: Retrieve the default domain for a given organization.
     operationId: getDefaultDomainForOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -156,15 +199,18 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/organizations/{guid}/usage_summary:
   get:
     summary: Get usage summary
-    description: This endpoint retrieves the specified organization object's memory and app instance usage summary.
+    description: This endpoint retrieves the specified organization object's memory
+      and app instance usage summary.
     operationId: getUsageSummaryForOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -200,54 +246,57 @@
                       description: The URL to get this usage summary
                     organization:
                       $ref: '../components/schemas/Link.yaml'
-                      description: The URL to get the organization for this usage summary
+                      description: The URL to get the organization for this usage
+                        summary
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/organizations/{guid}/users:
   get:
     summary: List users for an organization
     description: Retrieve all users with a role in the specified organization.
     operationId: listUsersForOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user guids to filter by
-      - name: usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of usernames to filter by
-      - name: origins
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of user origins to filter by
-      - name: partial_usernames
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of partial usernames to filter by
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of user guids to filter by
+    - name: usernames
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of usernames to filter by
+    - name: origins
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of user origins to filter by
+    - name: partial_usernames
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of partial usernames to filter by
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
     responses:
       '200':
         description: OK
@@ -259,15 +308,17 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/organizations/{guid}/relationships/default_isolation_segment:
   get:
     summary: Get default isolation segment
     description: Retrieve the default isolation segment for a given organization.
     operationId: getDefaultIsolationSegmentForOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
@@ -279,17 +330,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Assign default isolation segment
-    description: |-
-      Set the default isolation segment for a given organization. Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
+    description: 'Set the default isolation segment for a given organization. Only
+      isolation segments that are entitled to the organization are eligible to be
+      the default isolation segment.
 
-      Apps will not run in the new default isolation segment until they are restarted.
+
+      Apps will not run in the new default isolation segment until they are restarted.'
     operationId: assignDefaultIsolationSegmentForOrganization
     tags:
-      - Organizations
+    - Organizations
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
@@ -306,3 +361,7 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

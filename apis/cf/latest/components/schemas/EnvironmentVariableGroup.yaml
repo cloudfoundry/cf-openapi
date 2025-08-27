@@ -5,12 +5,12 @@ properties:
     format: date-time
     description: The time the environment variable group was last updated
   name:
-    type: string
+    type: [string, "null"]
     description: The name of the group; can only be "running" or "staging"
   var:
     type: object
     additionalProperties:
-      type: string
+      type: [string, "null"]
     description: Environment variables to inject; keys and values must be strings
   links:
     type: object

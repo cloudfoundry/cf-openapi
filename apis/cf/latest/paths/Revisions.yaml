@@ -4,9 +4,9 @@
     description: Retrieve a revision.
     operationId: getRevision
     tags:
-      - Revisions
+    - Revisions
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved revision
@@ -24,14 +24,28 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   patch:
     summary: Update a revision
     description: Update a revision.
     operationId: updateRevision
     tags:
-      - Revisions
+    - Revisions
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       description: Revision object that needs to be updated
       required: true
@@ -62,15 +76,25 @@
         $ref: '../components/responses/NotFound.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/revisions/{guid}/environment_variables:
   get:
     summary: Get environment variables for a revision
     description: Retrieve the environment variables that are associated with the revision.
     operationId: getRevisionEnvironmentVariables
     tags:
-      - Revisions
+    - Revisions
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: Successfully retrieved revision environment variables
@@ -97,28 +121,30 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/revisions:
   get:
     summary: List revisions for an app
     description: Retrieve revisions for an app the user has access to.
     operationId: listRevisionsForApp
     tags:
-      - Revisions
+    - Revisions
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
-      - $ref: '../components/parameters/LabelSelector.yaml'
-      - $ref: '../components/parameters/CreatedAts.yaml'
-      - $ref: '../components/parameters/UpdatedAts.yaml'
-      - name: versions
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of revision versions to filter by
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - name: versions
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of revision versions to filter by
     responses:
       '200':
         description: Successfully retrieved revisions for app
@@ -130,18 +156,21 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/apps/{guid}/revisions/deployed:
   get:
     summary: List deployed revisions for an app
-    description: Retrieve deployed revisions for an app the user has access to. Deployed revisions are revisions that are linked to started processes in the app.
+    description: Retrieve deployed revisions for an app the user has access to. Deployed
+      revisions are revisions that are linked to started processes in the app.
     operationId: listDeployedRevisionsForApp
     tags:
-      - Revisions
+    - Revisions
     parameters:
-      - $ref: '../components/parameters/Guid.yaml'
-      - $ref: '../components/parameters/Page.yaml'
-      - $ref: '../components/parameters/PerPage.yaml'
-      - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
     responses:
       '200':
         description: Successfully retrieved deployed revisions for app
@@ -153,3 +182,5 @@
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'

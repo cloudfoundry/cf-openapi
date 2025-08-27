@@ -4,180 +4,278 @@
     description: List security groups.
     operationId: listSecurityGroups
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
-      - name: guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-separated list of resource GUIDs to filter by
-      - name: names
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-separated list of names to filter by (case insensitive)
-      - name: globally_enabled_running
-        in: query
-        schema:
-          type: boolean
-        description: If true, only include the security groups that are enabled for running
-      - name: globally_enabled_staging
-        in: query
-        schema:
-          type: boolean
-        description: If true, only include the security groups that are enabled for staging
-      - name: running_space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of space guids to filter by
-      - name: staging_space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of space guids to filter by
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-separated list of resource GUIDs to filter by
+    - name: names
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-separated list of names to filter by (case insensitive)
+    - name: globally_enabled_running
+      in: query
+      schema:
+        type: boolean
+      description: If true, only include the security groups that are enabled for
+        running
+    - name: globally_enabled_staging
+      in: query
+      schema:
+        type: boolean
+      description: If true, only include the security groups that are enabled for
+        staging
+    - name: running_space_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of space guids to filter by
+    - name: staging_space_guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of space guids to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/SecurityGroupList.yaml
+              $ref: '../components/schemas/SecurityGroupList.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
       '403':
-        $ref: ../components/responses/Forbidden.yaml
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a security group
     description: Create a security group.
     operationId: createSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     requestBody:
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/SecurityGroup.yaml
+            $ref: '../components/schemas/SecurityGroupCreate.yaml'
     responses:
       '201':
         description: Created
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/SecurityGroup.yaml
+              $ref: '../components/schemas/SecurityGroup.yaml'
       '400':
-        $ref: ../components/responses/BadRequest.yaml
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
-        $ref: ../components/responses/Unauthorized.yaml
+        $ref: '../components/responses/Unauthorized.yaml'
       '403':
-        $ref: ../components/responses/Forbidden.yaml
+        $ref: '../components/responses/Forbidden.yaml'
       '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
 /v3/security_groups/{guid}:
   get:
     summary: Get a security group
     description: Get a security group.
     operationId: getSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/SecurityGroup.yaml
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/spaces/{guid}/running_security_groups:
-  get:
-    summary: List running security groups for a space
-    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
-    operationId: listRunningSecurityGroupsForSpaceBySpaceGuid
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/SecurityGroupList.yaml
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/spaces/{guid}/staging_security_groups:
-  get:
-    summary: List staging security groups for a space
-    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
-    operationId: listStagingSecurityGroupsForSpaceBySpaceGuid
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/SecurityGroupList.yaml
+              $ref: '../components/schemas/SecurityGroup.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
         $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a security group
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values. Updates to the `rules` parameter will fully replace the current set of `rules` for the security group. Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
+    description: Update a security group.
     operationId: updateSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/SecurityGroup.yaml
+            $ref: '../components/schemas/SecurityGroupUpdate.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/SecurityGroup.yaml
+              $ref: '../components/schemas/SecurityGroup.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a security group
     description: Delete a security group.
     operationId: deleteSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the security group
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+/v3/spaces/{guid}/running_security_groups:
+  get:
+    summary: List running security groups for a space
+    description: This endpoint returns security groups that are enabled for running
+      globally or at the space level for the given space.
+    operationId: listRunningSecurityGroupsForSpaceBySpaceGuid
+    tags:
+    - Security Groups
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+/v3/spaces/{guid}/staging_security_groups:
+  get:
+    summary: List staging security groups for a space
+    description: This endpoint returns security groups that are enabled for staging
+      globally or at the space level for the given space.
+    operationId: listStagingSecurityGroupsForSpaceBySpaceGuid
+    tags:
+    - Security Groups
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SecurityGroupList.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+  patch:
+    summary: Update a security group
+    description: This endpoint will only update the parameters specified in the request
+      body. Any unspecified parameters will retain their existing values. Updates
+      to the `rules` parameter will fully replace the current set of `rules` for the
+      security group. Updates to the `globally_enabled` parameter will be merged with
+      the existing configuration. For example, an update to the `globally_enabled.running`
+      parameter will not affect the `globally_enabled.staging` configuration.
+    operationId: updateSecurityGroup
+    tags:
+    - Security Groups
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/SecurityGroup.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/SecurityGroup.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+  delete:
+    summary: Delete a security group
+    description: Delete a security group.
+    operationId: deleteSecurityGroup
+    tags:
+    - Security Groups
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
     responses:
       '202':
         description: Accepted
@@ -190,88 +288,122 @@
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/security_groups/{guid}/relationships/running_spaces:
   post:
     summary: Bind a running security group to spaces
-    description: This endpoint binds one or more spaces to a security group with the running lifecycle. Running app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restarted for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    description: This endpoint binds one or more spaces to a security group with the
+      running lifecycle. Running app containers within these spaces will inherit the
+      rules specified by this security group. Apps within these spaces must be restarted
+      for these changes to take effect. Unless a security group is globally-enabled,
+      an admin must add it to a space for it to be visible for the org and space managers.
+      Once it's visible, org and space managers can add it to additional spaces.
     operationId: bindRunningSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            $ref: '../components/schemas/RelationshipToMany.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
+              $ref: '../components/schemas/RelationshipToMany.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/security_groups/{guid}/relationships/running_spaces/{space_guid}:
   delete:
     summary: Unbind a running security group from a space
-    description: This endpoint removes a space from a security group with the running lifecycle. Apps within this space must be restarted for these changes to take effect.
+    description: This endpoint removes a space from a security group with the running
+      lifecycle. Apps within this space must be restarted for these changes to take
+      effect.
     operationId: unbindRunningSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/SpaceGuid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/SpaceGuid.yaml'
     responses:
       '204':
         description: No Content
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/security_groups/{guid}/relationships/staging_spaces:
   post:
     summary: Bind a staging security group to spaces
-    description: This endpoint binds one or more spaces to a security group with the staging lifecycle. Staging app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restaged for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    description: This endpoint binds one or more spaces to a security group with the
+      staging lifecycle. Staging app containers within these spaces will inherit the
+      rules specified by this security group. Apps within these spaces must be restaged
+      for these changes to take effect. Unless a security group is globally-enabled,
+      an admin must add it to a space for it to be visible for the org and space managers.
+      Once it's visible, org and space managers can add it to additional spaces.
     operationId: bindStagingSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
     requestBody:
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            $ref: '../components/schemas/RelationshipToMany.yaml'
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
+              $ref: '../components/schemas/RelationshipToMany.yaml'
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
 /v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}:
   delete:
     summary: Unbind a staging security group from a space
-    description: This endpoint removes a space from a security group with the staging lifecycle. Apps within this space must be restaged for these changes to take effect.
+    description: This endpoint removes a space from a security group with the staging
+      lifecycle. Apps within this space must be restaged for these changes to take
+      effect.
     operationId: unbindStagingSecurityGroup
     tags:
-      - Security Groups
+    - Security Groups
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/SpaceGuid.yaml
+    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/SpaceGuid.yaml'
     responses:
       '204':
         description: No Content
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
-        $ref: ../components/responses/NotFound.yaml
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

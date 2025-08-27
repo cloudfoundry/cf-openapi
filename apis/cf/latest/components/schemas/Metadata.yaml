@@ -3,7 +3,7 @@ properties:
   labels:
     type: object
     additionalProperties:
-      type: string
+      type: [string, "null"]
     description: |
       A set of key-value pairs that describe the resource. Labels are a JSON object that contains information about a resource. They are used to tag resources with metadata that can be used to filter and group resources. Labels are included in the response body of a request to retrieve a resource.
       Labels are user-specified key/value pairs that are attached to API Resources. They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
@@ -43,7 +43,7 @@ properties:
   annotations:
     type: object
     additionalProperties:
-      type: string
+      type: [string, "null"]
     description: |
       A set of key-value pairs that describe the resource. Annotations are a JSON object that contains information about a resource. They are used to tag resources with metadata that can be used to filter and group resources. Annotations are included in the response body of a request to retrieve a resource.
       Annotations are user-specified key-value pairs that are attached to API resources. They do not affect the operation of Cloud Foundry. Annotations cannot be used in filters.

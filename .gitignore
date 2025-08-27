@@ -45,3 +45,7 @@ node_modules
 out
 tmp
 .tmp
+
+# validator
+validator/validator
+validator/validation_output.txt

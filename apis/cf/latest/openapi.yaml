@@ -107,7 +107,10 @@ components:
       $ref: './components/schemas/RelationshipToOne.yaml'
     RelationshipToMany:
       $ref: './components/schemas/RelationshipToMany.yaml'
-    
+    UserRelationshipToOne:
+      $ref: './components/schemas/UserRelationshipToOne.yaml'
+    IncludedResources:
+      $ref: './components/schemas/IncludedResources.yaml'
     Link:
       $ref: './components/schemas/Link.yaml'
     Pagination:

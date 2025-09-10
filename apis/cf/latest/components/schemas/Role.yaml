@@ -39,7 +39,7 @@ properties:
               A relationship to the space the role controls access to; when this is an organization role, `space.data` will be `null`.
       user:
         allOf:
-          - $ref: './RelationshipToOne.yaml'
+          - $ref: './UserRelationshipToOne.yaml'
           - description: |
               A relationship to the user; this is the user that has the role
   links:

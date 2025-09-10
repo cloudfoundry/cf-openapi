@@ -1,0 +1,31 @@
+type: [object, "null"]
+properties:
+  data:
+    type: object
+    description: |
+      User relationship data that can be specified either by GUID or by username and origin.
+      When using username and origin, the set_roles_by_username feature flag must be enabled.
+    oneOf:
+      - type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+            description: The GUID of the user
+        required:
+          - guid
+        additionalProperties: false
+      - type: object
+        properties:
+          username:
+            type: string
+            description: The username of the user
+          origin:
+            type: string
+            description: The identity provider for the user (e.g., 'ldap', 'saml'). Optional field to disambiguate the username.
+        required:
+          - username
+        additionalProperties: false
+        description: |
+          User relationship data that can be specified either by GUID or by username and origin.
+          Set to null to clear the relationship.

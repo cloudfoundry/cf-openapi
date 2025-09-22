@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Cloud Foundry V3 API
-  description: "# Welcome to the Cloud Foundry V3 API docs! This is the latest available specification. \n\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still deprecated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
+  description: "# Welcome to the Experimental Cloud Foundry V3 API Docs! \n\n# Expermiental Warning\n This OpenAPI specification is a experiment and not ready for productive use.\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still deprecated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
   version: latest
   license:
     name: Apache 2.0

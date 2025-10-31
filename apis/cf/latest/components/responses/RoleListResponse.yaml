@@ -9,7 +9,7 @@ content:
         resources:
           type: array
           items:
-            $ref: '../schemas/Role.yaml'
+            $ref: '../schemas/RoleResources.yaml'
         included:
           $ref: '../schemas/IncludedResources.yaml'
           description: Additional related resources included in the response when using the include parameter

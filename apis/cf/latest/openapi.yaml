@@ -123,8 +123,6 @@ components:
       $ref: './components/schemas/BuildpackList.yaml'
     User:
       $ref: './components/schemas/User.yaml'
-    PaginatedUsers:
-      $ref: './components/schemas/PaginatedUsers.yaml'
     Droplet:
       $ref: './components/schemas/Droplet.yaml'
     DropletList:

@@ -5,7 +5,7 @@ properties:
   resources:
     type: array
     items:
-      $ref: './AppResources.yaml'
+      $ref: './App.yaml'
   included:
     $ref: './IncludedResources.yaml'
     description: Additional related resources included in the response when using the include parameter

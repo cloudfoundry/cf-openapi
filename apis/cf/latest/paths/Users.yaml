@@ -46,7 +46,7 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/PaginatedUsers.yaml'
+              $ref: '../components/schemas/UserList.yaml'
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':

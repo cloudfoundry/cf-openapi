@@ -18,7 +18,7 @@
         type: array
         items:
           type: string
-      description: Comma-delimited list of user guids to filter by
+      description: Comma-delimited list of user guids to filter by (can include UAA user IDs or client IDs)
     - name: usernames
       in: query
       schema:
@@ -111,7 +111,7 @@
     tags:
     - Users
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/UserGuid.yaml'
     responses:
       '200':
         description: OK
@@ -127,12 +127,12 @@
         $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a user
-    description: Update a user’s metadata.
+    description: Update a user's metadata.
     operationId: updateUser
     tags:
     - Users
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/UserGuid.yaml'
     requestBody:
       $ref: '../components/requestBodies/UserUpdate.yaml'
     responses:
@@ -161,7 +161,7 @@
     tags:
     - Users
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+    - $ref: '../components/parameters/UserGuid.yaml'
     responses:
       '202':
         description: Accepted

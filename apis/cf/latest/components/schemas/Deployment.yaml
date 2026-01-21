@@ -68,7 +68,7 @@ allOf:
                 properties:
                   instance_weight:
                     type: integer
-                    description: The number of instances to deploy at this step
+                    description: The percentage of instances to be deployed as part of the canary process in this step
     droplet:
       type: object
       properties:

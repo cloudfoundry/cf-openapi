@@ -96,6 +96,39 @@
                 enum:
                 - rolling
                 - canary
+              options:
+                type: object
+                properties:
+                  max_in_flight:
+                    type: integer
+                    description: The maximum number of instances that will be deployed simultaneously
+                    default: 1
+                    minimum: 1
+                  web_instances:
+                    type: integer
+                    description: The number of instances for the web process of the new droplet
+                  memory_in_mb:
+                    type: integer
+                    description: The amount of memory in megabytes to allocate for the web process
+                  disk_in_mb:
+                    type: integer
+                    description: The amount of disk space in megabytes to allocate for the web process
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                    description: The log rate limit in bytes per second for the web process. A value of -1 indicates unlimited, 0 prevents any logs from being emitted.
+                  canary:
+                    type: object
+                    description: Canary steps to use for the deployment. Only available for deployments with strategy ‘canary’.
+                    properties:
+                      steps:
+                        type: array
+                        description: Array of steps defining the canary deployment progression
+                        items:
+                          type: object
+                          properties:
+                            instance_weight:
+                              type: integer
+                              description: The percentage of instances to be deployed as part of the canary process in this step
               droplet:
                 $ref: '../components/schemas/Relationship.yaml'
               revision:

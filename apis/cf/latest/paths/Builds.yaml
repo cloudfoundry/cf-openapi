@@ -145,7 +145,7 @@
           droplet:
             operationId: getDroplet
             parameters:
-              guid: $response.body#/droplet/data/guid
+              guid: $response.body#/droplet/guid
             description: Retrieve the droplet for this build
       '401':
         $ref: '../components/responses/Unauthorized.yaml'

@@ -606,6 +606,8 @@ paths:
     $ref: './paths/Processes.yaml#/~1v3~1processes'
   /v3/processes/{guid}:
     $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}'
+  /v3/processes/{guid}/process_instances:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1process_instances'
   /v3/processes/{guid}/stats:
     $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1stats'
   /v3/processes/{guid}/actions/scale:

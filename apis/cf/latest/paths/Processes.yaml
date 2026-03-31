@@ -147,6 +147,55 @@
         $ref: '../components/responses/ServiceUnavailable.yaml'
       '409':
         $ref: '../components/responses/Conflict.yaml'
+/v3/processes/{guid}/process_instances:
+  get:
+    summary: List instances for a process
+    description: Retrieve the instances for a process. Unlike the stats endpoint,
+      this returns a simplified view with only the index, state, and uptime of each
+      instance.
+    operationId: listProcessInstances
+    tags:
+    - Processes
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resources:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      index:
+                        type: integer
+                      state:
+                        type: string
+                        enum:
+                        - RUNNING
+                        - CRASHED
+                        - STARTING
+                        - DOWN
+                      since:
+                        type: number
+                        format: double
+                links:
+                  type: object
+                  properties:
+                    self:
+                      $ref: '../components/schemas/Link.yaml'
+                    process:
+                      $ref: '../components/schemas/Link.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/processes/{guid}/stats:
   get:
     summary: Get stats for a process

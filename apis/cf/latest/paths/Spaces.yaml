@@ -483,6 +483,58 @@
         $ref: '../components/responses/Forbidden.yaml'
       '422':
         $ref: '../components/responses/UnprocessableEntity.yaml'
+/v3/spaces/{guid}/usage_summary:
+  get:
+    summary: Get usage summary for a space
+    description: This endpoint retrieves the specified space's memory and app instance
+      usage summary.
+    operationId: getUsageSummaryForSpace
+    tags:
+    - Spaces
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usage_summary:
+                  type: object
+                  properties:
+                    started_instances:
+                      type: integer
+                    memory_in_mb:
+                      type: integer
+                    routes:
+                      type: integer
+                    service_instances:
+                      type: integer
+                    reserved_ports:
+                      type: integer
+                    domains:
+                      type: integer
+                    per_app_tasks:
+                      type: integer
+                    service_keys:
+                      type: integer
+                links:
+                  type: object
+                  properties:
+                    self:
+                      $ref: '../components/schemas/Link.yaml'
+                      description: The URL to get this usage summary
+                    space:
+                      $ref: '../components/schemas/Link.yaml'
+                      description: The URL to get the space for this usage summary
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
 /v3/spaces/{guid}/running_security_groups:
   get:
     summary: List running security groups for a space

@@ -1,0 +1,17 @@
+type: object
+properties:
+  plan_updateable:
+    type: boolean
+    description: Whether the service plan can be updated
+  bindable:
+    type: boolean
+    description: Whether the service can be bound to applications
+  instances_retrievable:
+    type: boolean
+    description: Whether service instances can be retrieved
+  bindings_retrievable:
+    type: boolean
+    description: Whether service bindings can be retrieved
+  allow_context_updates:
+    type: boolean
+    description: Whether context updates are allowed

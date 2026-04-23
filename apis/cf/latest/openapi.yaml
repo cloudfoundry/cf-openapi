@@ -446,6 +446,8 @@ paths:
     $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1relationships~1organizations~1{org_guid}'
   /v3/isolation_segments/{guid}/relationships/spaces:
     $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1relationships~1spaces'
+  /v3/isolation_segments/{guid}/organizations:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1organizations'
   /v3/jobs/{guid}:
     $ref: './paths/Jobs.yaml#/~1v3~1jobs~1{guid}'
   /v3/resource_matches:
@@ -540,6 +542,8 @@ paths:
     $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1relationships~1isolation_segment'
   /v3/spaces/{guid}/routes:
     $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1routes'
+  /v3/spaces/{guid}/usage_summary:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1usage_summary'
   /v3/spaces/{guid}/running_security_groups:
     $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1running_security_groups'
   /v3/spaces/{guid}/staging_security_groups:

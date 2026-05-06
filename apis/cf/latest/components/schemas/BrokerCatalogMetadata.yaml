@@ -1,0 +1,21 @@
+type: object
+properties:
+  displayName:
+    type: string
+    description: Display name for the service offering
+  documentationUrl:
+    type: string
+    description: URL to documentation
+  imageUrl:
+    type: string
+    description: URL or data URI for the service image
+  longDescription:
+    type: string
+    description: Long description of the service
+  providerDisplayName:
+    type: string
+    description: Display name of the service provider
+  supportUrl:
+    type: string
+    description: URL for support
+additionalProperties: true

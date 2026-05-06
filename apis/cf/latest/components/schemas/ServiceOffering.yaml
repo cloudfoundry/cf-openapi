@@ -2,10 +2,41 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      name:
+        type: string
+        description: Name of the service offering
+      description:
+        type: string
+        description: Description of the service offering
+      available:
+        type: boolean
+        description: Whether the service offering is available
+      tags:
+        type: array
+        items:
+          type: string
+        description: Tags associated with the service offering
+      requires:
+        type: array
+        items:
+          type: string
+        description: Permissions required by the service offering
+      shareable:
+        type: boolean
+        description: Whether service instances can be shared across spaces
+      documentation_url:
+        type: string
+        description: URL to documentation for the service offering
+      broker_catalog:
+        $ref: './BrokerCatalog.yaml'
+      relationships:
+        $ref: './ServiceOfferingRelationships.yaml'
       service_broker_guid:
         type: string
+        description: GUID of the service broker
       service_broker_name:
         type: string
+        description: Name of the service broker
       metadata:
         $ref: './Metadata.yaml'
       links:

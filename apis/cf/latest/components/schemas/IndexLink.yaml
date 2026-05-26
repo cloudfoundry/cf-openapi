@@ -1,5 +1,5 @@
 allOf:
-  - $ref: ../components/schemas/Link.yaml
+  - $ref: ./Link.yaml
   - type: object
     properties:
       meta:

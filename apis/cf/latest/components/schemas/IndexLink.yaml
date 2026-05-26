@@ -1,25 +1,19 @@
-type: object
-properties:
-  href:
-    type: string
-    description: The URL of the link
-  method:
-    type: string
-    description: An optional field containing the HTTP method to be used when following the URL
-  meta:
-    type: object
-    description: Contains metadata about the link
+allOf:
+  - $ref: ../components/schemas/Link.yaml
+  - type: object
     properties:
-      version:
-        type: string
-        description: The version of the API
-      host_key_fingerprint:
-        type: string
-        description: The host key fingerprint of the link
-      oauth_client:
-        type: string
-        description: The oauth client for the link
-required:
-  - href
+      meta:
+        type: object
+        description: Contains metadata about the link
+        properties:
+          version:
+            type: string
+            description: The version of the API
+          host_key_fingerprint:
+            type: string
+            description: The host key fingerprint of the link
+          oauth_client:
+            type: string
+            description: The oauth client for the link
 description: |
   Each link is keyed by its type and will include a href for the URL and an optional method for links that cannot be followed using GET. Can include a meta object with metadata about the link.

@@ -1,0 +1,47 @@
+name: OpenAPI Breaking Changes
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  detect-breaking-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 1. Prepare PR Spec
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          path: pr
+          
+      - name: Build PR Spec
+        working-directory: pr
+        run: |
+          npm install
+          npm run build
+
+      # 2. Prepare Base Spec
+      - name: Checkout Base Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+          
+      - name: Build Base Spec
+        working-directory: base
+        run: |
+          npm install
+          npm run build
+
+      # 3. Compare with oasdiff
+      - name: Check for Breaking Changes
+        uses: oasdiff/oasdiff-action/breaking@v0.0.37
+        with:
+          base: 'base/dist/latest/openapi.yaml'
+          revision: 'pr/dist/latest/openapi.yaml'
+          fail-on: 'ERR'

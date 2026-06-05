@@ -4,38 +4,52 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   detect-breaking-changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # 1. Prepare PR Spec
+      # 1. Checkout Branches
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
           path: pr
+          persist-credentials: false
           
-      - name: Build PR Spec
-        working-directory: pr
-        run: |
-          npm install
-          npm run build
-
-      # 2. Prepare Base Spec
       - name: Checkout Base Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
           path: base
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            pr/package-lock.json
+            base/package-lock.json
+
+      # 2. Build Specs
+      - name: Build PR Spec
+        working-directory: pr
+        run: |
+          npm ci --ignore-scripts
+          npm run build
           
       - name: Build Base Spec
         working-directory: base
         run: |
-          npm install
+          npm ci --ignore-scripts
           npm run build
 
       # 3. Compare with oasdiff
@@ -45,3 +59,4 @@ jobs:
           base: 'base/dist/latest/openapi.yaml'
           revision: 'pr/dist/latest/openapi.yaml'
           fail-on: 'ERR'
+

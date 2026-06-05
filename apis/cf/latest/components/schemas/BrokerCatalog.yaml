@@ -1,0 +1,10 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+    description: The identifier of the service in the broker's catalog
+  metadata:
+    $ref: './BrokerCatalogMetadata.yaml'
+  features:
+    $ref: './BrokerCatalogFeatures.yaml'

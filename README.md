@@ -64,6 +64,41 @@ First, this command runs the build script to ensure the latest specification is 
 
 Runs the `bin/create-version.js` script, which is used to create a new versioned directory under `apis/cf/`. This is useful when a new version of the CAPI is released and you need to update the specification. It copies the current `apis/cf/latest/openapi.yaml` to a new versioned directory, and maintains the `redocly.yaml` file for the new version. After running this command and rebuilding, the new version will be available in scalar.
 
+**Validation Testing**
+
+`./scripts/validate-local.sh`
+
+Runs comprehensive validation testing against real captured API requests. This script:
+1. Builds the latest OpenAPI schema
+2. Finds the most recent request capture file from Cloud Foundry production traffic
+3. Validates all captured requests against the OpenAPI specification
+4. Generates a detailed validation report with error analysis and statistics
+
+The validation results include:
+- Total requests tested and success/failure rates
+- Categorized error types (missing response codes, schema validation errors, etc.)
+- Top error patterns and most problematic endpoints
+- Detailed output saved to `validator/validation_output.txt`
+
+**Validation Report Generation**
+
+`./scripts/generate-validation-report.sh`
+
+Generates a comprehensive validation report from existing validation output. This script outputs markdown-formatted reports to STDOUT and can be run independently to analyze validation results. The output is consistent whether run locally or in CI.
+
+**Prerequisites for validation:**
+- Go must be installed and available in your `PATH`
+- Request capture files must be present in the `validator/` directory
+
+**Automated Validation**
+
+The repository includes validation testing as part of the test workflow (`test.yaml`) that automatically runs on every push and pull request. The workflow:
+- Builds the OpenAPI schema
+- Runs validation against the latest request capture data
+- Generates detailed reports in the GitHub job summary
+- Uploads validation results as artifacts
+- Never fails the build - validation errors are reported but don't block PRs
+
 **Compliance Testing**
 
 `yarn test:compliance`

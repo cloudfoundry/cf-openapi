@@ -1,3 +1,5 @@
+**This repo has been archived. the CF OpenAPI spec is now contained in the [Cloud Controller](https://github.com/cloudfoundry/cloud_controller_ng/tree/main/docs/openapi) repository. The docs are hosted at https://v3-apidocs.cloudfoundry.org/openapi**
+
 # Cloud Foundry CAPI OpenAPI Specification - Experimental
 
 > **Note:** This repository is an experimental project to explore the OpenAPI specification for the Cloud Foundry API (CAPI). It is not an official Cloud Foundry project and may not be suitable for production use.

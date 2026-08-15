@@ -30,3 +30,27 @@ jobs:
           yarn redocly lint --max-problems 9999 --format github-actions
       - name: Build
         run: yarn build
+      - name: Setup Go for validation
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - name: Run OpenAPI validation
+        run: |
+          cd validator
+
+          # Find the latest request capture file for 2025/08/26
+          CAPTURE_FILE=$(ls -1 request_capture.json 2>/dev/null | tail -1)
+          if [ -z "$CAPTURE_FILE" ]; then
+            echo "No request capture file found"
+            exit 1
+          fi
+
+          echo "Running OpenAPI validator..."
+
+          # Run validator and capture output (don't fail on validation errors)
+          go run main.go "$CAPTURE_FILE" ../dist/latest/openapi.yaml > validation_output.txt
+          cat validation_output.txt >> $GITHUB_STEP_SUMMARY
+      - name: Generate validation report
+        run: |
+          cd scripts
+          ./generate-validation-report.sh >> $GITHUB_STEP_SUMMARY
